@@ -14,7 +14,7 @@ export const Route = createFileRoute("/app/settings")({
       { property: "og:description", content: "Tune retrieval, reasoning and consensus behaviour." },
     ],
   }),
-  component: SettingsPage;
+  component: SettingsPage,
 });
 
 function Row({
