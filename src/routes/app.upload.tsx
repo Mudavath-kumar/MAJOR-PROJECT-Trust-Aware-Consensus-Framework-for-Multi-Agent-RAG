@@ -83,7 +83,7 @@ function UploadPage() {
       />
 
       <Panel
-        className={`animate-rise p-1 transition-colors duration-300 ${dragging ? "border-white/40" : ""}`}
+        className={`animate-rise p-1 transition-colors duration-300 ${dragging ? "border-foreground/40" : ""}`}
       >
         <div
           onDragOver={(e) => {

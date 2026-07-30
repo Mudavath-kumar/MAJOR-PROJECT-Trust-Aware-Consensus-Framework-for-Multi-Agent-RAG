@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-32px_rgba(0,0,0,0.8)]",
+        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.02)_inset,0_20px_40px_-32px_rgba(0,0,0,0.12)]",
         className,
       )}
     >

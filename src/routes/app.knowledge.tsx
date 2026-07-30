@@ -64,7 +64,7 @@ function KnowledgeBase() {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors duration-300 ${
-                    filter === f ? "bg-white/15 text-foreground" : "text-muted-foreground hover:bg-muted"
+                    filter === f ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {f}
