@@ -66,7 +66,7 @@ function Stat({
   const shown = useCounter(value, decimals);
   return (
     <Panel
-      className="animate-rise p-5 transition-colors duration-300 hover:border-white/25"
+      className="animate-rise p-5 transition-colors duration-300 hover:border-foreground/25"
       // stagger
     >
       <div style={{ animationDelay: `${delay}ms` }}>
@@ -138,19 +138,19 @@ function Dashboard() {
             <div className="mt-4 flex flex-col gap-2">
               <Link
                 to="/app/upload"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-white/5"
+                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
               >
                 <Upload size={16} className="text-accent" /> Upload documents
               </Link>
               <Link
                 to="/app/knowledge"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-white/5"
+                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
               >
                 <FileText size={16} className="text-accent" /> Browse knowledge base
               </Link>
               <Link
                 to="/app/analytics"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-white/5"
+                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
               >
                 <Zap size={16} className="text-accent" /> Review hallucination rate
               </Link>
@@ -170,7 +170,7 @@ function Dashboard() {
                   <span className="text-muted-foreground">{name}</span>
                   <span className="flex items-center gap-2">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${state === "Operational" ? "bg-emerald-400" : "bg-amber-400"}`}
+                      className={`h-1.5 w-1.5 rounded-full ${state === "Operational" ? "bg-emerald-500" : "bg-amber-500"}`}
                     />
                     <span className="text-xs">{state}</span>
                   </span>
@@ -187,14 +187,14 @@ function Dashboard() {
           {DOCUMENTS.slice(0, 6).map((d) => (
             <div
               key={d.id}
-              className="rounded-xl border border-border p-4 transition-colors duration-300 hover:bg-white/5"
+              className="rounded-xl border border-border p-4 transition-colors duration-300 hover:bg-muted"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                   {d.type} · {d.size}
                 </span>
                 <span
-                  className={`font-mono text-[10px] uppercase tracking-[0.15em] ${d.status === "ready" ? "text-emerald-300" : "text-amber-300"}`}
+                  className={`font-mono text-[10px] uppercase tracking-[0.15em] ${d.status === "ready" ? "text-emerald-600" : "text-amber-600"}`}
                 >
                   {d.status}
                 </span>

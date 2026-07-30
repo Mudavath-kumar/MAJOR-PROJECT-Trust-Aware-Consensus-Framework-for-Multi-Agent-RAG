@@ -55,7 +55,7 @@ function KnowledgeBase() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search documents…"
-                className="h-9 w-full rounded-lg border border-border bg-white/5 pl-9 text-sm outline-none transition-colors duration-300 focus:border-white/25"
+                className="h-9 w-full rounded-lg border border-border bg-muted pl-9 text-sm outline-none transition-colors duration-300 focus:border-foreground/25"
               />
             </div>
             <div className="flex gap-1">
@@ -64,7 +64,7 @@ function KnowledgeBase() {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors duration-300 ${
-                    filter === f ? "bg-white/15 text-foreground" : "text-muted-foreground hover:bg-white/5"
+                    filter === f ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {f}
@@ -82,7 +82,7 @@ function KnowledgeBase() {
                 key={d.id}
                 onClick={() => setSelected(d)}
                 className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors duration-300 ${
-                  selected?.id === d.id ? "border-white/25 bg-white/10" : "border-border hover:bg-white/5"
+                  selected?.id === d.id ? "border-foreground/25 bg-secondary" : "border-border hover:bg-muted"
                 }`}
               >
                 <FileText size={16} className="shrink-0 text-muted-foreground" />
@@ -145,7 +145,7 @@ function KnowledgeBase() {
                 {selected.tags.map((t) => (
                   <span
                     key={t}
-                    className="rounded-full border border-border bg-white/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground"
+                    className="rounded-full border border-border bg-muted px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground"
                   >
                     {t}
                   </span>

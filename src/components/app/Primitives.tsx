@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_20px_40px_-32px_rgba(0,0,0,0.8)]",
+        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.02)_inset,0_20px_40px_-32px_rgba(0,0,0,0.12)]",
         className,
       )}
     >
@@ -67,10 +67,10 @@ export function ScorePill({
 }) {
   const toneClass =
     tone === "good"
-      ? "text-emerald-300 border-emerald-400/25 bg-emerald-400/10"
+      ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/10"
       : tone === "warn"
-        ? "text-amber-300 border-amber-400/25 bg-amber-400/10"
-        : "text-foreground border-border bg-white/5";
+        ? "text-amber-600 border-amber-500/30 bg-amber-500/10"
+        : "text-foreground border-border bg-muted";
   return (
     <div className={cn("rounded-lg border px-3 py-2", toneClass)}>
       <div className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-70">{label}</div>
@@ -81,7 +81,7 @@ export function ScorePill({
 
 export function Meter({ value, className }: { value: number; className?: string }) {
   return (
-    <div className={cn("h-1.5 w-full overflow-hidden rounded-full bg-white/10", className)}>
+    <div className={cn("h-1.5 w-full overflow-hidden rounded-full bg-secondary", className)}>
       <div
         className="h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}

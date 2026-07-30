@@ -71,7 +71,7 @@ function Timeline({ active }: { active: number }) {
             <span
               className={`absolute -left-[26px] top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border transition-colors duration-500 ${
                 done
-                  ? "border-emerald-400/50 bg-emerald-400"
+                  ? "border-emerald-400/50 bg-emerald-500"
                   : running
                     ? "border-accent bg-accent/40"
                     : "border-border bg-background"
@@ -153,7 +153,7 @@ function ChatPage() {
         <div className="flex min-h-[70vh] flex-col">
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="flex justify-end">
-              <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-white/10 px-4 py-3 text-sm">
+              <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-secondary px-4 py-3 text-sm">
                 {asked}
               </div>
             </div>
@@ -224,26 +224,26 @@ function ChatPage() {
                       setCopied(true);
                       setTimeout(() => setCopied(false), 1500);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-white/10"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-secondary"
                   >
                     {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "Copied" : "Copy"}
                   </button>
                   <button
                     onClick={() => setRunId((r) => r + 1)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-white/10"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-secondary"
                   >
                     <RefreshCw size={13} /> Regenerate
                   </button>
                   <button
                     onClick={() => setVote("up")}
-                    className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-white/10 ${vote === "up" ? "text-emerald-300" : ""}`}
+                    className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-secondary ${vote === "up" ? "text-emerald-600" : ""}`}
                     aria-label="Helpful"
                   >
                     <ThumbsUp size={13} />
                   </button>
                   <button
                     onClick={() => setVote("down")}
-                    className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-white/10 ${vote === "down" ? "text-destructive" : ""}`}
+                    className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-secondary ${vote === "down" ? "text-destructive" : ""}`}
                     aria-label="Not helpful"
                   >
                     <ThumbsDown size={13} />
@@ -290,14 +290,14 @@ function ChatPage() {
               const [before, after] = c.text.split(c.highlight);
               const tone =
                 c.trust === "high"
-                  ? "text-emerald-300"
+                  ? "text-emerald-600"
                   : c.trust === "medium"
-                    ? "text-amber-300"
+                    ? "text-amber-600"
                     : "text-muted-foreground";
               return (
                 <div
                   key={c.id}
-                  className="rounded-xl border border-border p-3 transition-colors duration-300 hover:bg-white/5"
+                  className="rounded-xl border border-border p-3 transition-colors duration-300 hover:bg-muted"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
