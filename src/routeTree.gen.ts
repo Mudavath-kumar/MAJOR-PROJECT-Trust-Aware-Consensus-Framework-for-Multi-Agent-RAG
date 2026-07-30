@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppKnowledgeRouteImport } from './routes/app.knowledge'
 import { Route as AppUploadRouteImport } from './routes/app.upload'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKnowledgeRoute = AppKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUploadRoute = AppUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -38,11 +44,13 @@ const AppUploadRoute = AppUploadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/knowledge': typeof AppKnowledgeRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/knowledge': typeof AppKnowledgeRoute
   '/app/upload': typeof AppUploadRoute
   '/app': typeof AppIndexRoute
 }
@@ -50,15 +58,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/knowledge': typeof AppKnowledgeRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/app/upload' | '/app/'
+  fullPaths: '/' | '/app' | '/app/knowledge' | '/app/upload' | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/upload' | '/app'
-  id: '__root__' | '/' | '/app' | '/app/upload' | '/app/'
+  to: '/' | '/app/knowledge' | '/app/upload' | '/app'
+  id: '__root__' | '/' | '/app' | '/app/knowledge' | '/app/upload' | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +98,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/knowledge': {
+      id: '/app/knowledge'
+      path: '/knowledge'
+      fullPath: '/app/knowledge'
+      preLoaderRoute: typeof AppKnowledgeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/upload': {
       id: '/app/upload'
       path: '/upload'
@@ -100,11 +116,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppKnowledgeRoute: typeof AppKnowledgeRoute
   AppUploadRoute: typeof AppUploadRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppKnowledgeRoute: AppKnowledgeRoute,
   AppUploadRoute: AppUploadRoute,
   AppIndexRoute: AppIndexRoute,
 }
