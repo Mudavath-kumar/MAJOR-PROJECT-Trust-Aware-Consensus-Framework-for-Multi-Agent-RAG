@@ -96,7 +96,18 @@ function Analytics() {
         <ChartCard title="Trust distribution" hint="Source trust level across answered queries">
           <PieChart>
             <Tooltip {...TOOLTIP} />
-            <Pie data={TRUST_DIST} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
+            <Pie
+              data={TRUST_DIST}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={50}
+              outerRadius={80}
+              paddingAngle={3}
+              label={({ name, value }) => `${name} ${value}`}
+              labelLine={false}
+            >
               {TRUST_DIST.map((_, i) => (
                 <Cell key={i} fill={PIE_COLORS[i]} stroke="transparent" />
               ))}
