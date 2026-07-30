@@ -38,7 +38,7 @@ function Row({
 }
 
 const selectCls =
-  "h-9 w-full rounded-lg border border-border bg-white/5 px-3 text-sm outline-none transition-colors duration-300 focus:border-white/25";
+  "h-9 w-full rounded-lg border border-border bg-muted px-3 text-sm outline-none transition-colors duration-300 focus:border-foreground/25";
 
 function SettingsPage() {
   const [theme, setTheme] = useState("dark");
@@ -153,7 +153,7 @@ function SettingsPage() {
         <button className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity duration-300 hover:opacity-85">
           Save configuration
         </button>
-        <button className="rounded-full border border-border px-5 py-2.5 text-sm transition-colors duration-300 hover:bg-white/5">
+        <button className="rounded-full border border-border px-5 py-2.5 text-sm transition-colors duration-300 hover:bg-muted">
           Reset to defaults
         </button>
       </div>

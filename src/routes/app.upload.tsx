@@ -97,7 +97,7 @@ function UploadPage() {
             addFiles(e.dataTransfer.files);
           }}
           onClick={() => inputRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center transition-colors duration-300 hover:bg-white/5"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center transition-colors duration-300 hover:bg-muted"
         >
           <UploadCloud size={28} className="text-accent" />
           <p className="mt-4 text-sm font-medium">Drop files here, or click to browse</p>
@@ -167,7 +167,7 @@ function UploadPage() {
               {DOCUMENTS.map((d) => (
                 <tr
                   key={d.id}
-                  className="border-b border-border transition-colors duration-300 last:border-0 hover:bg-white/5"
+                  className="border-b border-border transition-colors duration-300 last:border-0 hover:bg-muted"
                 >
                   <td className="flex items-center gap-2 px-5 py-3">
                     <FileText size={14} className="text-muted-foreground" />
@@ -181,8 +181,8 @@ function UploadPage() {
                     <span
                       className={`rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] ${
                         d.status === "ready"
-                          ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
-                          : "border-amber-400/25 bg-amber-400/10 text-amber-300"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-600"
                       }`}
                     >
                       {d.status}
