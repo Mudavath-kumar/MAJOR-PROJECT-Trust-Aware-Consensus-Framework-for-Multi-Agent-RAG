@@ -124,13 +124,14 @@ export function ScrollVideo() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#0a0a0a]">
-      <img
-        src="/hero-poster.jpg"
-        alt=""
+      {/* Poster layer: soft mist gradient until the first video frame decodes */}
+      <div
         aria-hidden
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
-          hasFrame ? "opacity-0" : "opacity-100"
-        }`}
+        className={`absolute inset-0 transition-opacity duration-500 ${hasFrame ? "opacity-0" : "opacity-100"}`}
+        style={{
+          background:
+            "radial-gradient(60% 60% at 55% 45%, rgba(120,140,170,0.35), rgba(10,10,10,1) 70%)",
+        }}
       />
       <video
         ref={videoRef}
