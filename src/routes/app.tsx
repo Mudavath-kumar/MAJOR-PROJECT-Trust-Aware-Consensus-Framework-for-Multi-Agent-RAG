@@ -32,14 +32,21 @@ export const Route = createFileRoute("/app")({
   component: AppShell,
 });
 
-const NAV = [
+type NavItem = {
+  to: "/app" | "/app/chat" | "/app/upload" | "/app/knowledge" | "/app/analytics" | "/app/settings";
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/chat", label: "AI Chat", icon: Bot },
   { to: "/app/upload", label: "Upload Documents", icon: Upload },
   { to: "/app/knowledge", label: "Knowledge Base", icon: Database },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/settings", label: "Settings", icon: Settings },
-] as const;
+];
 
 function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
