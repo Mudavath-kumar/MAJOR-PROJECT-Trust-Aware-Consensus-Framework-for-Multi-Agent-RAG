@@ -123,14 +123,14 @@ export function ScrollVideo() {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#0a0a0a]">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#141416]">
       {/* Poster layer: soft mist gradient until the first video frame decodes */}
       <div
         aria-hidden
         className={`absolute inset-0 transition-opacity duration-500 ${hasFrame ? "opacity-0" : "opacity-100"}`}
         style={{
           background:
-            "radial-gradient(60% 60% at 55% 45%, rgba(120,140,170,0.35), rgba(10,10,10,1) 70%)",
+            "radial-gradient(60% 60% at 55% 45%, rgba(150,165,190,0.4), rgba(20,20,24,1) 70%)",
         }}
       />
       <video
@@ -150,7 +150,16 @@ export function ScrollVideo() {
           cacheReady ? "opacity-100" : "opacity-0"
         }`}
       />
-      <div className="absolute inset-0 bg-[#0a0a0a]/35" />
+      {/* Brightening scrim: a soft light glow lifts the mood while the darker
+          lower band keeps the white text legible. */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(90% 55% at 50% -5%, rgba(255,255,255,0.16), transparent 55%), linear-gradient(180deg, rgba(250,250,252,0.05) 0%, rgba(20,20,24,0.22) 55%, rgba(10,10,12,0.4) 100%)",
+        }}
+      />
     </div>
   );
 }
