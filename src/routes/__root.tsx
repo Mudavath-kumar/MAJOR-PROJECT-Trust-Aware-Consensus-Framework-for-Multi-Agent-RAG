@@ -77,20 +77,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TrustRAG — Reliable AI through Trust, Evidence, Consensus" },
+      { title: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
       {
         name: "description",
         content:
-          "TrustRAG is an explainable multi-agent RAG platform: every answer ships with evidence, confidence, trust and consensus scores.",
+          "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
       { name: "author", content: "TrustRAG" },
-      { property: "og:title", content: "TrustRAG — Explainable Multi-Agent RAG" },
+      { property: "og:title", content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
       {
         property: "og:description",
-        content: "Answers you can audit: evidence, trust scores and agent decisions on every response.",
+        content: "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
+      { name: "twitter:description", content: "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/662a85f4-4e7e-40ff-9c9a-0139390ecb3b/id-preview-da1b8da6--119b8107-31f1-4ca1-bb21-8373500b2561.lovable.app-1785696465610.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/662a85f4-4e7e-40ff-9c9a-0139390ecb3b/id-preview-da1b8da6--119b8107-31f1-4ca1-bb21-8373500b2561.lovable.app-1785696465610.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

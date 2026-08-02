@@ -26,10 +26,10 @@ export const Route = createFileRoute("/")({
         content:
           "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
-      { property: "og:title", content: "TrustRAG — Reliable AI you can audit" },
+      { property: "og:title", content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
       {
         property: "og:description",
-        content: "Multi-agent retrieval, verified evidence and transparent trust scoring on every answer.",
+        content: "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
     ],
   }),
