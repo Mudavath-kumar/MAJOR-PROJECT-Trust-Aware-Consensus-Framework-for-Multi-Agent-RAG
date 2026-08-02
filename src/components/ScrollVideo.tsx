@@ -157,7 +157,7 @@ export function ScrollVideo() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(90% 55% at 50% -5%, rgba(255,255,255,0.16), transparent 55%), linear-gradient(180deg, rgba(250,250,252,0.05) 0%, rgba(20,20,24,0.22) 55%, rgba(10,10,12,0.4) 100%)",
+            "radial-gradient(95% 60% at 50% -8%, rgba(255,255,255,0.22), transparent 50%), linear-gradient(180deg, rgba(250,250,252,0.08) 0%, rgba(20,20,24,0.18) 50%, rgba(12,12,14,0.34) 100%)",
         }}
       />
     </div>
