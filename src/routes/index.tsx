@@ -1,5 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Hexagon } from "lucide-react";
+import {
+  ChevronRight,
+  Hexagon,
+  Search,
+  FileSearch,
+  ShieldCheck,
+  Users,
+  Upload,
+  MessageSquare,
+  BarChart3,
+  Scale,
+  Stethoscope,
+  Landmark,
+  GraduationCap,
+} from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { ScrollVideo } from "@/components/ScrollVideo";
 
@@ -39,11 +53,118 @@ const CAPABILITIES = [
   },
 ];
 
+const PIPELINE = [
+  {
+    icon: Upload,
+    title: "Ingest",
+    body: "Drop in PDFs, DOCX, TXT, MD, CSV or JSON. Text is extracted in your browser, split on sentence boundaries into ~700 character chunks and indexed locally.",
+  },
+  {
+    icon: Search,
+    title: "Retrieve",
+    body: "Your question is tokenised and scored against every chunk with TF-IDF cosine similarity. The strongest passages become the working context.",
+  },
+  {
+    icon: FileSearch,
+    title: "Verify",
+    body: "The fact agent re-reads each retrieved passage against the draft answer, flagging unsupported statements before they are shown.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Score",
+    body: "Confidence, trust and consensus are computed per answer, with the evidence panel listing rank, similarity and source for every citation.",
+  },
+];
+
+const AGENTS = [
+  {
+    icon: Search,
+    name: "Retrieval agent",
+    role: "Finds the passages that actually matter, filtered by the document scope you select.",
+  },
+  {
+    icon: FileSearch,
+    name: "Research agent",
+    role: "Drafts an extractive answer and maps every sentence back to a numbered citation.",
+  },
+  {
+    icon: ShieldCheck,
+    name: "Fact agent",
+    role: "Checks each claim against its evidence and downgrades anything thinly supported.",
+  },
+  {
+    icon: Users,
+    name: "Consensus agent",
+    role: "Compares independent reads of the corpus and reports the level of agreement.",
+  },
+];
+
+const USE_CASES = [
+  { icon: Scale, title: "Legal review", body: "Search contracts and case files with a citation for every clause you rely on." },
+  { icon: Stethoscope, title: "Clinical research", body: "Interrogate protocols and papers without losing the provenance of a single figure." },
+  { icon: Landmark, title: "Finance & policy", body: "Turn filings, memos and regulation into answers your committee can defend." },
+  { icon: GraduationCap, title: "Research teams", body: "Build a shared corpus and let the whole team ask it questions in plain language." },
+];
+
+const METRICS = [
+  { v: "128", k: "Documents indexed" },
+  { v: "1,394", k: "Questions answered" },
+  { v: "91.2%", k: "Average trust score" },
+  { v: "<2%", k: "Unsupported claims" },
+];
+
+const FAQ = [
+  {
+    q: "Where do my documents go?",
+    a: "Nowhere. Parsing, chunking and retrieval all run in your browser and the index is kept in local storage on your machine.",
+  },
+  {
+    q: "What does the trust score actually mean?",
+    a: "It weights retrieval similarity against source authority and how many independent passages back the same claim.",
+  },
+  {
+    q: "Which file types are supported?",
+    a: "TXT, MD, CSV and JSON are parsed exactly; PDF and DOCX use a best-effort text decoder so you can still query them.",
+  },
+  {
+    q: "Can I limit an answer to certain sources?",
+    a: "Yes. The search scope control in the chat lets you restrict retrieval to any subset of your indexed documents.",
+  },
+];
+
 function Badge({ children }: { children: string }) {
   return (
     <span className="inline-block border-l-2 border-white bg-white/15 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-white backdrop-blur-md">
       {children}
     </span>
+  );
+}
+
+function SectionHead({
+  badge,
+  title,
+  lead,
+}: {
+  badge: string;
+  title: string;
+  lead: string;
+}) {
+  return (
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="max-w-xl">
+        <Reveal delay={80}>
+          <Badge>{badge}</Badge>
+        </Reveal>
+        <Reveal delay={180}>
+          <h2 className="mt-5 text-4xl font-normal leading-[1.08] tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
+            {title}
+          </h2>
+        </Reveal>
+      </div>
+      <Reveal delay={280} className="max-w-sm sm:text-right">
+        <p className="text-sm leading-relaxed text-white/80 drop-shadow-md sm:text-base">{lead}</p>
+      </Reveal>
+    </div>
   );
 }
 
@@ -58,14 +179,19 @@ function Landing() {
             <Reveal delay={0}>
               <Link to="/" className="flex items-center gap-2 text-white">
                 <Hexagon size={24} strokeWidth={1.5} />
-                <span className="text-lg font-medium tracking-tight sm:text-xl">trustrag</span>
+                <span className="text-lg font-medium tracking-tight sm:text-xl">TrustRAG</span>
               </Link>
             </Reveal>
             <nav className="hidden items-center gap-8 md:flex lg:gap-10">
-              {["Platform", "Evidence", "Research", "Contact"].map((label, i) => (
+              {[
+                { label: "Platform", href: "#capability" },
+                { label: "How it works", href: "#pipeline" },
+                { label: "Agents", href: "#agents" },
+                { label: "FAQ", href: "#faq" },
+              ].map(({ label, href }, i) => (
                 <Reveal key={label} delay={100 + i * 100}>
                   <a
-                    href="#capability"
+                    href={href}
                     className="text-sm text-white/85 transition-colors duration-300 hover:text-white"
                   >
                     {label}
