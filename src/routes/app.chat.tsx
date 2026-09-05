@@ -421,7 +421,7 @@ function ChatPage() {
       <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
         {/* Conversation */}
         <div className="flex min-h-[70vh] flex-col">
-          <Conversation className="min-h-0 flex-1">
+          <Conversation className="h-[clamp(440px,58vh,680px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
             <ConversationContent className="gap-5 px-0 py-0 pr-1">
             {turns.map((t) => (
               <div key={t.id} className="space-y-4">
