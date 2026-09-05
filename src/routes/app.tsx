@@ -11,7 +11,6 @@ import {
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -50,13 +49,11 @@ function AppShell() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl">
-        <div className="border-b border-border">
-        <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-4 px-5 sm:px-8">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex shrink-0 items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"><Hexagon size={17} strokeWidth={1.8} /></span>
-            <span className="font-display text-lg font-semibold">TrustRAG</span>
-            <span className="hidden border-l border-border pl-3 text-xs text-muted-foreground sm:block">Workspace</span>
+            <Hexagon size={22} strokeWidth={1.5} className="text-accent" />
+            <span className="text-lg font-medium tracking-tight">trustrag</span>
           </Link>
 
           <div className="relative ml-auto hidden w-full max-w-xs lg:block">
@@ -66,29 +63,26 @@ function AppShell() {
             />
             <input
               placeholder="Search documents, chunks, answers…"
-              className="h-9 w-full rounded-md border border-border bg-secondary pl-9 text-sm outline-none transition-colors duration-200 placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20"
+              className="h-9 w-full rounded-lg border border-border bg-muted pl-9 text-sm outline-none transition-colors duration-300 placeholder:text-muted-foreground focus:border-foreground/30"
             />
           </div>
 
-          <div className="ml-auto flex items-center gap-2 lg:ml-0">
-            <Button
-              variant="ghost"
-              size="icon"
+          <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
+            <button
               aria-label="Notifications"
-              className="relative text-muted-foreground"
+              className="relative rounded-md p-2 text-muted-foreground transition-colors duration-300 hover:bg-muted hover:text-foreground"
             >
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
-            </Button>
-            <div className="ml-1 flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+            </button>
+            <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-xs font-medium">
               MI
             </div>
           </div>
         </div>
-        </div>
 
-        <nav className="border-b border-border bg-secondary/45" aria-label="Workspace navigation">
-          <div className="mx-auto flex h-12 w-full max-w-[1320px] gap-1 overflow-x-auto px-5 sm:px-8">
+        <nav className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
+          <div className="-mb-px flex gap-1 overflow-x-auto">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = exact ? path === to : path.startsWith(to);
               return (
@@ -96,9 +90,9 @@ function AppShell() {
                   key={to}
                   to={to}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors duration-200",
+                    "flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm transition-colors duration-300",
                     active
-                      ? "border-primary text-primary"
+                      ? "border-foreground text-foreground"
                       : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -111,7 +105,7 @@ function AppShell() {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-[1320px] min-w-0 flex-1 px-5 py-10 sm:px-8">
+      <main className="mx-auto w-full max-w-[1400px] min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <Outlet />
       </main>
     </div>
