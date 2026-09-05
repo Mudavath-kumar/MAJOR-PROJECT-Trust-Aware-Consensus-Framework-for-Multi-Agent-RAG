@@ -93,8 +93,8 @@ function AppShell() {
           </div>
         </div>
 
-        <nav className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
-          <div className="-mb-px flex gap-1 overflow-x-auto">
+        <nav className="mx-auto w-full max-w-[1400px] px-4 pb-3 sm:px-6 lg:px-8">
+          <div className="flex gap-1 overflow-x-auto rounded-full border border-border bg-secondary/40 p-1 backdrop-blur-md">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = exact ? path === to : path.startsWith(to);
               return (
@@ -102,13 +102,13 @@ function AppShell() {
                   key={to}
                   to={to}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm transition-colors duration-300",
+                    "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors duration-300",
                     active
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
-                  <Icon size={16} className="shrink-0" />
+                  <Icon size={15} className="shrink-0" />
                   <span className="truncate">{label}</span>
                 </Link>
               );
