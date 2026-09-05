@@ -1,600 +1,209 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ChevronRight,
-  Hexagon,
-  Search,
-  FileSearch,
-  ShieldCheck,
-  Users,
-  Upload,
-  MessageSquare,
+  ArrowRight,
   BarChart3,
-  Scale,
-  Stethoscope,
-  Landmark,
+  Check,
+  FileSearch,
+  FileText,
   GraduationCap,
+  Hexagon,
+  Landmark,
+  MessageSquare,
+  Scale,
+  Search,
+  ShieldCheck,
+  Stethoscope,
+  Upload,
+  Users,
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
-import { ScrollVideo } from "@/components/ScrollVideo";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
-      {
-        name: "description",
-        content:
-          "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
-      },
-      { property: "og:title", content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
-      {
-        property: "og:description",
-        content: "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
-      },
+      { title: "TrustRAG — Evidence-first AI for your documents" },
+      { name: "description", content: "Ask your documents questions and get evidence-backed answers with confidence, trust and consensus scores." },
+      { property: "og:title", content: "TrustRAG — Evidence-first AI" },
+      { property: "og:description", content: "Explainable multi-agent answers grounded in your documents." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
 });
 
-const SERVICES = ["/ MULTI-AGENT RAG", "/ EVIDENCE VERIFICATION", "/ TRUST SCORING"];
-
-const CAPABILITIES = [
-  {
-    title: "Grounded retrieval",
-    body: "Every claim is traced back to the exact chunk it came from, ranked by similarity and trust level.",
-  },
-  {
-    title: "Layered verification",
-    body: "A research agent drafts, a fact agent checks, and a trust agent scores before anything reaches you.",
-  },
-  {
-    title: "Consensus engine",
-    body: "Independent agents must agree. Disagreement is surfaced, never smoothed over.",
-  },
-];
-
 const PIPELINE = [
-  {
-    icon: Upload,
-    title: "Ingest",
-    body: "Drop in PDFs, DOCX, TXT, MD, CSV or JSON. Text is extracted in your browser, split on sentence boundaries into ~700 character chunks and indexed locally.",
-  },
-  {
-    icon: Search,
-    title: "Retrieve",
-    body: "Your question is tokenised and scored against every chunk with TF-IDF cosine similarity. The strongest passages become the working context.",
-  },
-  {
-    icon: FileSearch,
-    title: "Verify",
-    body: "The fact agent re-reads each retrieved passage against the draft answer, flagging unsupported statements before they are shown.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Score",
-    body: "Confidence, trust and consensus are computed per answer, with the evidence panel listing rank, similarity and source for every citation.",
-  },
+  { icon: Upload, step: "01", title: "Ingest", body: "Add PDF, DOCX, TXT, MD, CSV or JSON files. TrustRAG extracts and prepares the content for retrieval." },
+  { icon: Search, step: "02", title: "Retrieve", body: "Each question is matched against your indexed sources to find the passages that matter most." },
+  { icon: FileSearch, step: "03", title: "Verify", body: "Independent agents check the draft against the retrieved passages and flag weak support." },
+  { icon: ShieldCheck, step: "04", title: "Score", body: "Every answer ships with confidence, trust and consensus scores, plus its exact citations." },
 ];
 
 const AGENTS = [
-  {
-    icon: Search,
-    name: "Retrieval agent",
-    role: "Finds the passages that actually matter, filtered by the document scope you select.",
-  },
-  {
-    icon: FileSearch,
-    name: "Research agent",
-    role: "Drafts an extractive answer and maps every sentence back to a numbered citation.",
-  },
-  {
-    icon: ShieldCheck,
-    name: "Fact agent",
-    role: "Checks each claim against its evidence and downgrades anything thinly supported.",
-  },
-  {
-    icon: Users,
-    name: "Consensus agent",
-    role: "Compares independent reads of the corpus and reports the level of agreement.",
-  },
-];
+  [Search, "Retrieval agent", "Finds and ranks the most relevant passages in the sources you selected."],
+  [FileSearch, "Research agent", "Builds a concise answer and maps each material claim to its citation."],
+  [ShieldCheck, "Fact agent", "Challenges the draft and reduces confidence where the evidence is weak."],
+  [Users, "Consensus agent", "Compares independent reads and makes disagreement visible instead of hiding it."],
+] as const;
 
 const USE_CASES = [
-  { icon: Scale, title: "Legal review", body: "Search contracts and case files with a citation for every clause you rely on." },
-  { icon: Stethoscope, title: "Clinical research", body: "Interrogate protocols and papers without losing the provenance of a single figure." },
-  { icon: Landmark, title: "Finance & policy", body: "Turn filings, memos and regulation into answers your committee can defend." },
-  { icon: GraduationCap, title: "Research teams", body: "Build a shared corpus and let the whole team ask it questions in plain language." },
-];
+  [Scale, "Legal", "Review contracts and case files with a source attached to every clause."],
+  [Stethoscope, "Clinical", "Interrogate protocols and research without losing the provenance of a figure."],
+  [Landmark, "Finance", "Turn filings, policy and internal memos into answers a committee can defend."],
+  [GraduationCap, "Research", "Give a team one shared, searchable corpus with transparent evidence."],
+] as const;
 
-const METRICS = [
-  { v: "128", k: "Documents indexed" },
-  { v: "1,394", k: "Questions answered" },
-  { v: "91.2%", k: "Average trust score" },
-  { v: "<2%", k: "Unsupported claims" },
-];
-
-const FAQ = [
-  {
-    q: "Where do my documents go?",
-    a: "Nowhere. Parsing, chunking and retrieval all run in your browser and the index is kept in local storage on your machine.",
-  },
-  {
-    q: "What does the trust score actually mean?",
-    a: "It weights retrieval similarity against source authority and how many independent passages back the same claim.",
-  },
-  {
-    q: "Which file types are supported?",
-    a: "TXT, MD, CSV and JSON are parsed exactly; PDF and DOCX use a best-effort text decoder so you can still query them.",
-  },
-  {
-    q: "Can I limit an answer to certain sources?",
-    a: "Yes. The search scope control in the chat lets you restrict retrieval to any subset of your indexed documents.",
-  },
-];
-
-function Badge({ children }: { children: string }) {
+function Brand() {
   return (
-    <span className="inline-block border-l-2 border-white bg-white/15 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-white backdrop-blur-md">
-      {children}
-    </span>
+    <Link to="/" className="flex items-center gap-2.5" aria-label="TrustRAG home">
+      <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"><Hexagon size={17} strokeWidth={1.8} /></span>
+      <span className="font-display text-lg font-semibold">TrustRAG</span>
+    </Link>
   );
 }
 
-function SectionHead({
-  badge,
-  title,
-  lead,
-}: {
-  badge: string;
-  title: string;
-  lead: string;
-}) {
+function SectionTitle({ eyebrow, title, copy }: { eyebrow: string; title: string; copy: string }) {
   return (
-    <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-      <div className="max-w-xl">
-        <Reveal delay={80}>
-          <Badge>{badge}</Badge>
-        </Reveal>
-        <Reveal delay={180}>
-          <h2 className="mt-5 text-4xl font-normal leading-[1.08] tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
-            {title}
-          </h2>
-        </Reveal>
-      </div>
-      <Reveal delay={280} className="max-w-sm sm:text-right">
-        <p className="text-sm leading-relaxed text-white/80 drop-shadow-md sm:text-base">{lead}</p>
+    <div className="grid gap-5 lg:grid-cols-[1fr_420px] lg:items-end lg:gap-16">
+      <Reveal>
+        <p className="text-xs font-semibold uppercase text-primary">{eyebrow}</p>
+        <h2 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-tight sm:text-5xl">{title}</h2>
       </Reveal>
+      <Reveal delay={100}><p className="text-base leading-7 text-muted-foreground">{copy}</p></Reveal>
     </div>
   );
 }
 
 function Landing() {
   return (
-    <div className="relative">
-      <ScrollVideo />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-[1320px] items-center px-5 sm:px-8">
+          <Brand />
+          <nav className="mx-auto hidden items-center gap-7 md:flex" aria-label="Main navigation">
+            <a href="#platform" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Platform</a>
+            <a href="#workflow" className="text-sm text-muted-foreground transition-colors hover:text-foreground">How it works</a>
+            <a href="#agents" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Agents</a>
+            <a href="#use-cases" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Use cases</a>
+          </nav>
+          <Button asChild size="sm" className="ml-auto">
+            <Link to="/app">Open workspace <ArrowRight /></Link>
+          </Button>
+        </div>
+      </header>
 
-      <div className="relative z-10">
-        <header className="fixed top-0 left-0 z-50 w-full border-b border-white/15">
-          <div className="flex items-center justify-between px-5 py-4 sm:px-8 md:px-12">
-            <Reveal delay={0}>
-              <Link to="/" className="flex items-center gap-2 text-white">
-                <Hexagon size={24} strokeWidth={1.5} />
-                <span className="text-lg font-medium tracking-tight sm:text-xl">TrustRAG</span>
-              </Link>
-            </Reveal>
-            <nav className="hidden items-center gap-8 md:flex lg:gap-10">
-              {[
-                { label: "Platform", href: "#capability" },
-                { label: "How it works", href: "#pipeline" },
-                { label: "Agents", href: "#agents" },
-                { label: "FAQ", href: "#faq" },
-              ].map(({ label, href }, i) => (
-                <Reveal key={label} delay={100 + i * 100}>
-                  <a
-                    href={href}
-                    className="text-sm text-white/85 transition-colors duration-300 hover:text-white"
-                  >
-                    {label}
-                    {label === "Platform" && (
-                      <sup className="ml-0.5 font-mono text-[10px] text-white/60">6</sup>
-                    )}
-                  </a>
-                </Reveal>
-              ))}
-            </nav>
-            <Reveal delay={500}>
-              <Link
-                to="/app"
-                className="rounded-md border border-white/20 bg-white/15 px-4 py-2 text-xs text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/25 sm:px-5 sm:text-sm"
-              >
-                Open the platform
-              </Link>
-            </Reveal>
-          </div>
-        </header>
-
-        <main>
-          {/* Hero */}
-          <section className="flex min-h-screen flex-col justify-between px-5 pt-24 pb-12 sm:px-8 sm:pt-28 md:px-12 md:pb-16 supports-[height:100svh]:min-h-[100svh]">
-            <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
-              <ul className="flex flex-col gap-2">
-                {SERVICES.map((s, i) => (
-                  <Reveal as="li" key={s} delay={150 + i * 120}>
-                    <span className="font-mono text-xs uppercase tracking-[0.15em] text-white/90 drop-shadow-md">
-                      {s}
-                    </span>
-                  </Reveal>
-                ))}
-              </ul>
-              <Reveal delay={300} className="max-w-xs sm:text-right">
-                <p className="text-lg leading-relaxed text-white drop-shadow-md sm:text-xl">
-                  We build answers you can audit — grounded in your documents, scored for trust, and
-                  explained step by step.
-                </p>
-              </Reveal>
-            </div>
-
-            <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-              <div>
-                <Reveal delay={150} className="mb-5">
-                  <Badge>Reliable AI through trust</Badge>
-                </Reveal>
-                <Reveal delay={280}>
-                  <h1 className="text-5xl font-normal leading-[1.05] tracking-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
-                    Evidence. Trust.
-                    <br />
-                    Consensus.
-                  </h1>
-                </Reveal>
-              </div>
-
-              <Reveal delay={420}>
-                <div className="w-full max-w-xs rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                    Live pipeline
-                  </span>
-                  <div className="mt-3 grid grid-cols-3 gap-3">
-                    {[
-                      { k: "Confidence", v: "92%" },
-                      { k: "Trust", v: "88%" },
-                      { k: "Consensus", v: "76%" },
-                    ].map((m) => (
-                      <div key={m.k}>
-                        <div className="text-lg font-medium tabular-nums text-white">{m.v}</div>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/55">
-                          {m.k}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Link
-                    to="/app/upload"
-                    className="mt-4 inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85"
-                  >
-                    Upload a document <ChevronRight size={14} />
-                  </Link>
-                </div>
-              </Reveal>
-            </div>
-          </section>
-
-          <div className="h-[80vh]" aria-hidden />
-
-          {/* Capability */}
-          <section
-            id="capability"
-            className="flex min-h-screen flex-col justify-between px-5 pt-24 pb-12 sm:px-8 sm:pt-28 md:px-12 md:pb-16 supports-[height:100svh]:min-h-[100svh]"
-          >
-            <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
-              <Reveal delay={120}>
-                <Badge>Insight on demand</Badge>
-              </Reveal>
-              <Reveal delay={220} className="max-w-sm sm:text-right">
-                <p className="text-lg leading-relaxed text-white drop-shadow-md sm:text-xl">
-                  TrustRAG doesn't just respond — it retrieves, verifies, scores, and shows its work.
-                </p>
-              </Reveal>
-            </div>
-
-            <div className="flex flex-1 flex-col justify-end gap-12 md:flex-row md:items-end md:justify-between md:gap-16">
-              <div className="max-w-xl">
-                <Reveal delay={180}>
-                  <h2 className="text-5xl font-normal leading-[1.05] tracking-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
-                    Learn to see
-                    <br />
-                    brilliantly.
-                  </h2>
-                </Reveal>
-                <Reveal delay={320}>
-                  <p className="mt-6 max-w-md text-sm text-white/80 drop-shadow-md sm:text-base">
-                    From the first upload to the final answer, TrustRAG turns raw documents into
-                    decisions your team can defend — quietly, precisely, at speed.
-                  </p>
-                </Reveal>
-                <Reveal delay={420}>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Link
-                      to="/app/chat"
-                      className="inline-flex items-center gap-1 rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85 sm:text-sm"
-                    >
-                      Run the demo <ChevronRight size={14} />
-                    </Link>
-                    <Link
-                      to="/app"
-                      className="rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/20 sm:text-sm"
-                    >
-                      Free consultation
-                    </Link>
-                  </div>
-                </Reveal>
-              </div>
-
-              <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white/10 px-5 backdrop-blur-md sm:px-6">
-                {CAPABILITIES.map((c, i) => (
-                  <Reveal
-                    key={c.title}
-                    delay={300 + i * 110}
-                    className={i < CAPABILITIES.length - 1 ? "border-b border-white/15" : ""}
-                  >
-                    <div className="group flex gap-5 py-5">
-                      <span className="font-mono text-[11px] tracking-[0.15em] text-white/55">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div>
-                        <h3 className="flex items-center gap-1 text-base font-medium text-white sm:text-lg">
-                          {c.title}
-                          <ChevronRight
-                            size={16}
-                            className="text-white/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-white"
-                          />
-                        </h3>
-                        <p className="mt-1.5 text-sm leading-relaxed text-white/70">{c.body}</p>
-                      </div>
-                    </div>
-                  </Reveal>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* How it works */}
-          <section id="pipeline" className="px-5 py-24 sm:px-8 md:px-12 md:py-32">
-            <SectionHead
-              badge="How it works"
-              title="Four steps from file to defensible answer."
-              lead="Nothing leaves your machine. The whole pipeline — parsing, indexing, retrieval and scoring — runs in the browser."
-            />
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {PIPELINE.map((s, i) => (
-                <Reveal key={s.title} delay={120 + i * 100}>
-                  <div className="h-full rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md transition-colors duration-300 hover:bg-white/15">
-                    <div className="flex items-center justify-between">
-                      <s.icon size={20} className="text-white" strokeWidth={1.5} />
-                      <span className="font-mono text-[11px] tracking-[0.15em] text-white/50">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    </div>
-                    <h3 className="mt-5 text-lg font-medium text-white">{s.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/70">{s.body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* Agents */}
-          <section id="agents" className="px-5 py-24 sm:px-8 md:px-12 md:py-32">
-            <SectionHead
-              badge="Multi-agent architecture"
-              title="Four agents, one auditable answer."
-              lead="Each agent has a single job and leaves a trace, so you can see exactly where an answer came from and where it was challenged."
-            />
-            <div className="mt-12 grid gap-4 md:grid-cols-2">
-              {AGENTS.map((a, i) => (
-                <Reveal key={a.name} delay={120 + i * 90}>
-                  <div className="flex h-full gap-5 rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10">
-                      <a.icon size={18} className="text-white" strokeWidth={1.5} />
-                    </span>
-                    <div>
-                      <h3 className="text-base font-medium text-white sm:text-lg">{a.name}</h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-white/70">{a.role}</p>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* Evidence explorer */}
-          <section id="evidence" className="px-5 py-24 sm:px-8 md:px-12 md:py-32">
-            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-              <div>
-                <Reveal delay={80}>
-                  <Badge>Evidence explorer</Badge>
-                </Reveal>
-                <Reveal delay={180}>
-                  <h2 className="mt-5 text-4xl font-normal leading-[1.08] tracking-tight text-white drop-shadow-lg sm:text-5xl">
-                    See the passage,
-                    <br />
-                    not just the claim.
-                  </h2>
-                </Reveal>
-                <Reveal delay={280}>
-                  <p className="mt-6 max-w-md text-sm leading-relaxed text-white/80 sm:text-base">
-                    Every citation opens the exact chunk it came from — with its document, rank,
-                    similarity score and trust level. Narrow retrieval to a subset of sources, then
-                    export the whole transcript with its evidence attached.
-                  </p>
-                </Reveal>
-                <Reveal delay={380}>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Link
-                      to="/app/knowledge"
-                      className="inline-flex items-center gap-1 rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85 sm:text-sm"
-                    >
-                      Browse the knowledge base <ChevronRight size={14} />
-                    </Link>
-                    <Link
-                      to="/app/analytics"
-                      className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/20 sm:text-sm"
-                    >
-                      <BarChart3 size={14} /> See analytics
-                    </Link>
-                  </div>
-                </Reveal>
-              </div>
-
-              <Reveal delay={200}>
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md sm:p-6">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                    Retrieved evidence
-                  </span>
-                  <div className="mt-4 space-y-3">
-                    {[
-                      { doc: "Q3-risk-register.pdf", sim: "0.91", trust: "high" },
-                      { doc: "vendor-msa-2026.docx", sim: "0.74", trust: "high" },
-                      { doc: "board-notes-may.md", sim: "0.41", trust: "medium" },
-                    ].map((e, i) => (
-                      <div key={e.doc} className="rounded-xl border border-white/15 bg-white/5 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="truncate text-sm text-white">
-                            <span className="font-mono text-[11px] text-white/50">[{i + 1}]</span>{" "}
-                            {e.doc}
-                          </span>
-                          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                            {e.sim} · {e.trust}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/15">
-                          <div
-                            className="h-full rounded-full bg-white"
-                            style={{ width: `${Number(e.sim) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-          </section>
-
-          {/* Metrics */}
-          <section className="px-5 py-20 sm:px-8 md:px-12">
-            <div className="grid gap-6 rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md sm:grid-cols-2 lg:grid-cols-4">
-              {METRICS.map((m, i) => (
-                <Reveal key={m.k} delay={100 + i * 90}>
-                  <div>
-                    <div className="text-4xl font-normal tabular-nums text-white">{m.v}</div>
-                    <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                      {m.k}
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* Use cases */}
-          <section id="use-cases" className="px-5 py-24 sm:px-8 md:px-12 md:py-32">
-            <SectionHead
-              badge="Where it fits"
-              title="Built for work that has to hold up."
-              lead="Anywhere an answer needs a source attached to it, TrustRAG gives you the paper trail by default."
-            />
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {USE_CASES.map((u, i) => (
-                <Reveal key={u.title} delay={120 + i * 90}>
-                  <div className="h-full rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md transition-colors duration-300 hover:bg-white/15">
-                    <u.icon size={20} className="text-white" strokeWidth={1.5} />
-                    <h3 className="mt-5 text-base font-medium text-white sm:text-lg">{u.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/70">{u.body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* FAQ */}
-          <section id="faq" className="px-5 py-24 sm:px-8 md:px-12 md:py-32">
-            <SectionHead
-              badge="Questions"
-              title="The details, plainly."
-              lead="No backend, no data leaving the browser, and a score you can interrogate."
-            />
-            <div className="mt-12 grid gap-4 md:grid-cols-2">
-              {FAQ.map((f, i) => (
-                <Reveal key={f.q} delay={120 + i * 80}>
-                  <div className="h-full rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md">
-                    <h3 className="text-base font-medium text-white">{f.q}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/70">{f.a}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* CTA */}
-          <section className="px-5 pb-24 sm:px-8 md:px-12">
+      <main>
+        <section className="border-b border-border bg-background">
+          <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-[1320px] items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1.08fr_.92fr] lg:py-20">
             <Reveal>
-              <div className="rounded-3xl border border-white/15 bg-white/10 p-10 text-center backdrop-blur-md sm:p-16">
-                <h2 className="text-4xl font-normal leading-[1.08] tracking-tight text-white drop-shadow-lg sm:text-5xl">
-                  Upload a document.
-                  <br />
-                  Ask it anything.
-                </h2>
-                <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
-                  Your corpus is indexed in seconds and every answer arrives with its evidence.
-                </p>
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Link
-                    to="/app/upload"
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition-colors duration-300 hover:bg-white/85"
-                  >
-                    <Upload size={15} /> Upload documents
-                  </Link>
-                  <Link
-                    to="/app/chat"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/20"
-                  >
-                    <MessageSquare size={15} /> Open the chat
-                  </Link>
+              <div className="inline-flex items-center gap-2 border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+                <span className="size-1.5 rounded-full bg-success" /> Evidence-first multi-agent RAG
+              </div>
+              <h1 className="mt-7 max-w-3xl font-display text-5xl font-semibold leading-[1.04] sm:text-6xl lg:text-7xl">
+                Answers your team can verify.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
+                Ask questions across your documents. TrustRAG retrieves the evidence, checks every claim and shows exactly why the answer deserves your trust.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button asChild size="lg"><Link to="/app/upload"><Upload /> Add your documents</Link></Button>
+                <Button asChild size="lg" variant="outline"><Link to="/app/chat"><MessageSquare /> Try the workspace</Link></Button>
+              </div>
+              <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
+                {['Private in your browser', 'Citations by default', 'No black-box scores'].map((item) => (
+                  <span key={item} className="flex items-center gap-2"><Check size={15} className="text-success" />{item}</span>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal delay={120} className="lg:pl-6">
+              <div className="border border-border bg-card shadow-xl shadow-shadow/50">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                  <div><p className="text-sm font-semibold">Verified answer</p><p className="mt-0.5 text-xs text-muted-foreground">3 sources · 4 agents</p></div>
+                  <span className="flex items-center gap-2 text-xs font-medium text-success"><span className="size-1.5 rounded-full bg-success" /> Complete</span>
+                </div>
+                <div className="p-5 sm:p-7">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">Question</p>
+                  <p className="mt-2 font-display text-xl font-semibold">What are the main renewal risks in our vendor agreements?</p>
+                  <div className="mt-6 border-l-2 border-primary pl-4 text-sm leading-7 text-foreground">
+                    Three contracts contain automatic renewal clauses with notice windows under 30 days. Two also permit annual price increases without a stated cap <span className="font-semibold text-primary">[1][2]</span>.
+                  </div>
+                  <div className="mt-7 grid grid-cols-3 border-y border-border">
+                    {[["Confidence","92%"],["Trust","88%"],["Consensus","84%"]].map(([k,v], i) => (
+                      <div key={k} className={`py-4 ${i ? 'border-l border-border pl-4' : ''}`}><div className="text-2xl font-semibold tabular-nums">{v}</div><div className="mt-1 text-xs text-muted-foreground">{k}</div></div>
+                    ))}
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    {[['01','vendor-msa-2026.docx','91%'],['02','procurement-policy.pdf','78%']].map(([n,doc,score]) => (
+                      <div key={doc} className="flex items-center gap-3 border-b border-border pb-3 text-sm last:border-0 last:pb-0"><span className="font-mono text-xs text-muted-foreground">{n}</span><FileText size={15} className="text-primary"/><span className="min-w-0 flex-1 truncate">{doc}</span><span className="text-xs font-medium text-muted-foreground">{score} match</span></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </Reveal>
-          </section>
-        </main>
-
-        <footer className="border-t border-white/15 px-5 py-10 sm:px-8 md:px-12">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <Link to="/" className="flex items-center gap-2 text-white">
-              <Hexagon size={20} strokeWidth={1.5} />
-              <span className="text-base font-medium tracking-tight">TrustRAG</span>
-            </Link>
-            <nav className="flex flex-wrap gap-6">
-              {[
-                { label: "Dashboard", to: "/app" as const },
-                { label: "Upload", to: "/app/upload" as const },
-                { label: "Knowledge", to: "/app/knowledge" as const },
-                { label: "Chat", to: "/app/chat" as const },
-                { label: "Analytics", to: "/app/analytics" as const },
-              ].map((l) => (
-                <Link
-                  key={l.label}
-                  to={l.to}
-                  className="text-sm text-white/70 transition-colors duration-300 hover:text-white"
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </nav>
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/50">
-              © 2026 TrustRAG
-            </p>
           </div>
-        </footer>
-      </div>
+        </section>
+
+        <section className="border-b border-border bg-secondary/55">
+          <div className="mx-auto grid max-w-[1320px] grid-cols-2 px-5 sm:px-8 lg:grid-cols-4">
+            {[['128','Documents indexed'],['1,394','Questions answered'],['91.2%','Average trust'],['<2%','Unsupported claims']].map(([v,k], i) => (
+              <div key={k} className={`py-8 lg:py-10 ${i % 2 ? 'border-l border-border pl-6' : ''} ${i > 1 ? 'border-t border-border lg:border-t-0 lg:border-l lg:pl-8' : ''}`}><div className="font-display text-3xl font-semibold tabular-nums">{v}</div><div className="mt-1 text-sm text-muted-foreground">{k}</div></div>
+            ))}
+          </div>
+        </section>
+
+        <section id="platform" className="border-b border-border bg-background py-24 sm:py-32">
+          <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+            <SectionTitle eyebrow="The platform" title="One clear chain from question to evidence." copy="Most AI tools give you a polished paragraph. TrustRAG gives you the answer, the underlying passages, and a record of how multiple agents reached agreement." />
+            <div className="mt-16 grid border-y border-border md:grid-cols-3">
+              {[['Grounded retrieval','Every claim links to the exact document passage that supports it.'],['Layered verification','Research and fact agents challenge one another before the answer reaches you.'],['Visible consensus','Agent disagreement lowers the score and stays visible for review.']].map(([title, body], i) => (
+                <Reveal key={title} delay={i*80} className={`py-8 md:px-8 ${i ? 'border-t border-border md:border-l md:border-t-0' : ''}`}><span className="font-mono text-xs text-primary">0{i+1}</span><h3 className="mt-8 font-display text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p></Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow" className="border-b border-border bg-secondary/55 py-24 sm:py-32">
+          <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+            <SectionTitle eyebrow="How it works" title="From file to defensible answer in four steps." copy="The entire workflow is visible. You can inspect the source scope, follow each agent and open every cited passage." />
+            <div className="mt-16 divide-y divide-border border-y border-border">
+              {PIPELINE.map(({icon: Icon,step,title,body}, i) => (
+                <Reveal key={title} delay={i*60} className="grid gap-4 py-7 sm:grid-cols-[64px_220px_1fr] sm:items-center"><span className="font-mono text-xs text-muted-foreground">{step}</span><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center border border-border bg-card text-primary"><Icon size={17}/></span><h3 className="font-display text-lg font-semibold">{title}</h3></div><p className="max-w-2xl text-sm leading-6 text-muted-foreground">{body}</p></Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="agents" className="border-b border-border bg-background py-24 sm:py-32">
+          <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+            <SectionTitle eyebrow="Multi-agent architecture" title="Specialists that check each other’s work." copy="Each agent has one job, one output and a visible place in the execution timeline." />
+            <div className="mt-16 grid border border-border md:grid-cols-2">
+              {AGENTS.map(([Icon,title,body], i) => <Reveal key={title} delay={i*70} className={`flex gap-5 p-7 sm:p-9 ${i%2 ? 'md:border-l md:border-border' : ''} ${i>1 ? 'border-t border-border' : i===1 ? 'border-t border-border md:border-t-0' : ''}`}><Icon className="mt-1 shrink-0 text-primary" size={20}/><div><h3 className="font-display text-lg font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div></Reveal>)}
+            </div>
+          </div>
+        </section>
+
+        <section id="use-cases" className="border-b border-border bg-secondary/55 py-24 sm:py-32">
+          <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+            <SectionTitle eyebrow="Use cases" title="For decisions that need a paper trail." copy="Use TrustRAG anywhere the quality of the source matters as much as the speed of the answer." />
+            <div className="mt-16 grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+              {USE_CASES.map(([Icon,title,body], i) => <Reveal key={title} delay={i*60} className="bg-background p-7"><Icon size={20} className="text-primary"/><h3 className="mt-8 font-display text-lg font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p></Reveal>)}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-primary py-20 text-primary-foreground">
+          <Reveal className="mx-auto flex max-w-[1320px] flex-col items-start justify-between gap-8 px-5 sm:px-8 lg:flex-row lg:items-center">
+            <div><p className="text-sm text-primary-foreground/70">Start with your own sources</p><h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold sm:text-5xl">Upload a document. Ask it anything.</h2></div>
+            <Button asChild size="lg" variant="secondary"><Link to="/app/upload">Open TrustRAG <ArrowRight /></Link></Button>
+          </Reveal>
+        </section>
+      </main>
+
+      <footer className="border-t border-border bg-background">
+        <div className="mx-auto flex max-w-[1320px] flex-col gap-6 px-5 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-8"><Brand/><div className="flex items-center gap-6 text-sm text-muted-foreground"><Link to="/app">Workspace</Link><Link to="/app/knowledge">Knowledge</Link><Link to="/app/analytics"><BarChart3 className="inline size-4"/> Analytics</Link></div><p className="text-xs text-muted-foreground">© 2026 TrustRAG</p></div>
+      </footer>
     </div>
   );
 }
