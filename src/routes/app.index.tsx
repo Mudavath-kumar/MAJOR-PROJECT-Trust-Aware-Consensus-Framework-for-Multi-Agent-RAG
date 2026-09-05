@@ -65,16 +65,15 @@ function Stat({
 }) {
   const shown = useCounter(value, decimals);
   return (
-    <Panel
-      className="animate-rise p-5 transition-colors duration-300 hover:border-foreground/25"
-      // stagger
-    >
+    <Panel className="animate-rise group p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40">
       <div style={{ animationDelay: `${delay}ms` }}>
         <div className="flex items-start justify-between">
           <MonoLabel>{label}</MonoLabel>
-          <Icon size={16} className="text-accent" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
+            <Icon size={15} />
+          </span>
         </div>
-        <div className="mt-3 text-3xl font-medium tabular-nums">
+        <div className="mt-4 text-3xl font-medium tracking-tight tabular-nums">
           {shown}
           {suffix}
         </div>
