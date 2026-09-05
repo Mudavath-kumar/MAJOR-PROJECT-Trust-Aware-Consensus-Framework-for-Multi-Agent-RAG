@@ -146,9 +146,9 @@ function EvidenceCard({
 }) {
   const tone =
     trust === "high"
-      ? "text-emerald-600"
+      ? "text-emerald-400"
       : trust === "medium"
-        ? "text-amber-600"
+        ? "text-amber-400"
         : "text-muted-foreground";
   const [before, after] = highlight ? text.split(highlight) : [text, ""];
   return (
@@ -469,7 +469,7 @@ function ChatPage() {
                     </button>
                     <button
                       onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
-                      className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-secondary ${votes[t.id] === "up" ? "text-emerald-600" : ""}`}
+                      className={`rounded-full border border-border p-2 transition-colors duration-300 hover:bg-secondary ${votes[t.id] === "up" ? "text-emerald-400" : ""}`}
                       aria-label="Helpful"
                     >
                       <ThumbsUp size={13} />

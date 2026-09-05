@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.02)_inset,0_20px_40px_-32px_rgba(0,0,0,0.12)]",
+        "rounded-2xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_8%,transparent)_inset,0_30px_60px_-40px_rgba(0,0,0,0.6)]",
         className,
       )}
     >
@@ -67,9 +67,9 @@ export function ScorePill({
 }) {
   const toneClass =
     tone === "good"
-      ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/10"
+      ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
       : tone === "warn"
-        ? "text-amber-600 border-amber-500/30 bg-amber-500/10"
+        ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
         : "text-foreground border-border bg-muted";
   return (
     <div className={cn("rounded-lg border px-3 py-2", toneClass)}>
