@@ -1,5 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Hexagon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const FALCON_VIDEO =
@@ -18,6 +19,14 @@ function GoogleMark() {
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const signup = mode === "signup";
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+
+  const enterDemo = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    window.setTimeout(() => void navigate({ to: "/app" }), 420);
+  };
 
   return (
     <main className="min-h-screen bg-[#fefefe] text-[#2c3343] lg:grid lg:h-screen lg:grid-cols-[57.1%_42.9%] lg:overflow-hidden">
@@ -48,15 +57,17 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             <p className="mt-4 text-[16px] text-[#797979]">{signup ? "Create an account to begin building trustworthy answers." : <><strong className="text-[#2c3343]">Log in</strong> to continue monitoring your evidence.</>}</p>
           </div>
 
-          <div className="mt-9 space-y-3">
-            {signup && <input type="text" autoComplete="name" aria-label="Full name" placeholder="Full name" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-shadow focus:ring-2 focus:ring-[#283139]/20" />}
-            <input type="email" autoComplete="email" aria-label="Email address" placeholder="Eg. johndoe@gmail.com" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-shadow focus:ring-2 focus:ring-[#283139]/20" />
-            <input type="password" autoComplete={signup ? "new-password" : "current-password"} aria-label="Password" placeholder="Password" className="h-14 w-full rounded-xl border border-transparent bg-[#f3f3f3] px-[18px] text-base outline-hidden transition-shadow focus:border-[#acacae] focus:ring-2 focus:ring-[#283139]/20" />
-          </div>
+          <form onSubmit={enterDemo}>
+            <div className="mt-9 space-y-3">
+              {signup && <input required type="text" autoComplete="name" aria-label="Full name" placeholder="Full name" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:ring-2 focus:ring-[#283139]/20" />}
+              <input required type="email" autoComplete="email" aria-label="Email address" placeholder="Eg. johndoe@gmail.com" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:ring-2 focus:ring-[#283139]/20" />
+              <input required type="password" autoComplete={signup ? "new-password" : "current-password"} aria-label="Password" placeholder="Password" className="h-14 w-full rounded-xl border border-transparent bg-[#f3f3f3] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:border-[#acacae] focus:ring-2 focus:ring-[#283139]/20" />
+            </div>
 
-          <Button type="button" className="mt-6 h-[58px] w-full rounded-full bg-[#283139] text-base font-medium text-white shadow-[0_8px_20px_rgba(18,26,34,0.16)] hover:bg-[#34414b]">
-            {signup ? "Create account" : "Login"} <ArrowRight size={16} />
-          </Button>
+            <Button disabled={submitting} type="submit" className="mt-6 h-[58px] w-full rounded-full bg-[#283139] text-base font-medium text-white shadow-[0_8px_20px_rgba(18,26,34,0.16)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[#34414b]">
+              {submitting ? "Opening workspace…" : signup ? "Create account" : "Login"} <ArrowRight size={16} />
+            </Button>
+          </form>
 
           <div className="my-7 flex items-center gap-4 text-[11px] font-bold tracking-[0.08em] text-[#5a5a5b]">
             <span className="h-px flex-1 bg-[#b1b1b2]" /> OR <span className="h-px flex-1 bg-[#b1b1b2]" />

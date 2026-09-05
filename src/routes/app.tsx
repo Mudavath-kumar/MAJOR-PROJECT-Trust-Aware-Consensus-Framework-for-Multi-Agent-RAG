@@ -49,7 +49,7 @@ function AppShell() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background">
-      {/* ambient cinematic wash, matches the landing page */}
+      {/* restrained cinematic wash, matching the existing landing page */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10"
@@ -58,7 +58,7 @@ function AppShell() {
             "radial-gradient(900px 480px at 50% -8%, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 70%), radial-gradient(700px 420px at 88% 8%, color-mix(in oklab, var(--color-foreground) 7%, transparent), transparent 70%)",
         }}
       />
-      <header className="sticky top-0 z-40 border-b border-border bg-background/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <Hexagon size={22} strokeWidth={1.5} className="text-accent" />
@@ -73,16 +73,17 @@ function AppShell() {
               size={16}
               className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
             />
-            <input
+             <input
+               aria-label="Search workspace"
               placeholder="Search documents, chunks, answers…"
-              className="h-9 w-full rounded-lg border border-border bg-muted pl-9 text-sm outline-none transition-colors duration-300 placeholder:text-muted-foreground focus:border-foreground/30"
+               className="h-9 w-full rounded-full border border-border bg-muted/70 pl-9 pr-4 text-sm outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-muted-foreground focus:border-foreground/30 focus:bg-background focus:ring-2 focus:ring-ring/20"
             />
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
             <button
               aria-label="Notifications"
-              className="relative rounded-md p-2 text-muted-foreground transition-colors duration-300 hover:bg-muted hover:text-foreground"
+               className="relative rounded-full p-2 text-muted-foreground transition-colors duration-300 hover:bg-muted hover:text-foreground"
             >
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
@@ -94,7 +95,7 @@ function AppShell() {
         </div>
 
         <nav className="mx-auto w-full max-w-[1400px] px-4 pb-3 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto rounded-full border border-border bg-secondary/40 p-1 backdrop-blur-md">
+           <div className="flex gap-1 overflow-x-auto rounded-full border border-border bg-secondary/40 p-1 shadow-sm backdrop-blur-md">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = exact ? path === to : path.startsWith(to);
               return (
@@ -102,9 +103,9 @@ function AppShell() {
                   key={to}
                   to={to}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors duration-300",
+                     "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm transition-[color,background-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                     active
-                      ? "bg-foreground text-background"
+                       ? "bg-foreground text-background shadow-sm"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
