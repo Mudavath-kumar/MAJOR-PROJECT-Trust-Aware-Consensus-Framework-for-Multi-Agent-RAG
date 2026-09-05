@@ -1,212 +1,112 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Activity,
-  FileText,
-  Gauge,
-  MessageSquare,
-  ShieldCheck,
-  Upload,
-  Zap,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Activity, ArrowRight, FileText, Gauge, MessageSquare, ShieldCheck, Upload } from "lucide-react";
 import { ACTIVITY, DOCUMENTS } from "@/lib/trustrag-data";
-import { Meter, MonoLabel, PageHeader, Panel } from "@/components/app/Primitives";
+import { PageHeader } from "@/components/app/Primitives";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
     meta: [
       { title: "Dashboard — TrustRAG Console" },
-      {
-        name: "description",
-        content: "Documents indexed, queries answered, confidence and trust averages at a glance.",
-      },
+      { name: "description", content: "Monitor documents, questions, confidence and trust across your TrustRAG workspace." },
       { property: "og:title", content: "TrustRAG Dashboard" },
-      { property: "og:description", content: "Live view of your evidence-backed AI workspace." },
+      { property: "og:description", content: "Your evidence-backed AI workspace at a glance." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,
 });
 
-function useCounter(target: number, decimals = 0) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    const start = performance.now();
-    const dur = 900;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      setV(target * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target]);
-  return v.toFixed(decimals);
-}
+const METRICS = [
+  { label: "Documents", value: "128", note: "+6 this week", icon: FileText },
+  { label: "Questions", value: "1,394", note: "+18% this week", icon: MessageSquare },
+  { label: "Confidence", value: "87.4%", note: "Last 200 answers", icon: Gauge },
+  { label: "Trust score", value: "91.2%", note: "Source weighted", icon: ShieldCheck },
+];
 
-function Stat({
-  label,
-  value,
-  suffix,
-  hint,
-  icon: Icon,
-  decimals = 0,
-  meter,
-  delay,
-}: {
-  label: string;
-  value: number;
-  suffix?: string;
-  hint: string;
-  icon: typeof FileText;
-  decimals?: number;
-  meter?: number;
-  delay: number;
-}) {
-  const shown = useCounter(value, decimals);
-  return (
-    <Panel
-      className="animate-rise p-5 transition-colors duration-300 hover:border-foreground/25"
-      // stagger
-    >
-      <div style={{ animationDelay: `${delay}ms` }}>
-        <div className="flex items-start justify-between">
-          <MonoLabel>{label}</MonoLabel>
-          <Icon size={16} className="text-accent" />
-        </div>
-        <div className="mt-3 text-3xl font-medium tabular-nums">
-          {shown}
-          {suffix}
-        </div>
-        {meter !== undefined && <Meter value={meter} className="mt-3" />}
-        <p className="mt-3 text-xs text-muted-foreground">{hint}</p>
-      </div>
-    </Panel>
-  );
-}
+const PIPELINE = [
+  ["Retrieval index", "Operational"],
+  ["Document processor", "Operational"],
+  ["Consensus engine", "Reviewing"],
+  ["Evidence mapper", "Operational"],
+] as const;
 
 function Dashboard() {
   return (
     <>
       <PageHeader
-        eyebrow="Overview"
-        title="Everything, with its evidence."
-        description="A live read on your corpus, the questions asked of it, and how much the agents trust their own answers."
-        action={
-          <Link
-            to="/app/chat"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity duration-300 hover:opacity-85"
-          >
-            <MessageSquare size={15} /> Ask a question
-          </Link>
-        }
+        eyebrow="Workspace overview"
+        title="Good morning, Mitha."
+        description="Your documents are ready, the agents are online, and recent answers remain strongly grounded."
+        action={<Button asChild><Link to="/app/chat"><MessageSquare /> Ask a question</Link></Button>}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Total documents" value={128} hint="6 added this week" icon={FileText} delay={0} />
-        <Stat label="Total queries" value={1394} hint="+18% vs last week" icon={MessageSquare} delay={60} />
-        <Stat label="Avg confidence" value={87.4} suffix="%" decimals={1} meter={87.4} hint="Across the last 200 answers" icon={Gauge} delay={120} />
-        <Stat label="Avg trust score" value={91.2} suffix="%" decimals={1} meter={91.2} hint="Weighted by source authority" icon={ShieldCheck} delay={180} />
-      </div>
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <Panel className="animate-rise p-5 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <MonoLabel>Recent activity</MonoLabel>
-            <Activity size={16} className="text-muted-foreground" />
-          </div>
-          <ul className="mt-4 divide-y divide-border">
-            {ACTIVITY.map((a) => (
-              <li key={a.what} className="flex items-center justify-between gap-4 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm">
-                    <span className="font-medium">{a.who}</span>{" "}
-                    <span className="text-muted-foreground">{a.what}</span>
-                  </p>
-                </div>
-                <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                  {a.when}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-
-        <div className="flex flex-col gap-4">
-          <Panel className="animate-rise p-5">
-            <MonoLabel>Quick actions</MonoLabel>
-            <div className="mt-4 flex flex-col gap-2">
-              <Link
-                to="/app/upload"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
-              >
-                <Upload size={16} className="text-accent" /> Upload documents
-              </Link>
-              <Link
-                to="/app/knowledge"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
-              >
-                <FileText size={16} className="text-accent" /> Browse knowledge base
-              </Link>
-              <Link
-                to="/app/analytics"
-                className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors duration-300 hover:bg-muted"
-              >
-                <Zap size={16} className="text-accent" /> Review hallucination rate
-              </Link>
-            </div>
-          </Panel>
-
-          <Panel className="animate-rise p-5">
-            <MonoLabel>System status</MonoLabel>
-            <ul className="mt-4 space-y-3 text-sm">
-              {[
-                ["Retrieval index", "Operational"],
-                ["Embedding worker", "Operational"],
-                ["Consensus engine", "Degraded"],
-                ["LLM gateway", "Operational"],
-              ].map(([name, state]) => (
-                <li key={name} className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{name}</span>
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${state === "Operational" ? "bg-emerald-500" : "bg-amber-500"}`}
-                    />
-                    <span className="text-xs">{state}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </div>
-      </div>
-
-      <Panel className="animate-rise mt-6 p-5">
-        <MonoLabel>Recently uploaded</MonoLabel>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {DOCUMENTS.slice(0, 6).map((d) => (
-            <div
-              key={d.id}
-              className="rounded-xl border border-border p-4 transition-colors duration-300 hover:bg-muted"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                  {d.type} · {d.size}
-                </span>
-                <span
-                  className={`font-mono text-[10px] uppercase tracking-[0.15em] ${d.status === "ready" ? "text-emerald-600" : "text-amber-600"}`}
-                >
-                  {d.status}
-                </span>
-              </div>
-              <p className="mt-2 truncate text-sm font-medium">{d.name}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {d.chunks} chunks · {d.uploaded}
-              </p>
+      <section className="border-y border-border bg-card" aria-label="Workspace metrics">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4">
+          {METRICS.map(({ label, value, note, icon: Icon }, i) => (
+            <div key={label} className={`p-6 ${i % 2 ? "border-l border-border" : ""} ${i > 1 ? "border-t border-border xl:border-t-0 xl:border-l" : ""}`}>
+              <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">{label}</span><Icon size={17} className="text-primary" /></div>
+              <div className="mt-5 font-display text-3xl font-semibold tabular-nums">{value}</div>
+              <p className="mt-2 text-xs text-muted-foreground">{note}</p>
             </div>
           ))}
         </div>
-      </Panel>
+      </section>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,.7fr)]">
+        <section className="border border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div><h2 className="font-display text-base font-semibold">Recent activity</h2><p className="mt-1 text-xs text-muted-foreground">The latest work across this workspace</p></div>
+            <Activity size={17} className="text-muted-foreground" />
+          </div>
+          <div className="divide-y divide-border">
+            {ACTIVITY.map((item, i) => (
+              <div key={`${item.what}-${i}`} className="grid gap-2 px-5 py-4 sm:grid-cols-[36px_1fr_auto] sm:items-center">
+                <span className="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-primary">{item.who.slice(0, 1)}</span>
+                <p className="text-sm"><span className="font-semibold">{item.who}</span> <span className="text-muted-foreground">{item.what}</span></p>
+                <time className="text-xs text-muted-foreground">{item.when}</time>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border px-5 py-4"><Button asChild variant="ghost" size="sm" className="px-0 text-primary"><Link to="/app/analytics">View all activity <ArrowRight /></Link></Button></div>
+        </section>
+
+        <aside className="space-y-8">
+          <section className="border border-border bg-card">
+            <div className="border-b border-border px-5 py-4"><h2 className="font-display text-base font-semibold">System health</h2><p className="mt-1 text-xs text-muted-foreground">Local processing services</p></div>
+            <div className="divide-y divide-border px-5">
+              {PIPELINE.map(([name, state]) => (
+                <div key={name} className="flex items-center justify-between py-3.5 text-sm"><span>{name}</span><span className="flex items-center gap-2 text-xs text-muted-foreground"><span className={`size-1.5 rounded-full ${state === "Operational" ? "bg-success" : "bg-warning"}`} />{state}</span></div>
+              ))}
+            </div>
+          </section>
+
+          <section className="border border-primary/20 bg-accent/40 p-5">
+            <Upload size={19} className="text-primary" />
+            <h2 className="mt-5 font-display text-lg font-semibold">Add more knowledge</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Upload documents and they become available as sources in chat.</p>
+            <Button asChild variant="outline" className="mt-5 w-full bg-background"><Link to="/app/upload">Upload documents <ArrowRight /></Link></Button>
+          </section>
+        </aside>
+      </div>
+
+      <section className="mt-8 border border-border bg-card">
+        <div className="flex items-end justify-between border-b border-border px-5 py-4">
+          <div><h2 className="font-display text-base font-semibold">Recently indexed</h2><p className="mt-1 text-xs text-muted-foreground">Documents available to the retrieval agents</p></div>
+          <Button asChild variant="ghost" size="sm"><Link to="/app/knowledge">Knowledge base <ArrowRight /></Link></Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] text-left text-sm">
+            <thead className="bg-secondary/70 text-xs text-muted-foreground"><tr><th className="px-5 py-3 font-medium">Document</th><th className="px-5 py-3 font-medium">Type</th><th className="px-5 py-3 font-medium">Chunks</th><th className="px-5 py-3 font-medium">Added</th><th className="px-5 py-3 font-medium">Status</th></tr></thead>
+            <tbody className="divide-y divide-border">
+              {DOCUMENTS.slice(0, 5).map((doc) => (
+                <tr key={doc.id} className="transition-colors hover:bg-secondary/40"><td className="px-5 py-4 font-medium">{doc.name}</td><td className="px-5 py-4 text-muted-foreground">{doc.type} · {doc.size}</td><td className="px-5 py-4 tabular-nums text-muted-foreground">{doc.chunks}</td><td className="px-5 py-4 text-muted-foreground">{doc.uploaded}</td><td className="px-5 py-4"><span className="inline-flex items-center gap-2 text-xs font-medium"><span className={`size-1.5 rounded-full ${doc.status === "ready" ? "bg-success" : "bg-warning"}`} />{doc.status}</span></td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 }

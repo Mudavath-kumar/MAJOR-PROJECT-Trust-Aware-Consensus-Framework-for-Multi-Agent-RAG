@@ -108,7 +108,6 @@ function AppShell() {
               );
             })}
           </div>
-          </div>
         </nav>
       </header>
 
