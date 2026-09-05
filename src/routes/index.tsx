@@ -171,7 +171,7 @@ function SectionHead({
 
 function Landing() {
   return (
-    <div className="relative">
+    <div className="dark relative bg-background text-foreground">
       <ScrollVideo />
 
       <div className="relative z-10">
