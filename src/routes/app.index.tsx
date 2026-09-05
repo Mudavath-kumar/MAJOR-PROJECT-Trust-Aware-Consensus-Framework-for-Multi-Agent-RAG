@@ -186,7 +186,7 @@ function Dashboard() {
           {DOCUMENTS.slice(0, 6).map((d) => (
             <div
               key={d.id}
-              className="rounded-xl border border-border p-4 transition-colors duration-300 hover:bg-muted"
+              className="rounded-xl border border-border bg-secondary/30 p-4 transition-colors duration-300 hover:border-accent/40 hover:bg-secondary/60"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
