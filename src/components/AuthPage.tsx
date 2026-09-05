@@ -49,19 +49,19 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         </div>
       </section>
 
-      <section className="relative -mt-7 min-h-[calc(100svh-273px)] rounded-t-[28px] bg-[#fefefe] px-6 py-10 shadow-[0_-10px_28px_rgba(20,28,36,0.10)] sm:px-10 lg:mt-0 lg:min-h-0 lg:rounded-none lg:p-3 lg:shadow-none">
-        <div className="mx-auto flex h-full max-w-[613px] flex-col justify-center rounded-[26px] border border-black/[0.04] bg-white/95 px-6 py-10 shadow-[1px_10px_14px_rgba(10,14,20,0.14),0_1px_3px_rgba(10,14,20,0.05)] sm:px-12 lg:px-[62px]">
+      <section className="relative -mt-7 min-h-[calc(100svh-273px)] rounded-t-[28px] bg-[#fefefe] px-6 py-10 sm:px-10 lg:mt-0 lg:min-h-0 lg:rounded-none lg:px-[clamp(48px,7vw,110px)] lg:py-12">
+        <div className="mx-auto flex h-full max-w-[520px] flex-col justify-center py-8">
           <div className="animate-rise">
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#797979]">{signup ? "Create your workspace" : "Welcome back"}</span>
-            <h1 className="mt-3 text-[38px] font-semibold leading-none tracking-[-0.05em] text-[#2c3343] sm:text-[43px]">{signup ? "Start with TrustRAG" : "Welcome Back!"}</h1>
+            <span className="inline-flex w-fit items-center rounded-full border border-[#dfe3e6] bg-[#f7f8f8] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#60666b]">{signup ? "Create your workspace" : "Secure workspace access"}</span>
+            <h1 className="mt-6 text-[42px] font-semibold leading-[1.02] tracking-[-0.05em] text-[#2c3343] sm:text-[52px]">{signup ? "Start with TrustRAG" : "Welcome back."}</h1>
             <p className="mt-4 text-[16px] text-[#797979]">{signup ? "Create an account to begin building trustworthy answers." : <><strong className="text-[#2c3343]">Log in</strong> to continue monitoring your evidence.</>}</p>
           </div>
 
           <form onSubmit={enterDemo}>
-            <div className="mt-9 space-y-3">
-              {signup && <input required type="text" autoComplete="name" aria-label="Full name" placeholder="Full name" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:ring-2 focus:ring-[#283139]/20" />}
-              <input required type="email" autoComplete="email" aria-label="Email address" placeholder="Eg. johndoe@gmail.com" className="h-14 w-full rounded-xl border border-[#acacae] bg-[#fafafa] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:ring-2 focus:ring-[#283139]/20" />
-              <input required type="password" autoComplete={signup ? "new-password" : "current-password"} aria-label="Password" placeholder="Password" className="h-14 w-full rounded-xl border border-transparent bg-[#f3f3f3] px-[18px] text-base outline-hidden transition-[border-color,box-shadow] focus:border-[#acacae] focus:ring-2 focus:ring-[#283139]/20" />
+            <div className="mt-10 space-y-5">
+              {signup && <label className="block text-sm font-medium text-[#2c3343]">Full name<input required type="text" autoComplete="name" placeholder="Your name" className="mt-2 h-13 w-full border-0 border-b border-[#c8c8ca] bg-transparent px-0 text-base outline-hidden transition-[border-color,box-shadow] focus:border-[#283139] focus:ring-0" /></label>}
+              <label className="block text-sm font-medium text-[#2c3343]">Email address<input required type="email" autoComplete="email" placeholder="Eg. johndoe@gmail.com" className="mt-2 h-13 w-full border-0 border-b border-[#c8c8ca] bg-transparent px-0 text-base outline-hidden transition-[border-color,box-shadow] focus:border-[#283139] focus:ring-0" /></label>
+              <label className="block text-sm font-medium text-[#2c3343]">Password<input required type="password" autoComplete={signup ? "new-password" : "current-password"} placeholder="Password" className="mt-2 h-13 w-full border-0 border-b border-[#c8c8ca] bg-transparent px-0 text-base outline-hidden transition-[border-color,box-shadow] focus:border-[#283139] focus:ring-0" /></label>
             </div>
 
             <Button disabled={submitting} type="submit" className="mt-6 h-[58px] w-full rounded-full bg-[#283139] text-base font-medium text-white shadow-[0_8px_20px_rgba(18,26,34,0.16)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-[#34414b]">
