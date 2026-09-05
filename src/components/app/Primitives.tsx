@@ -67,9 +67,9 @@ export function ScorePill({
 }) {
   const toneClass =
     tone === "good"
-      ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/10"
+      ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
       : tone === "warn"
-        ? "text-amber-600 border-amber-500/30 bg-amber-500/10"
+        ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
         : "text-foreground border-border bg-muted";
   return (
     <div className={cn("rounded-lg border px-3 py-2", toneClass)}>

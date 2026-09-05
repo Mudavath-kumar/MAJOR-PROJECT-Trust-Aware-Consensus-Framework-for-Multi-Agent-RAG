@@ -194,7 +194,7 @@ function Dashboard() {
                   {d.type} · {d.size}
                 </span>
                 <span
-                  className={`font-mono text-[10px] uppercase tracking-[0.15em] ${d.status === "ready" ? "text-emerald-600" : "text-amber-600"}`}
+                  className={`font-mono text-[10px] uppercase tracking-[0.15em] ${d.status === "ready" ? "text-emerald-400" : "text-amber-400"}`}
                 >
                   {d.status}
                 </span>

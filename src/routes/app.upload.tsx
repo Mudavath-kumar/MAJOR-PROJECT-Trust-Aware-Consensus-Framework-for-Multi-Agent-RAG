@@ -298,8 +298,8 @@ function UploadPage() {
                     <span
                       className={`rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] ${
                         d.status === "ready"
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-                          : "border-amber-500/30 bg-amber-500/10 text-amber-600"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-400"
                       }`}
                     >
                       {d.status}
