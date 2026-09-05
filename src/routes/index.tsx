@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { ScrollVideo } from "@/components/ScrollVideo";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -174,44 +175,7 @@ function Landing() {
       <ScrollVideo />
 
       <div className="relative z-10">
-        <header className="fixed top-0 left-0 z-50 w-full border-b border-white/15">
-          <div className="flex items-center justify-between px-5 py-4 sm:px-8 md:px-12">
-            <Reveal delay={0}>
-              <Link to="/" className="flex items-center gap-2 text-white">
-                <Hexagon size={24} strokeWidth={1.5} />
-                <span className="text-lg font-medium tracking-tight sm:text-xl">TrustRAG</span>
-              </Link>
-            </Reveal>
-            <nav className="hidden items-center gap-8 md:flex lg:gap-10">
-              {[
-                { label: "Platform", href: "#capability" },
-                { label: "How it works", href: "#pipeline" },
-                { label: "Agents", href: "#agents" },
-                { label: "FAQ", href: "#faq" },
-              ].map(({ label, href }, i) => (
-                <Reveal key={label} delay={100 + i * 100}>
-                  <a
-                    href={href}
-                    className="text-sm text-white/85 transition-colors duration-300 hover:text-white"
-                  >
-                    {label}
-                    {label === "Platform" && (
-                      <sup className="ml-0.5 font-mono text-[10px] text-white/60">6</sup>
-                    )}
-                  </a>
-                </Reveal>
-              ))}
-            </nav>
-            <Reveal delay={500}>
-              <Link
-                to="/app"
-                className="rounded-md border border-white/20 bg-white/15 px-4 py-2 text-xs text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/25 sm:px-5 sm:text-sm"
-              >
-                Open the platform
-              </Link>
-            </Reveal>
-          </div>
-        </header>
+        <SiteHeader />
 
         <main>
           {/* Hero */}
