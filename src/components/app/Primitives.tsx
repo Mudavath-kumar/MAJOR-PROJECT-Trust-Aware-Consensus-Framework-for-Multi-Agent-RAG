@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.02)_inset,0_20px_40px_-32px_rgba(0,0,0,0.12)]",
+        "rounded-md border border-border bg-card shadow-sm",
         className,
       )}
     >
@@ -24,7 +24,7 @@ export function MonoLabel({ children, className }: { children: ReactNode; classN
   return (
     <span
       className={cn(
-        "font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground",
+        "font-mono text-[10px] font-semibold uppercase text-muted-foreground",
         className,
       )}
     >
@@ -48,7 +48,7 @@ export function PageHeader({
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="animate-rise">
         <MonoLabel>{eyebrow}</MonoLabel>
-        <h1 className="mt-2 text-3xl font-normal tracking-tight sm:text-4xl">{title}</h1>
+        <h1 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">{title}</h1>
         <p className="mt-2 max-w-xl text-sm text-muted-foreground">{description}</p>
       </div>
       {action}
