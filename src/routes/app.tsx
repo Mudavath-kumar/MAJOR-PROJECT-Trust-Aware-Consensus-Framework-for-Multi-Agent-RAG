@@ -11,6 +11,7 @@ import {
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -49,16 +50,7 @@ function AppShell() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background">
-      {/* restrained cinematic wash, matching the existing landing page */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(900px 480px at 50% -8%, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 70%), radial-gradient(700px 420px at 88% 8%, color-mix(in oklab, var(--color-foreground) 7%, transparent), transparent 70%)",
-        }}
-      />
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-2xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex shrink-0 items-center gap-2">
             <Hexagon size={22} strokeWidth={1.5} className="text-accent" />
@@ -81,13 +73,16 @@ function AppShell() {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               aria-label="Notifications"
-               className="relative rounded-full p-2 text-muted-foreground transition-colors duration-300 hover:bg-muted hover:text-foreground"
+              className="relative rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
-            </button>
+            </Button>
             <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-xs font-medium">
               MI
             </div>

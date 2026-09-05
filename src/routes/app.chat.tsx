@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Check,
+  BadgeCheck,
+  BrainCircuit,
   ChevronRight,
   Copy,
   Download,
   FileText,
   Filter,
+  GitMerge,
   Loader2,
+  Network,
   RefreshCw,
-  Send,
+  ScanSearch,
+  SearchCheck,
   ShieldCheck,
   Sparkle,
   ThumbsDown,
@@ -25,6 +30,19 @@ import {
   type Retrieved,
 } from "@/lib/doc-store";
 import { Meter, MonoLabel, PageHeader, Panel, ScorePill } from "@/components/app/Primitives";
+import { Button } from "@/components/ui/button";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
 
 export const Route = createFileRoute("/app/chat")({
   head: () => ({
@@ -93,33 +111,46 @@ function Markdown({ text }: { text: string }) {
 }
 
 function Timeline({ active, details }: { active: number; details: string[] }) {
+  const icons = [ScanSearch, BrainCircuit, SearchCheck, ShieldCheck, GitMerge, Network, BadgeCheck];
   return (
-    <ol className="relative ml-1 space-y-3 border-l border-border pl-5">
+    <ol className="relative space-y-2" aria-label="Answer execution progress">
+      <div className="absolute bottom-5 left-[19px] top-5 w-px overflow-hidden bg-border" aria-hidden>
+        <div
+          className={`w-full bg-linear-to-b from-emerald-500 to-accent transition-[height] duration-500 ${active < AGENT_STEPS.length ? "animate-timeline-flow bg-size-[1px_18px]" : ""}`}
+          style={{ height: `${Math.min(100, (active / AGENT_STEPS.length) * 100)}%` }}
+        />
+      </div>
       {AGENT_STEPS.map((s, i) => {
         const done = i < active;
         const running = i === active;
+        const Icon = icons[i];
         return (
-          <li key={s.key} className="relative">
+          <li
+            key={s.key}
+            className={`relative grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 transition-[opacity,background-color,border-color,transform] duration-500 ${
+              running ? "translate-x-1 border-accent/40 bg-accent/5" : "border-transparent"
+            } ${done || running ? "opacity-100" : "opacity-40"}`}
+          >
             <span
-              className={`absolute -left-[26px] top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border transition-colors duration-500 ${
+              className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-background transition-colors duration-500 ${
                 done
-                  ? "border-emerald-400/50 bg-emerald-500"
+                  ? "border-emerald-500/30 bg-emerald-50 text-emerald-700"
                   : running
-                    ? "border-accent bg-accent/40"
-                    : "border-border bg-background"
+                    ? "animate-timeline-pulse border-accent bg-accent/15 text-foreground"
+                    : "border-border text-muted-foreground"
               }`}
-            />
-            <div
-              className={`transition-opacity duration-500 ${done || running ? "opacity-100" : "opacity-40"}`}
             >
-              <div className="flex items-center gap-2 text-sm">
-                {s.label}
-                {running && <Loader2 size={12} className="animate-spin text-accent" />}
-              </div>
+              {done ? <Check size={17} strokeWidth={2.5} /> : <Icon size={17} />}
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{s.label}</div>
               {(done || running) && (
-                <p className="mt-0.5 text-xs text-muted-foreground">{details[i] ?? s.detail}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{details[i] ?? s.detail}</p>
               )}
             </div>
+            <span className={`text-[10px] font-semibold uppercase text-muted-foreground ${running ? "text-foreground" : ""}`}>
+              {done ? "Done" : running ? "Running" : "Queued"}
+            </span>
           </li>
         );
       })}
@@ -189,16 +220,10 @@ function ChatPage() {
   const [typed, setTyped] = useState("");
   const [copied, setCopied] = useState(false);
   const [votes, setVotes] = useState<Record<number, "up" | "down">>({});
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const draft = useRef<Turn | null>(null);
 
   const hasCorpus = docs.some((d) => d.parsed);
   const activeScope = scope.length ? scope : null;
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   // Seed with the demo answer so the pipeline is visible before any upload.
   useEffect(() => {
@@ -277,10 +302,6 @@ function ChatPage() {
     return () => clearInterval(t);
   }, [pending, step]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [typed, step, turns.length]);
-
   const latest = turns[turns.length - 1];
   const evidence = draft.current?.hits ?? latest?.hits ?? [];
   const stepDetails = useMemo(() => {
@@ -323,23 +344,29 @@ function ChatPage() {
         description="Upload a file, pick the sources to search, and every answer arrives with its retrieval trail, verified claims and agreement level."
         action={
           <div className="flex gap-2">
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={exportTranscript}
               disabled={!turns.length}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-secondary disabled:opacity-40"
+              className="rounded-full"
             >
               <Download size={13} /> Export
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setTurns([]);
                 setVotes({});
               }}
               disabled={!turns.length}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors duration-300 hover:bg-secondary disabled:opacity-40"
+              className="rounded-full"
             >
               <Trash2 size={13} /> Clear
-            </button>
+            </Button>
           </div>
         }
       />
@@ -394,22 +421,24 @@ function ChatPage() {
       <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
         {/* Conversation */}
         <div className="flex min-h-[70vh] flex-col">
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
+          <Conversation className="h-[clamp(440px,58vh,680px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
+            <ConversationContent className="gap-5 px-0 py-0 pr-1">
             {turns.map((t) => (
               <div key={t.id} className="space-y-4">
-                <div className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-secondary px-4 py-3 text-sm">
+                <Message from="user">
+                  <MessageContent className="bg-primary text-primary-foreground">
                     {t.question}
-                  </div>
-                </div>
-                <Panel className="animate-rise p-5">
+                  </MessageContent>
+                </Message>
+                <Message from="assistant">
+                <Panel className="animate-rise w-full p-5">
                   <div className="flex items-center gap-2">
                     <ShieldCheck size={16} className="text-accent" />
                     <MonoLabel>{t.demo ? "Sample answer" : "Generated answer"}</MonoLabel>
                   </div>
 
                   <div className="mt-4">
-                    <Markdown text={t.answer} />
+                    <MessageResponse>{t.answer}</MessageResponse>
                   </div>
 
                   <div className="mt-5 grid gap-2 sm:grid-cols-3">
@@ -483,18 +512,23 @@ function ChatPage() {
                     </button>
                   </div>
                 </Panel>
+                </Message>
               </div>
             ))}
 
             {pending && (
               <>
-                <div className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-secondary px-4 py-3 text-sm">
+                <Message from="user">
+                  <MessageContent className="bg-primary text-primary-foreground">
                     {pending}
+                  </MessageContent>
+                </Message>
+                <Message from="assistant">
+                <Panel className="animate-rise w-full p-5">
+                  <div className="flex items-center justify-between">
+                    <MonoLabel>Execution timeline</MonoLabel>
+                    <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold uppercase text-muted-foreground">{Math.min(step + 1, AGENT_STEPS.length)} / {AGENT_STEPS.length}</span>
                   </div>
-                </div>
-                <Panel className="animate-rise p-5">
-                  <MonoLabel>Execution timeline</MonoLabel>
                   <div className="mt-4">
                     <Timeline active={step} details={stepDetails} />
                   </div>
@@ -505,9 +539,12 @@ function ChatPage() {
                     </div>
                   )}
                 </Panel>
+                </Message>
               </>
             )}
-          </div>
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
@@ -521,18 +558,15 @@ function ChatPage() {
             ))}
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!question.trim() || pending) return;
-              ask(question.trim());
+          <PromptInput
+            onSubmit={(message) => {
+              if (!message.text.trim() || pending) return;
+              ask(message.text.trim());
               setQuestion("");
-              inputRef.current?.focus();
             }}
-            className="mt-3 flex items-center gap-2 rounded-2xl border border-border bg-card/60 p-2 backdrop-blur-md"
+            className="mt-3 rounded-2xl border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
           >
-            <input
-              ref={inputRef}
+            <PromptInputTextarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder={
@@ -540,16 +574,12 @@ function ChatPage() {
                   ? "Ask a question about your uploaded documents…"
                   : "Ask anything — upload a document to search your own files"
               }
-              className="h-10 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
+              className="min-h-20 px-4 py-3"
             />
-            <button
-              type="submit"
-              disabled={!!pending}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity duration-300 hover:opacity-85 disabled:opacity-40"
-            >
-              {pending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Ask
-            </button>
-          </form>
+            <PromptInputFooter className="justify-end px-2 pb-2">
+              <PromptInputSubmit status={pending ? "submitted" : "ready"} disabled={!question.trim() || !!pending} className="rounded-full" />
+            </PromptInputFooter>
+          </PromptInput>
         </div>
 
         {/* Evidence panel */}

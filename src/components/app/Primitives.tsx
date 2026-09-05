@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-gradient-to-b from-card/90 to-card/55 backdrop-blur-xl shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_8%,transparent)_inset,0_24px_52px_-40px_rgba(0,0,0,0.55)] transition-[border-color,box-shadow,transform] duration-300 hover:border-foreground/20 hover:shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_10%,transparent)_inset,0_28px_58px_-38px_rgba(0,0,0,0.62)]",
+        "rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_32px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow,transform] duration-300 hover:border-foreground/15 hover:shadow-[0_2px_4px_rgba(15,23,42,0.04),0_18px_42px_rgba(15,23,42,0.07)]",
         className,
       )}
     >

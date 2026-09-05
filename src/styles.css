@@ -173,6 +173,24 @@
   }
 }
 
+@keyframes timeline-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 35%, transparent); }
+  50% { box-shadow: 0 0 0 7px transparent; }
+}
+
+@keyframes timeline-flow {
+  from { background-position: 0 0; }
+  to { background-position: 0 18px; }
+}
+
+@utility animate-timeline-pulse {
+  animation: timeline-pulse 1.5s ease-in-out infinite;
+}
+
+@utility animate-timeline-flow {
+  animation: timeline-flow 0.9s linear infinite;
+}
+
 @utility animate-rise {
   animation: rise 500ms ease-out both;
 }
