@@ -15,7 +15,7 @@ export function SiteHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-6 sm:pt-7">
-      <div className="mx-auto grid h-[54px] max-w-[880px] grid-cols-[minmax(0,1fr)_auto] items-center rounded-full border border-white/10 bg-black/95 px-2 shadow-[0_14px_50px_rgba(0,0,0,0.28)] backdrop-blur-xl md:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-[54px] max-w-[880px] grid-cols-[minmax(0,1fr)_auto] items-center rounded-full border border-white/15 bg-black/90 px-2 shadow-[0_14px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-300 hover:border-white/20 hover:shadow-[0_18px_55px_rgba(0,0,0,0.32)] md:grid-cols-[1fr_auto_1fr]">
         <Link to="/" className="flex min-w-0 items-center gap-2 pl-3 text-white" aria-label="TrustRAG home">
           <Hexagon size={23} strokeWidth={1.6} className="shrink-0 text-cyan-400" />
           <span className="truncate text-[17px] font-semibold tracking-[-0.01em]">TrustRAG</span>
@@ -26,7 +26,7 @@ export function SiteHeader() {
             <a
               key={item.label}
               href={item.href}
-              className="rounded-full px-4 py-2 text-[14px] font-medium text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+              className="rounded-full px-4 py-2 text-[14px] font-medium text-white/75 transition-[color,background-color] duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             >
               {item.label}
             </a>
@@ -34,10 +34,10 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center justify-end gap-2 md:flex">
-          <Link to="/login" className="rounded-full px-4 py-2 text-[14px] font-medium text-white/75 transition-colors hover:text-white">
+           <Link to="/login" className="rounded-full px-4 py-2 text-[14px] font-medium text-white/75 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35">
             Log in
           </Link>
-          <Link to="/signup" className="rounded-full bg-white px-5 py-2.5 text-[14px] font-semibold text-black transition-transform duration-200 hover:scale-[1.02]">
+          <Link to="/signup" className="rounded-full bg-white px-5 py-2.5 text-[14px] font-semibold text-black transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
             Get started
           </Link>
         </div>

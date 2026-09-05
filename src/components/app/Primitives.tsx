@@ -11,7 +11,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_8%,transparent)_inset,0_30px_60px_-40px_rgba(0,0,0,0.6)]",
+        "rounded-2xl border border-border bg-gradient-to-b from-card/90 to-card/55 backdrop-blur-xl shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_8%,transparent)_inset,0_24px_52px_-40px_rgba(0,0,0,0.55)] transition-[border-color,box-shadow,transform] duration-300 hover:border-foreground/20 hover:shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-foreground)_10%,transparent)_inset,0_28px_58px_-38px_rgba(0,0,0,0.62)]",
         className,
       )}
     >
@@ -45,11 +45,11 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <div className="animate-rise">
         <MonoLabel>{eyebrow}</MonoLabel>
-        <h1 className="mt-2 text-3xl font-normal tracking-tight sm:text-4xl">{title}</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">{description}</p>
+        <h1 className="mt-2 text-3xl font-medium tracking-normal sm:text-4xl">{title}</h1>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">{description}</p>
       </div>
       {action}
     </div>
