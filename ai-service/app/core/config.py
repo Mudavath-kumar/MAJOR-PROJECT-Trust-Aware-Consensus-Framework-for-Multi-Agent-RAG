@@ -1,0 +1,47 @@
+import os
+from pathlib import Path
+from dotenv import dotenv_values
+
+service_root = Path(__file__).resolve().parents[2]
+dotenv_settings = {}
+for dotenv_path in (service_root.parent / "backend" / ".env", service_root / ".env"):
+    for key, value in dotenv_values(dotenv_path).items():
+        if value is not None and value.strip():
+            dotenv_settings[key] = value
+for key, value in dotenv_settings.items():
+    os.environ.setdefault(key, value)
+
+class Settings:
+    PORT: int = int(os.getenv("PORT", "8000"))
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+
+    # Google Gemini — 100% Free (15 RPM, 1M tokens/day)
+    # Get free key at: https://aistudio.google.com/app/apikey (no credit card)
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
+
+    # OpenRouter fallback/alternative provider
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+    OPENROUTER_SITE_URL: str = os.getenv("OPENROUTER_SITE_URL", "")
+    OPENROUTER_APP_NAME: str = os.getenv("OPENROUTER_APP_NAME", "TrustRAG")
+
+    # Local Ollama fallback (runs offline, 100% free)
+    OLLAMA_ENDPOINT: str = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2")
+
+    # Optional: Tavily free search (1000 queries/month)
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
+    EXTERNAL_VERIFICATION_ENABLED: bool = os.getenv(
+        "EXTERNAL_VERIFICATION_ENABLED", "true"
+    ).lower() in {"1", "true", "yes", "on"}
+
+    # Vector store & embedding
+    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+
+    @property
+    def DEFAULT_MODEL(self) -> str:
+        return self.GEMINI_MODEL
+
+settings = Settings()
