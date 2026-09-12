@@ -1,0 +1,2914 @@
+TrustRAG — Complete Product Requirements Document (PRD)
+
+Trust-Aware Multi-Agent Retrieval-Augmented Generation Framework
+
+Project Type: Final-Year Major Project + Research-Oriented AI
+System
+Domain: Generative AI, Retrieval-Augmented Generation, Multi-Agent
+Systems, Trustworthy AI
+Status: Master Project Specification
+
+1. Executive Summary
+
+TrustRAG is an AI-powered knowledge intelligence platform that allows
+users to upload documents and ask natural-language questions about their
+knowledge base.
+
+A conventional RAG pipeline generally follows:
+
+User Question
+    ↓
+Retriever
+    ↓
+Relevant Context
+    ↓
+LLM
+    ↓
+Answer
+
+TrustRAG adds a verification and decision layer between retrieval and
+final generation.
+
+Retrieved evidence is analyzed by four specialized agents:
+
+Research Agent
+
+Fact Verification Agent
+
+Trust Assessment Agent
+
+Reasoning Agent
+
+Their outputs are evaluated by an Adaptive Consensus Engine.
+
+When evidence is insufficient, conflicting, weak, or stale, the system
+conditionally activates an External Knowledge Verification Agent.
+The external agent retrieves additional information from appropriate
+trusted online sources, after which the consensus is recalculated.
+
+The final response can contain:
+
+Answer
+
+Confidence Score
+
+Trust Score
+
+Consensus Score
+
+Supporting Evidence
+
+Source References
+
+Retrieved Chunks
+
+Agent Results
+
+Reasoning Summary
+
+External Verification Status
+
+The system is intended to reduce unsupported and overconfident answers.
+It does not claim to guarantee 100% factual correctness.
+
+2. Product Vision
+
+Transform RAG from a system that simply retrieves and generates into a
+system that retrieves, verifies, evaluates, reasons, and decides when
+additional evidence is required.
+
+3. Problem Statement
+
+LLMs can generate fluent and convincing answers that contain unsupported
+or incorrect information.
+
+Traditional RAG improves grounding by retrieving external context, but
+retrieval can itself fail.
+
+Key Problems
+
+Irrelevant retrieval
+
+Incorrect retrieval
+
+Incomplete evidence
+
+Conflicting documents
+
+Outdated information
+
+Unreliable sources
+
+Unsupported claims
+
+Overconfident responses
+
+Limited explainability
+
+Central Research Problem
+
+How can retrieved evidence be evaluated through multiple verification
+perspectives before an AI system generates a confident answer?
+
+4. Proposed Solution
+
+TrustRAG introduces a multi-stage evidence verification workflow:
+
+User Question
+      ↓
+Query Processing
+      ↓
+Semantic Retrieval
+      ↓
+Reranking
+      ↓
+Relevant Evidence
+      ↓
+┌─────────────────────────────────────┐
+│       Multi-Agent Verification      │
+│                                     │
+│ Research Agent                      │
+│ Fact Verification Agent             │
+│ Trust Assessment Agent              │
+│ Reasoning Agent                     │
+└─────────────────────────────────────┘
+      ↓
+Adaptive Consensus Engine
+      ↓
+Confidence Evaluation
+      │
+      ├── High Confidence ─────→ Generate Answer
+      │
+      └── Low Confidence
+                  ↓
+       External Knowledge Verification
+                  ↓
+          Additional Evidence
+                  ↓
+       Consensus Recalculation
+                  ↓
+         Generate / Abstain
+
+5. Product Goals
+
+Primary Goals
+
+Reduce unsupported AI-generated responses.
+
+Detect conflicting evidence.
+
+Evaluate source credibility.
+
+Improve evidence grounding.
+
+Provide confidence information.
+
+Provide transparent source references.
+
+Perform external verification only when necessary.
+
+Provide an abstention path when reliable evidence cannot be
+established.
+
+Non-Goals
+
+TrustRAG does not claim to:
+
+Guarantee 100% correctness.
+
+Know the absolute truth of every statement.
+
+Replace human experts in high-stakes decisions.
+
+Treat confidence as equivalent to accuracy.
+
+Automatically trust every online source.
+
+Search the web for every query.
+
+6. Target Users
+
+Students
+
+Use cases:
+
+Lecture notes
+
+Textbooks
+
+Study materials
+
+Course PDFs
+
+Example:
+
+Explain supervised learning using my uploaded notes.
+
+Researchers
+
+Use cases:
+
+Research papers
+
+Technical reports
+
+Conference papers
+
+Literature exploration
+
+Example:
+
+What methodology is used in this research paper?
+
+Professionals
+
+Use cases:
+
+Technical documentation
+
+Manuals
+
+Reports
+
+Internal knowledge
+
+Example:
+
+What is the documented refund procedure?
+
+Enterprise Users
+
+Use cases:
+
+Internal knowledge assistants
+
+Policy search
+
+Technical support
+
+Document intelligence
+
+7. Core Features
+
+User authentication
+
+User management
+
+Document upload
+
+Multi-document knowledge base
+
+PDF/DOCX/TXT/Markdown/CSV processing
+
+Text extraction
+
+Chunking
+
+Embedding generation
+
+Semantic retrieval
+
+Reranking
+
+AI chat
+
+Research Agent
+
+Fact Verification Agent
+
+Trust Assessment Agent
+
+Reasoning Agent
+
+Adaptive Consensus Engine
+
+Confidence scoring
+
+Conditional External Knowledge Verification Agent
+
+Evidence Explorer
+
+Source references
+
+Chat history
+
+Agent execution history
+
+Analytics
+
+User feedback
+
+System settings
+
+8. Complete System Architecture
+
+                              USER
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │      FRONTEND         │
+                    │   Next.js + React     │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │       BACKEND         │
+                    │   Node.js + Express   │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │      AI SERVICE       │
+                    │ Python + FastAPI      │
+                    │ LangGraph             │
+                    └───────────┬───────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+                    ▼                       ▼
+          DOCUMENT PIPELINE          QUERY PIPELINE
+                    │                       │
+                    ▼                       ▼
+             Text Extraction        Query Embedding
+                    │                       │
+                    ▼                       ▼
+                 Chunking               ChromaDB
+                    │                       │
+                    ▼                       ▼
+              BGE Embedding             Top-K Chunks
+                    │                       │
+                    ▼                       ▼
+                ChromaDB                 Reranker
+                                            │
+                                            ▼
+                              MULTI-AGENT PROCESSING
+                                            │
+             ┌──────────────┬───────────────┼──────────────┐
+             ▼              ▼               ▼              ▼
+         Research        Fact            Trust         Reasoning
+          Agent       Verification     Assessment        Agent
+                         Agent           Agent
+             │              │               │              │
+             └──────────────┴───────────────┴──────────────┘
+                                            │
+                                            ▼
+                              ADAPTIVE CONSENSUS ENGINE
+                                            │
+                                     Confidence Check
+                                      /                                                  /                                                 HIGH                LOW
+                                   │                   │
+                                   ▼                   ▼
+                            Generate Answer    External Knowledge
+                                                   Verification
+                                                        │
+                                                        ▼
+                                               Additional Evidence
+                                                        │
+                                                        ▼
+                                             Recalculate Consensus
+                                                        │
+                                                        ▼
+                                              Generate / Abstain
+
+9. Architecture Layers
+
+Layer 1 — User
+
+Users can:
+
+Sign in
+
+Upload documents
+
+Manage their knowledge base
+
+Ask questions
+
+Inspect evidence
+
+Inspect agent execution
+
+View analytics
+
+Configure settings
+
+Layer 2 — Frontend
+
+Technology
+
+Next.js
+
+React
+
+TypeScript
+
+Tailwind CSS
+
+shadcn/ui
+
+Zustand
+
+Recharts
+
+Responsibilities
+
+UI rendering
+
+Authentication state
+
+Document interaction
+
+Chat interaction
+
+Evidence visualization
+
+Agent visualization
+
+Analytics
+
+Settings
+
+API communication
+
+Loading/error states
+
+The frontend must not perform the core AI reasoning.
+
+Layer 3 — Backend
+
+Technology
+
+Node.js
+
+Express.js
+
+TypeScript
+
+MongoDB
+
+Mongoose
+
+JWT
+
+Responsibilities
+
+Authentication
+
+Authorization
+
+User management
+
+Document metadata
+
+Chat history
+
+API gateway
+
+Analytics
+
+Settings
+
+Communication with AI service
+
+Layer 4 — AI Service
+
+Technology
+
+Python
+
+FastAPI
+
+LangChain
+
+LangGraph
+
+Responsibilities
+
+Document processing
+
+Embeddings
+
+Retrieval
+
+Reranking
+
+Agent orchestration
+
+Consensus
+
+External verification
+
+Response generation
+
+Layer 5 — Data
+
+MongoDB
+
+Stores:
+
+Users
+
+Documents
+
+Conversations
+
+Messages
+
+Agent executions
+
+Consensus results
+
+Analytics
+
+Settings
+
+Feedback
+
+ChromaDB
+
+Stores:
+
+Document chunks
+
+Embeddings
+
+Chunk metadata
+
+Document IDs
+
+Page numbers
+
+File Storage
+
+Stores original uploaded documents.
+
+10. Frontend Requirements
+
+10.1 Landing Page
+
+Include:
+
+Product introduction
+
+Problem
+
+Solution
+
+Core capabilities
+
+Workflow
+
+Call to action
+
+10.2 Authentication
+
+Pages:
+
+Login
+
+Register
+
+Forgot Password
+
+Reset Password
+
+10.3 Dashboard
+
+Display:
+
+Total documents
+
+Total queries
+
+Average confidence
+
+Average trust
+
+Average consensus
+
+Recent documents
+
+Recent queries
+
+Recent activity
+
+Quick actions:
+
+Upload document
+
+Start chat
+
+Open knowledge base
+
+View analytics
+
+10.4 Document Upload
+
+Features:
+
+Drag and drop
+
+Multiple files
+
+File validation
+
+Progress
+
+Cancellation
+
+Processing status
+
+Success/error states
+
+Supported formats:
+
+PDF
+
+DOCX
+
+TXT
+
+Markdown
+
+CSV
+
+10.5 Knowledge Base
+
+Features:
+
+Search
+
+Filter
+
+Sort
+
+Pagination
+
+Document preview
+
+Metadata
+
+Processing status
+
+Chunk count
+
+Embedding status
+
+Delete
+
+10.6 AI Chat
+
+Features:
+
+New conversation
+
+Message history
+
+Question input
+
+AI response
+
+Regenerate
+
+Copy
+
+Feedback
+
+Sources
+
+Evidence
+
+Confidence
+
+Trust
+
+Consensus
+
+The frontend must be ready for streaming responses.
+
+10.7 Evidence Explorer
+
+Display:
+
+Query
+
+Retrieved chunks
+
+Document name
+
+Page
+
+Similarity score
+
+Ranking
+
+Metadata
+
+Trust information
+
+Evidence text
+
+10.8 Agent Execution
+
+Display:
+
+Research Agent
+
+Fact Verification Agent
+
+Trust Assessment Agent
+
+Reasoning Agent
+
+Adaptive Consensus Engine
+
+External Knowledge Verification Agent when triggered
+
+Statuses:
+
+Pending
+
+Running
+
+Completed
+
+Failed
+
+Skipped
+
+10.9 Analytics
+
+Display:
+
+Query volume
+
+Average confidence
+
+Average trust
+
+Average consensus
+
+Accuracy
+
+Groundedness
+
+Hallucination rate
+
+Retrieval quality
+
+Latency
+
+Evidence coverage
+
+10.10 Settings
+
+Configurable:
+
+LLM
+
+Embedding model
+
+Reranker
+
+Top-K
+
+Chunk size
+
+Chunk overlap
+
+Similarity threshold
+
+Consensus threshold
+
+Temperature
+
+External verification enabled/disabled
+
+11. Document Processing Pipeline
+
+File Upload
+    ↓
+Validation
+    ↓
+Text Extraction
+    ↓
+Cleaning
+    ↓
+Chunking
+    ↓
+Metadata Generation
+    ↓
+Embedding Generation
+    ↓
+ChromaDB Storage
+    ↓
+MongoDB Metadata
+    ↓
+Processing Complete
+
+Supported File Types
+
+Initial:
+
+PDF
+
+DOCX
+
+TXT
+
+Markdown
+
+CSV
+
+Future:
+
+HTML
+
+PPTX
+
+XLSX
+
+Scanned PDFs
+
+Images
+
+12. Text Extraction
+
+PDF
+
+Use PyMuPDF.
+
+Preserve:
+
+Document ID
+
+File name
+
+Page number
+
+Text
+
+Metadata
+
+DOCX
+
+Extract paragraphs and useful document structure.
+
+TXT / Markdown
+
+Read text while preserving useful structure.
+
+CSV
+
+Convert rows and columns into searchable records while retaining column
+metadata.
+
+13. Chunking
+
+Large documents are divided into smaller chunks.
+
+Initial engineering configuration:
+
+Chunk Size: approximately 700–1000 tokens
+Chunk Overlap: approximately 100–150 tokens
+
+These values should be experimentally evaluated.
+
+Each chunk should contain:
+
+chunk_id
+document_id
+page_number
+section
+chunk_index
+text
+
+14. Embeddings
+
+Initial model:
+
+BAAI/bge-small-en-v1.5
+
+Pipeline:
+
+Chunk Text
+    ↓
+Embedding Model
+    ↓
+Vector Representation
+    ↓
+ChromaDB
+
+15. Query Retrieval
+
+User Question
+    ↓
+Query Embedding
+    ↓
+ChromaDB
+    ↓
+Semantic Similarity Search
+    ↓
+Candidate Chunks
+    ↓
+Reranking
+    ↓
+Final Evidence Set
+
+Primary similarity measure:
+
+Cosine Similarity
+
+16. Reranking
+
+Recommended model:
+
+BAAI/bge-reranker-base
+
+Example:
+
+20 Candidate Chunks
+        ↓
+Cross-Encoder Reranker
+        ↓
+Top 5–10 Evidence Chunks
+
+Top-K must be configurable and experimentally evaluated.
+
+17. LLM
+
+Initial model:
+
+Llama 3.1 8B Instruct
+
+Possible alternatives:
+
+Qwen
+
+Gemma
+
+Other compatible instruction models
+
+The LLM can perform:
+
+Evidence extraction
+
+Claim analysis
+
+Fact verification
+
+Reasoning
+
+Response generation
+
+The LLM should be abstracted behind a model interface so the project can
+evaluate multiple models.
+
+18. Multi-Agent Framework
+
+The primary verification agents are:
+
+1. Research Agent
+2. Fact Verification Agent
+3. Trust Assessment Agent
+4. Reasoning Agent
+
+Conditional component:
+
+5. External Knowledge Verification Agent
+
+Central decision component:
+
+Adaptive Consensus Engine
+
+The consensus engine is not simply another ordinary agent; it is the
+decision layer that combines verification signals.
+
+19. Research Agent
+
+Purpose
+
+Extract important information from retrieved evidence.
+
+Input
+
+User Question
++
+Retrieved Chunks
+
+Tasks
+
+Identify relevant facts
+
+Extract entities
+
+Identify important statements
+
+Organize evidence
+
+Map facts to source chunks
+
+Output
+
+facts
+entities
+evidence_references
+research_score
+summary
+
+The agent extracts evidence but does not establish absolute truth by
+itself.
+
+20. Fact Verification Agent
+
+Purpose
+
+Check whether claims are supported by retrieved evidence.
+
+Possible Results
+
+SUPPORTED
+PARTIALLY_SUPPORTED
+UNSUPPORTED
+CONTRADICTED
+
+Output
+
+verified_claims
+unsupported_claims
+contradicted_claims
+verification_score
+evidence_mapping
+
+Example
+
+Claim:
+Python was first released in 1991.
+
+Evidence:
+Chunk 4
+Chunk 7
+
+Result:
+SUPPORTED
+
+21. Trust Assessment Agent
+
+Purpose
+
+Estimate the credibility of sources.
+
+Potential factors:
+
+Source authority
+
+Source type
+
+Reliability
+
+Freshness
+
+Domain reputation
+
+Metadata quality
+
+Example conceptual ranking:
+
+Official documentation → High
+Government source → High
+Academic publication → High
+Known reference source → Medium/High
+Unknown website → Low
+
+Output
+
+source_scores
+overall_trust_score
+trust_explanation
+
+The exact trust formula must be defined and validated experimentally.
+
+22. Reasoning Agent
+
+Purpose
+
+Evaluate logical consistency among evidence.
+
+Checks:
+
+Agreement
+
+Contradictions
+
+Missing information
+
+Logical consistency
+
+Claim relationships
+
+Example:
+
+Document A:
+Python released in 1991.
+
+Document B:
+Python released in 1993.
+
+Output:
+
+Conflict Detected
+
+23. External Knowledge Verification Agent
+
+Purpose
+
+Retrieve additional evidence from online sources when internal evidence
+is insufficient.
+
+It is conditional.
+
+It should not search the web for every query.
+
+Trigger Conditions
+
+Possible triggers:
+
+Low Confidence
+OR
+Conflicting Evidence
+OR
+Insufficient Evidence
+OR
+Low Source Trust
+OR
+Freshness Requirement
+
+Workflow
+
+Consensus Engine
+      ↓
+External Verification Trigger
+      ↓
+External Search
+      ↓
+Source Filtering
+      ↓
+Evidence Extraction
+      ↓
+Compare With Internal Evidence
+      ↓
+Consensus Recalculation
+
+24. External Source Strategy
+
+Prioritize sources appropriate to the question:
+
+Official documentation
+
+Government websites
+
+Academic publications
+
+Research institutions
+
+Institutional websites
+
+Store:
+
+source_url
+title
+domain
+source_type
+retrieved_at
+content_reference
+external_trust_score
+
+The system should not treat all search results as equally trustworthy.
+
+25. Adaptive Consensus Engine
+
+Purpose
+
+The Adaptive Consensus Engine is the central decision-making layer.
+
+It receives:
+
+Research Result
+Fact Verification Result
+Trust Result
+Reasoning Result
+External Verification Result (if triggered)
+
+It evaluates:
+
+Evidence quality
+
+Claim support
+
+Source credibility
+
+Agent agreement
+
+Contradiction level
+
+Evidence completeness
+
+External evidence
+
+It produces:
+
+consensus_score
+confidence_score
+decision
+
+26. Consensus Workflow
+
+Agent Outputs
+      ↓
+Normalize Signals
+      ↓
+Evaluate Evidence Quality
+      ↓
+Evaluate Claim Support
+      ↓
+Evaluate Source Trust
+      ↓
+Evaluate Contradictions
+      ↓
+Evaluate Agent Agreement
+      ↓
+Calculate Consensus
+      ↓
+Calculate Confidence
+      ↓
+Decision
+
+27. Adaptive Verification Loop
+
+Initial Retrieval
+      ↓
+Four Internal Agents
+      ↓
+Adaptive Consensus
+      ↓
+Confidence Check
+      │
+      ├── HIGH ─────────→ Generate Answer
+      │
+      └── LOW
+            ↓
+      External Verification
+            ↓
+      Additional Evidence
+            ↓
+      Re-evaluate Evidence
+            ↓
+      Recalculate Consensus
+            ↓
+      Generate Answer / Abstain
+
+A maximum number of additional verification cycles must be enforced to
+prevent infinite loops.
+
+Initial engineering value:
+
+Maximum additional cycles: 1–2
+
+This should be experimentally evaluated.
+
+28. Scoring Model
+
+TrustRAG should maintain separate conceptual scores.
+
+Evidence Quality Score
+
+Measures:
+
+Relevance
+
+Coverage
+
+Completeness of retrieved evidence
+
+Verification Score
+
+Measures how many claims are supported.
+
+Example:
+
+Total claims = 5
+Supported claims = 4
+
+Verification Score = 4 / 5 × 100
+                   = 80%
+
+Trust Score
+
+Measures estimated source credibility.
+
+Reasoning Score
+
+Measures:
+
+Consistency
+
+Contradiction level
+
+Logical relationships
+
+Consensus Score
+
+Represents the combined agreement among evidence and verification
+signals.
+
+Confidence Score
+
+Represents the system’s estimated confidence in its final answer.
+
+Confidence must not be presented as factual accuracy.
+
+29. Proposed Consensus Algorithm
+
+The final mathematical formulation should be finalized after literature
+review and experiments.
+
+A prototype can use:
+
+Consensus =
+w1 × Evidence Quality
++ w2 × Verification
++ w3 × Trust
++ w4 × Reasoning
++ w5 × External Verification
+
+with:
+
+w1 + w2 + w3 + w4 + w5 = 1
+
+The initial weights should be treated as prototype parameters, not as
+established research results.
+
+For the research version, investigate:
+
+Equal weighting
+
+Manually defined weighting
+
+Experimentally optimized weighting
+
+Dynamic weighting based on evidence conditions
+
+30. Confidence Decision
+
+Prototype:
+
+Confidence >= Threshold
+        ↓
+Generate Answer
+
+Confidence < Threshold
+        ↓
+External Verification
+
+Example prototype threshold:
+
+85%
+
+The final threshold should be selected using validation and calibration
+experiments.
+
+31. Final Answer Generation
+
+The generator receives:
+
+User Question
++
+Validated Evidence
++
+Consensus Result
++
+Source Information
+
+The answer should remain grounded in available evidence and should avoid
+unsupported claims.
+
+32. Final Response
+
+Example:
+
+ANSWER
+
+Python was first released in 1991.
+
+--------------------------------
+
+CONFIDENCE
+95%
+
+TRUST
+94%
+
+CONSENSUS
+96%
+
+--------------------------------
+
+SUPPORTING SOURCES
+
+1. Official Python documentation
+
+--------------------------------
+
+EVIDENCE
+
+Page 2
+Chunk 7
+
+--------------------------------
+
+VERIFICATION
+
+Fact Verification: Supported
+Reasoning: No conflict
+External Verification: Not required
+
+--------------------------------
+
+REASONING SUMMARY
+
+Multiple reliable sources support the same claim.
+
+33. Low-Confidence Response
+
+If reliable evidence cannot be established:
+
+Answer:
+
+The available evidence is insufficient or conflicting.
+The system could not establish a sufficiently reliable answer.
+
+Confidence: 48%
+Trust: 42%
+Consensus: 50%
+
+Reason:
+Conflicting sources remain unresolved.
+
+34. Confidence vs Accuracy
+
+These are different concepts.
+
+Confidence
+
+A runtime estimate produced by the system.
+
+Example:
+
+Confidence = 93%
+
+Accuracy
+
+Measured during evaluation.
+
+Example:
+
+100 benchmark questions
+89 correct
+
+Accuracy = 89%
+
+Do not claim:
+
+93% confidence = 93% accuracy
+
+Instead, evaluate whether confidence is well calibrated against actual
+correctness.
+
+35. End-to-End Example
+
+User asks:
+
+When was Python first released?
+
+Retrieval
+
+Chunk A:
+Python was first released in 1991.
+
+Chunk B:
+Python development began in the late 1980s.
+
+Research Agent
+
+Release = 1991
+Development = late 1980s
+
+Fact Verification
+
+Release = 1991
+Status = Supported
+
+Trust Assessment
+
+Official documentation
+Trust = High
+
+Reasoning
+
+No contradiction.
+Development period and release date are different events.
+
+Consensus
+
+High confidence
+
+External Verification
+
+Not required
+
+Final Response
+
+Python was first released in 1991.
+
+Confidence: 95%
+Trust: 94%
+Consensus: 96%
+
+36. Conflicting Evidence Example
+
+Suppose:
+
+Document A → 1991
+Document B → 1993
+
+Research Agent
+
+Two different claims detected.
+
+Fact Verification
+
+Both claims are supported by their respective documents.
+
+Trust Assessment
+
+Document A → 95
+Document B → 40
+
+Reasoning Agent
+
+Conflict detected.
+
+Consensus
+
+Confidence = Low
+
+External Verification
+
+The external agent searches appropriate trusted sources.
+
+Official source → 1991
+
+Consensus Recalculation
+
+Confidence = High
+
+Final Answer
+
+The system explains that the uploaded documents conflicted and that the
+higher-credibility evidence supports the selected answer.
+
+37. Incorrect Uploaded Document
+
+If the user uploads only an incorrect document, internal agents may all
+agree with that document.
+
+This is a fundamental limitation:
+
+Incorrect Evidence
+      ↓
+Multiple Agents
+      ↓
+Potentially Incorrect Consensus
+
+External verification provides an independent evidence path, but it also
+cannot guarantee truth.
+
+Therefore TrustRAG should be described as:
+
+A reliability-enhancement and uncertainty-aware framework, not a
+perfect truth-detection system.
+
+38. External Sources Also Conflict
+
+Example:
+
+Internal source → 1991
+Official source A → 1991
+Source B → 1993
+Source C → 1991
+
+The system evaluates:
+
+Authority
+
+Agreement
+
+Freshness
+
+Evidence quality
+
+If the conflict remains unresolved:
+
+Confidence remains low
+        ↓
+Explain uncertainty
+        ↓
+Abstain when appropriate
+
+39. Chat Data Flow
+
+Each query should have a unique queryId.
+
+Conversation
+   ↓
+User Message
+   ↓
+Query ID
+   ↓
+Retrieved Evidence
+   ↓
+Agent Results
+   ↓
+Consensus Result
+   ↓
+Final Answer
+
+This allows the frontend to inspect the entire decision process.
+
+40. Agent Execution Data
+
+Store:
+
+execution_id
+query_id
+agent_name
+status
+started_at
+completed_at
+duration
+input_reference
+output
+score
+error
+
+41. MongoDB Collections
+
+users
+
+_id
+name
+email
+password_hash
+role
+created_at
+updated_at
+
+documents
+
+_id
+user_id
+file_name
+file_type
+file_size
+storage_path
+processing_status
+chunk_count
+embedding_status
+created_at
+updated_at
+
+conversations
+
+_id
+user_id
+title
+created_at
+updated_at
+
+messages
+
+_id
+conversation_id
+role
+content
+query_id
+created_at
+
+agent_executions
+
+_id
+query_id
+agent_name
+status
+score
+output
+duration
+created_at
+
+consensus_results
+
+_id
+query_id
+research_score
+verification_score
+trust_score
+reasoning_score
+external_score
+consensus_score
+confidence_score
+decision
+created_at
+
+settings
+
+_id
+user_id
+llm_model
+embedding_model
+reranker_model
+top_k
+chunk_size
+chunk_overlap
+similarity_threshold
+consensus_threshold
+temperature
+external_verification_enabled
+
+feedback
+
+_id
+user_id
+query_id
+rating
+comment
+created_at
+
+42. ChromaDB Record Metadata
+
+Each vector record should contain:
+
+chunk_id
+document_id
+user_id
+file_name
+page_number
+section
+chunk_index
+text
+
+User-level isolation must be enforced.
+
+43. API Architecture
+
+Authentication
+
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/me
+
+Documents
+
+POST   /api/documents/upload
+GET    /api/documents
+GET    /api/documents/:id
+GET    /api/documents/:id/chunks
+DELETE /api/documents/:id
+
+Chat
+
+POST   /api/chat
+GET    /api/chat/conversations
+GET    /api/chat/conversations/:id
+DELETE /api/chat/conversations/:id
+POST   /api/chat/:id/regenerate
+
+Evidence
+
+GET /api/evidence/:queryId
+
+Agents
+
+GET /api/agents/:queryId
+
+Consensus
+
+GET /api/consensus/:queryId
+
+Analytics
+
+GET /api/analytics
+
+Settings
+
+GET /api/settings
+PUT /api/settings
+
+44. Example Chat Request
+
+{
+  "conversationId": "conv_123",
+  "query": "What is retrieval augmented generation?"
+}
+
+45. Example Chat Response
+
+{
+  "queryId": "query_123",
+  "answer": "Retrieval-Augmented Generation combines...",
+  "confidenceScore": 93,
+  "trustScore": 91,
+  "consensusScore": 94,
+  "sources": [],
+  "evidence": [],
+  "agentResults": [],
+  "reasoning": "Multiple supporting sources agree.",
+  "externalVerificationTriggered": false
+}
+
+46. Backend Project Structure
+
+backend/
+├── src/
+│   ├── controllers/
+│   │   ├── auth.controller.ts
+│   │   ├── document.controller.ts
+│   │   ├── chat.controller.ts
+│   │   ├── evidence.controller.ts
+│   │   ├── analytics.controller.ts
+│   │   └── settings.controller.ts
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.ts
+│   │   ├── document.routes.ts
+│   │   ├── chat.routes.ts
+│   │   ├── evidence.routes.ts
+│   │   ├── analytics.routes.ts
+│   │   └── settings.routes.ts
+│   │
+│   ├── models/
+│   │   ├── User.ts
+│   │   ├── Document.ts
+│   │   ├── Conversation.ts
+│   │   ├── Message.ts
+│   │   ├── AgentExecution.ts
+│   │   ├── ConsensusResult.ts
+│   │   └── Settings.ts
+│   │
+│   ├── services/
+│   │   ├── auth.service.ts
+│   │   ├── document.service.ts
+│   │   ├── chat.service.ts
+│   │   ├── ai.service.ts
+│   │   └── analytics.service.ts
+│   │
+│   ├── middleware/
+│   │   ├── auth.ts
+│   │   ├── validation.ts
+│   │   ├── rateLimiter.ts
+│   │   └── errorHandler.ts
+│   │
+│   ├── config/
+│   │   ├── database.ts
+│   │   └── environment.ts
+│   │
+│   └── server.ts
+│
+└── package.json
+
+47. AI Service Structure
+
+ai-service/
+├── app/
+│   ├── main.py
+│   │
+│   ├── api/
+│   │   ├── chat.py
+│   │   ├── documents.py
+│   │   └── agents.py
+│   │
+│   ├── agents/
+│   │   ├── research_agent.py
+│   │   ├── fact_verification_agent.py
+│   │   ├── trust_agent.py
+│   │   ├── reasoning_agent.py
+│   │   └── external_verification_agent.py
+│   │
+│   ├── consensus/
+│   │   ├── consensus_engine.py
+│   │   ├── confidence.py
+│   │   └── thresholds.py
+│   │
+│   ├── rag/
+│   │   ├── loader.py
+│   │   ├── chunker.py
+│   │   ├── embeddings.py
+│   │   ├── retriever.py
+│   │   ├── reranker.py
+│   │   └── generator.py
+│   │
+│   ├── models/
+│   ├── services/
+│   ├── evaluation/
+│   └── utils/
+│
+└── requirements.txt
+
+48. Frontend Structure
+
+frontend/
+├── app/
+│   ├── login/
+│   ├── register/
+│   ├── dashboard/
+│   ├── chat/
+│   ├── documents/
+│   ├── knowledge-base/
+│   ├── evidence/
+│   ├── agents/
+│   ├── analytics/
+│   └── settings/
+│
+├── components/
+│   ├── layout/
+│   ├── navigation/
+│   ├── chat/
+│   ├── documents/
+│   ├── evidence/
+│   ├── agents/
+│   ├── consensus/
+│   ├── analytics/
+│   └── common/
+│
+├── services/
+│   ├── authService.ts
+│   ├── chatService.ts
+│   ├── documentService.ts
+│   ├── evidenceService.ts
+│   ├── agentService.ts
+│   ├── analyticsService.ts
+│   └── settingsService.ts
+│
+├── stores/
+├── types/
+├── hooks/
+├── utils/
+└── middleware.ts
+
+49. Frontend State
+
+Manage:
+
+Authentication
+
+Current user
+
+Current conversation
+
+Messages
+
+Documents
+
+Upload status
+
+Agent execution
+
+Consensus result
+
+Settings
+
+Notifications
+
+Use global state only where necessary.
+
+50. Frontend Service Layer
+
+Do not call APIs directly from every component.
+
+Create:
+
+authService
+chatService
+documentService
+evidenceService
+agentService
+analyticsService
+settingsService
+
+Each service should provide:
+
+Typed requests
+
+Typed responses
+
+Error handling
+
+Loading handling
+
+51. TypeScript Types
+
+Create centralized types for:
+
+User
+Document
+DocumentChunk
+Conversation
+ChatMessage
+Evidence
+AgentResult
+ConsensusResult
+AnalyticsData
+SystemSettings
+
+Avoid unnecessary any.
+
+52. Security
+
+Implement:
+
+JWT authentication
+
+Password hashing
+
+Protected routes
+
+Authorization
+
+Input validation
+
+File type validation
+
+File size limits
+
+Rate limiting
+
+CORS
+
+Secure environment variables
+
+User-level document isolation
+
+Safe file handling
+
+Never expose API keys in frontend code.
+
+53. Error Handling
+
+Handle:
+
+Invalid files
+
+Upload failures
+
+Processing failures
+
+No relevant evidence
+
+AI service failures
+
+Model timeouts
+
+Vector database failures
+
+External search failures
+
+Authentication failures
+
+Network failures
+
+Do not expose raw stack traces.
+
+54. Performance
+
+Optimize:
+
+Document processing
+
+Vector retrieval
+
+Reranking
+
+LLM context size
+
+Agent execution
+
+External search frequency
+
+Avoid unnecessary external verification.
+
+The external agent should only run when the system determines that
+additional evidence is required.
+
+55. Observability
+
+Record:
+
+Request ID
+User ID
+Query ID
+Retrieval duration
+Agent duration
+Consensus duration
+External search duration
+Total response duration
+Errors
+
+Do not unnecessarily log private document content.
+
+56. Configuration
+
+Use environment variables for secrets and infrastructure:
+
+MONGODB_URI=
+CHROMA_URL=
+AI_SERVICE_URL=
+JWT_SECRET=
+LLM_API_KEY=
+EXTERNAL_SEARCH_API_KEY=
+
+Never commit secrets to Git.
+
+57. Deployment Architecture
+
+Development
+
+Frontend → Local
+Backend → Local
+AI Service → Local
+MongoDB → Local / Atlas
+ChromaDB → Local
+LLM → Ollama / API
+
+Production
+
+Possible architecture:
+
+Frontend → Vercel / equivalent
+Backend → Render / equivalent
+AI Service → GPU-capable server when local inference is used
+MongoDB → MongoDB Atlas
+Vector DB → Hosted / containerized ChromaDB
+
+Docker should be used for reproducible service deployment.
+
+58. Docker Architecture
+
+docker-compose
+│
+├── frontend
+├── backend
+├── ai-service
+├── mongodb
+└── chromadb
+
+Production may replace self-hosted databases with managed services.
+
+59. Research Contribution
+
+Do not claim the following as novel:
+
+React
+
+Next.js
+
+FastAPI
+
+LangChain
+
+LangGraph
+
+MongoDB
+
+ChromaDB
+
+Cosine similarity
+
+BGE embeddings
+
+Llama
+
+Reranking
+
+Potential research contributions:
+
+Adaptive Consensus Strategy
+
+Confidence-Based External Verification
+
+Trust Evaluation Method
+
+Evidence-Aware Decision Making
+
+Novelty must be established through literature review and experimental
+comparison.
+
+60. Research Evaluation
+
+Compare TrustRAG against suitable baselines such as:
+
+Standard RAG
+CRAG
+Self-RAG
+Multi-Agent RAG
+TrustRAG
+
+The final baseline set should be selected based on the literature review
+and reproducibility.
+
+61. Evaluation Metrics
+
+Accuracy
+
+Correct Answers / Total Questions × 100
+
+Groundedness
+
+Measures whether answer claims are supported by evidence.
+
+Hallucination Rate
+
+Measures unsupported or incorrect generated claims.
+
+Retrieval Quality
+
+Possible metrics:
+
+Recall@K
+
+Precision@K
+
+MRR
+
+NDCG
+
+Confidence Calibration
+
+Possible metrics:
+
+Expected Calibration Error
+
+Brier Score
+
+Latency
+
+Measure:
+
+Retrieval time
+
+Agent processing time
+
+External verification time
+
+Total response time
+
+Evidence Coverage
+
+Measures how much of the final answer is supported by available
+evidence.
+
+62. Baseline Experiment
+
+Use the same benchmark questions:
+
+Benchmark Dataset
+       ↓
+ ┌─────┼────────┬────────┬─────────────┐
+ ▼     ▼        ▼        ▼             ▼
+RAG   CRAG   Self-RAG  Multi-Agent   TrustRAG
+       ↓
+Evaluation
+       ↓
+Comparison
+
+Record:
+
+Accuracy
+
+Groundedness
+
+Hallucination rate
+
+Retrieval quality
+
+Confidence calibration
+
+Latency
+
+63. Ablation Study
+
+Test:
+
+Baseline RAG
+RAG + Multi-Agent
+RAG + Trust
+RAG + Consensus
+RAG + External Verification
+Full TrustRAG
+
+Goal:
+
+Determine which components contribute to reliability.
+
+64. Adaptive External Verification Experiment
+
+Compare:
+
+Always-On External Search
+vs
+Adaptive External Search
+
+Measure:
+
+Accuracy
+
+Groundedness
+
+Hallucination
+
+Latency
+
+Number of external searches
+
+Cost/API usage
+
+This evaluates whether conditional verification provides a useful
+trade-off.
+
+65. Confidence Calibration Experiment
+
+Group answers:
+
+0–20%
+20–40%
+40–60%
+60–80%
+80–100%
+
+Compare predicted confidence with actual correctness.
+
+A useful confidence mechanism should show a meaningful relationship
+between confidence and correctness.
+
+66. Functional Requirements
+
+FR-01 Authentication
+
+Users must be able to register and authenticate securely.
+
+FR-02 Document Upload
+
+Authenticated users must be able to upload supported documents.
+
+FR-03 Document Processing
+
+Uploaded documents must be extracted, chunked, embedded, and indexed.
+
+FR-04 Knowledge Base
+
+Users must be able to manage indexed documents.
+
+FR-05 Query Processing
+
+Users must be able to ask natural-language questions.
+
+FR-06 Retrieval
+
+The system must retrieve relevant evidence.
+
+FR-07 Agent Verification
+
+The system must evaluate evidence through specialized agents.
+
+FR-08 Consensus
+
+The system must produce consensus and confidence results.
+
+FR-09 Adaptive Verification
+
+The system must conditionally invoke external verification when
+configured criteria are met.
+
+FR-10 Final Answer
+
+The system must generate an evidence-grounded response.
+
+FR-11 Explainability
+
+The system must expose relevant evidence and source information.
+
+FR-12 Analytics
+
+The system must record and display relevant performance metrics.
+
+67. Non-Functional Requirements
+
+Performance
+
+Provide reasonable response times for normal queries.
+
+Reliability
+
+Gracefully handle service and model failures.
+
+Scalability
+
+Allow application and AI services to scale independently.
+
+Security
+
+Protect credentials and user documents.
+
+Maintainability
+
+Keep frontend, backend, AI, and data layers modular.
+
+Observability
+
+Record useful execution and error information.
+
+Usability
+
+Users should understand the origin and reliability signals of an answer.
+
+68. Testing Strategy
+
+Unit Testing
+
+Test:
+
+Chunking
+
+Score calculations
+
+Threshold decisions
+
+API validation
+
+Data transformations
+
+Integration Testing
+
+Test:
+
+Upload
+ ↓
+Processing
+ ↓
+Embedding
+ ↓
+Retrieval
+ ↓
+Agents
+ ↓
+Consensus
+
+End-to-End Testing
+
+Test complete user workflows.
+
+AI Evaluation
+
+Use fixed benchmark questions and consistent evaluation criteria.
+
+69. MVP Scope
+
+The minimum viable research prototype includes:
+
+Authentication
+
+PDF upload
+
+Text extraction
+
+Chunking
+
+Embeddings
+
+ChromaDB
+
+Semantic retrieval
+
+Reranking
+
+LLM generation
+
+Research Agent
+
+Fact Verification Agent
+
+Trust Assessment Agent
+
+Reasoning Agent
+
+Adaptive Consensus
+
+Confidence score
+
+Evidence display
+
+Basic conditional external verification
+
+Chat interface
+
+70. Phase 2
+
+Add:
+
+DOCX
+
+TXT
+
+Markdown
+
+CSV
+
+Advanced analytics
+
+Agent execution history
+
+Improved source ranking
+
+Better confidence calibration
+
+More sophisticated external verification
+
+User feedback analysis
+
+71. Future Scope
+
+Potential future additions:
+
+GraphRAG
+
+Multimodal RAG
+
+Image understanding
+
+Table understanding
+
+Multilingual RAG
+
+Domain-specific trust models
+
+Human-in-the-loop verification
+
+Enterprise SSO
+
+Advanced knowledge graphs
+
+Real-time knowledge updates
+
+Personalized retrieval
+
+Continuous evaluation
+
+72. Development Roadmap
+
+Phase 1 — Foundation
+
+Repository setup
+
+Frontend setup
+
+Backend setup
+
+AI service setup
+
+Database setup
+
+Authentication
+
+Phase 2 — Document Pipeline
+
+Upload
+
+Validation
+
+Extraction
+
+Chunking
+
+Embeddings
+
+ChromaDB
+
+Phase 3 — Baseline RAG
+
+Question
+ ↓
+Retrieval
+ ↓
+LLM
+ ↓
+Answer
+
+Build this before adding the multi-agent layer so it can be used as a
+research baseline.
+
+Phase 4 — Multi-Agent Layer
+
+Implement:
+
+Research
+
+Fact Verification
+
+Trust Assessment
+
+Reasoning
+
+Phase 5 — Consensus
+
+Implement:
+
+Score normalization
+
+Consensus
+
+Confidence
+
+Threshold decision
+
+Phase 6 — External Verification
+
+Implement:
+
+Conditional trigger
+
+External retrieval
+
+Source filtering
+
+Evidence comparison
+
+Re-consensus
+
+Phase 7 — Frontend Integration
+
+Connect:
+
+Chat
+
+Documents
+
+Evidence
+
+Agents
+
+Consensus
+
+Analytics
+
+Phase 8 — Testing
+
+Unit testing
+
+Integration testing
+
+End-to-end testing
+
+Security testing
+
+Performance testing
+
+Phase 9 — Research Evaluation
+
+Benchmark dataset
+
+Baseline comparison
+
+Ablation study
+
+Confidence calibration
+
+Statistical analysis
+
+Phase 10 — Research Paper
+
+Prepare:
+
+Introduction
+
+Literature Review
+
+Research Gap
+
+Methodology
+
+Architecture
+
+Proposed Algorithm
+
+Experimental Setup
+
+Results
+
+Discussion
+
+Limitations
+
+Conclusion
+
+Future Work
+
+73. Acceptance Criteria
+
+The MVP is complete when:
+
+A user can register and log in.
+
+A user can upload a supported document.
+
+The document is processed successfully.
+
+Chunks and embeddings are stored.
+
+A user can ask a question.
+
+Relevant evidence is retrieved.
+
+Four primary agents execute.
+
+Consensus is calculated.
+
+Confidence is returned.
+
+Evidence is displayed.
+
+External verification can be triggered.
+
+Final answers include source information.
+
+Low-confidence cases can be surfaced instead of being presented with
+unjustified certainty.
+
+Chat history is stored.
+
+Errors are handled gracefully.
+
+74. Final Technology Stack
+
+Layer
+
+Technology
+
+Frontend
+
+Next.js, React, TypeScript
+
+UI
+
+Tailwind CSS, shadcn/ui
+
+State
+
+Zustand
+
+Backend
+
+Node.js, Express.js
+
+Backend Language
+
+TypeScript
+
+AI Service
+
+Python, FastAPI
+
+Agent Orchestration
+
+LangGraph
+
+LLM Framework
+
+LangChain
+
+LLM
+
+Llama 3.1 8B Instruct / compatible model
+
+Embeddings
+
+BAAI/bge-small-en-v1.5
+
+Reranker
+
+BAAI/bge-reranker-base
+
+Vector DB
+
+ChromaDB
+
+Application DB
+
+MongoDB
+
+PDF Extraction
+
+PyMuPDF
+
+Containerization
+
+Docker
+
+API Testing
+
+Postman
+
+Version Control
+
+Git + GitHub
+
+Deployment
+
+Vercel / Render / equivalent
+
+75. Final End-to-End Flow
+
+USER
+  ↓
+NEXT.JS FRONTEND
+  ↓
+NODE + EXPRESS BACKEND
+  ↓
+FASTAPI AI SERVICE
+  ↓
+QUERY PROCESSING
+  ↓
+EMBEDDING
+  ↓
+CHROMADB RETRIEVAL
+  ↓
+RERANKING
+  ↓
+RELEVANT EVIDENCE
+  ↓
+┌──────────────────────────────────┐
+│       MULTI-AGENT LAYER          │
+│                                  │
+│ Research Agent                   │
+│ Fact Verification Agent          │
+│ Trust Assessment Agent           │
+│ Reasoning Agent                  │
+└────────────────┬─────────────────┘
+                 ↓
+       ADAPTIVE CONSENSUS
+                 ↓
+         CONFIDENCE CHECK
+           /                  HIGH           LOW
+         ↓              ↓
+      ANSWER      EXTERNAL VERIFICATION
+                        ↓
+                 ADDITIONAL EVIDENCE
+                        ↓
+                  RE-CONSENSUS
+                        ↓
+                 ANSWER / ABSTAIN
+
+76. Final Product Definition
+
+TrustRAG is a trust-aware, evidence-grounded RAG platform designed to
+improve the reliability and transparency of AI-generated answers.
+
+Its core workflow is:
+
+RETRIEVE
+   ↓
+EXTRACT
+   ↓
+VERIFY
+   ↓
+ASSESS TRUST
+   ↓
+REASON
+   ↓
+CONSENSUS
+   ↓
+CHECK CONFIDENCE
+   ↓
+VERIFY EXTERNALLY IF NECESSARY
+   ↓
+GENERATE OR ABSTAIN
+
+The primary research direction is:
+
+Investigate whether an adaptive consensus mechanism that combines
+evidence quality, claim verification, source trust, reasoning
+consistency, and conditional external verification can improve answer
+groundedness and confidence calibration while reducing unnecessary
+external retrieval.
+
+This PRD is the master implementation specification for the TrustRAG
+frontend, backend, AI service, data layer, architecture, research
+evaluation, testing, and deployment.

@@ -99,7 +99,22 @@ function SettingsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2400);
     } catch (err: any) {
-      setError(err.message || "Failed to save settings");
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "trustrag_local_settings",
+          JSON.stringify({
+            gemini_api_key: geminiKey,
+            tavily_api_key: tavilyKey,
+            ollama_endpoint: ollamaEp,
+            preferred_model: model,
+            similarity_top_k: topK,
+            consensus_threshold: threshold,
+            enable_external_search: extSearch,
+          }),
+        );
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2400);
     } finally {
       setSaving(false);
     }

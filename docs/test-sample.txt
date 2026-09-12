@@ -1,0 +1,1 @@
+TrustRAG is an Explainable AI platform that uses Multi-Agent Retrieval-Augmented Generation (RAG) to answer questions using uploaded documents. It provides confidence scores, trust scores, and consensus from multiple AI agents.

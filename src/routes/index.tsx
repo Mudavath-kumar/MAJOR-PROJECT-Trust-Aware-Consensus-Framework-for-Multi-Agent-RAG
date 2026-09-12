@@ -27,10 +27,14 @@ export const Route = createFileRoute("/")({
         content:
           "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
-      { property: "og:title", content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus" },
+      {
+        property: "og:title",
+        content: "TrustRAG — Reliable AI through Trust, Evidence, and Consensus",
+      },
       {
         property: "og:description",
-        content: "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
+        content:
+          "Explainable multi-agent RAG over your documents. Every answer carries evidence, confidence, trust and consensus scores.",
       },
     ],
   }),
@@ -58,12 +62,12 @@ const PIPELINE = [
   {
     icon: Upload,
     title: "Ingest",
-    body: "Drop in PDFs, DOCX, TXT, MD, CSV or JSON. Text is extracted in your browser, split on sentence boundaries into ~700 character chunks and indexed locally.",
+    body: "Drop in PDFs, DOCX, TXT, MD, CSV or JSON. The backend stores the original file, extracts text, chunks it, generates embeddings and marks it ready only after indexing succeeds.",
   },
   {
     icon: Search,
     title: "Retrieve",
-    body: "Your question is tokenised and scored against every chunk with TF-IDF cosine similarity. The strongest passages become the working context.",
+    body: "Your question is embedded and searched against the authenticated user's Chroma index. The strongest passages are passed to the verification agents as context.",
   },
   {
     icon: FileSearch,
@@ -101,10 +105,26 @@ const AGENTS = [
 ];
 
 const USE_CASES = [
-  { icon: Scale, title: "Legal review", body: "Search contracts and case files with a citation for every clause you rely on." },
-  { icon: Stethoscope, title: "Clinical research", body: "Interrogate protocols and papers without losing the provenance of a single figure." },
-  { icon: Landmark, title: "Finance & policy", body: "Turn filings, memos and regulation into answers your committee can defend." },
-  { icon: GraduationCap, title: "Research teams", body: "Build a shared corpus and let the whole team ask it questions in plain language." },
+  {
+    icon: Scale,
+    title: "Legal review",
+    body: "Search contracts and case files with a citation for every clause you rely on.",
+  },
+  {
+    icon: Stethoscope,
+    title: "Clinical research",
+    body: "Interrogate protocols and papers without losing the provenance of a single figure.",
+  },
+  {
+    icon: Landmark,
+    title: "Finance & policy",
+    body: "Turn filings, memos and regulation into answers your committee can defend.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Research teams",
+    body: "Build a shared corpus and let the whole team ask it questions in plain language.",
+  },
 ];
 
 const METRICS = [
@@ -117,7 +137,7 @@ const METRICS = [
 const FAQ = [
   {
     q: "Where do my documents go?",
-    a: "Nowhere. Parsing, chunking and retrieval all run in your browser and the index is kept in local storage on your machine.",
+    a: "Documents are processed by the configured TrustRAG services. Optional external verification can send the question to Tavily when enabled; set EXTERNAL_VERIFICATION_ENABLED=false to disable it.",
   },
   {
     q: "What does the trust score actually mean?",
@@ -125,7 +145,7 @@ const FAQ = [
   },
   {
     q: "Which file types are supported?",
-    a: "TXT, MD, CSV and JSON are parsed exactly; PDF and DOCX use a best-effort text decoder so you can still query them.",
+    a: "TXT, MD, CSV, JSON, PDF and DOCX are processed by the AI service. A document is not marked ready until text extraction, chunking and embedding complete.",
   },
   {
     q: "Can I limit an answer to certain sources?",
@@ -141,15 +161,7 @@ function Badge({ children }: { children: string }) {
   );
 }
 
-function SectionHead({
-  badge,
-  title,
-  lead,
-}: {
-  badge: string;
-  title: string;
-  lead: string;
-}) {
+function SectionHead({ badge, title, lead }: { badge: string; title: string; lead: string }) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-xl">
@@ -255,7 +267,8 @@ function Landing() {
               </Reveal>
               <Reveal delay={220} className="max-w-sm sm:text-right">
                 <p className="text-lg leading-relaxed text-white drop-shadow-md sm:text-xl">
-                  TrustRAG doesn't just respond — it retrieves, verifies, scores, and shows its work.
+                  TrustRAG doesn't just respond — it retrieves, verifies, scores, and shows its
+                  work.
                 </p>
               </Reveal>
             </div>
@@ -326,7 +339,7 @@ function Landing() {
             <SectionHead
               badge="How it works"
               title="Four steps from file to defensible answer."
-              lead="Nothing leaves your machine. The whole pipeline — parsing, indexing, retrieval and scoring — runs in the browser."
+              lead="Your documents stay in your configured TrustRAG storage. Retrieval is grounded in those documents, with optional Tavily verification for low-confidence answers."
             />
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PIPELINE.map((s, i) => (
@@ -485,7 +498,7 @@ function Landing() {
             <SectionHead
               badge="Questions"
               title="The details, plainly."
-              lead="No backend, no data leaving the browser, and a score you can interrogate."
+              lead="Your files stay in the configured storage; answers are generated by the authenticated backend and AI service with inspectable evidence."
             />
             <div className="mt-12 grid gap-4 md:grid-cols-2">
               {FAQ.map((f, i) => (

@@ -1,0 +1,102 @@
+# ─── TrustRAG — Render Blueprint ─────────────────────────────────────────────
+# Deploys 3 services: Frontend (Node), Backend (Node), AI Service (Docker)
+# 1-click deploy: https://render.com/deploy
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── 1. AI Service (FastAPI + ChromaDB) ──────────────────────────────────────
+  - type: web
+    name: trustrag-ai-service
+    runtime: docker
+    dockerfilePath: ./Dockerfile.ai-service
+    dockerContext: .
+    region: oregon
+    plan: standard  # 2GB RAM minimum for embedding model + ChromaDB
+    healthCheckPath: /health
+    disk:
+      name: chroma-db-storage
+      mountPath: /chroma_db
+      sizeGB: 10
+    envVars:
+      - key: CHROMA_DB_PATH
+        value: /chroma_db
+      - key: EMBEDDING_MODEL
+        value: BAAI/bge-small-en-v1.5
+      - key: GOOGLE_API_KEY
+        sync: false   # set via Render dashboard
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PORT
+        value: "8000"
+      - key: PYTHON_ENV
+        value: production
+
+  # ── 2. Backend (Express + MongoDB) ──────────────────────────────────────────
+  - type: web
+    name: trustrag-backend
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: .
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && node dist/server.js
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: MONGODB_URI
+        sync: false    # set via Render dashboard — use MongoDB Atlas free tier
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: AI_SERVICE_URL
+        fromService:
+          name: trustrag-ai-service
+          type: web
+          property: host
+          envVarKey: AI_SERVICE_URL_INTERNAL
+      - key: FRONTEND_URL
+        fromService:
+          name: trustrag-frontend
+          type: web
+          property: host
+          envVarKey: FRONTEND_URL_INTERNAL
+      - key: BACKBLAZE_KEY_ID
+        sync: false
+      - key: BACKBLAZE_APPLICATION_KEY
+        sync: false
+      - key: BACKBLAZE_BUCKET_NAME
+        sync: false
+
+  # ── 3. Frontend (TanStack Start) ────────────────────────────────────────────
+  - type: web
+    name: trustrag-frontend
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: .
+    buildCommand: bun install && bun run build
+    startCommand: bun run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        fromService:
+          name: trustrag-backend
+          type: web
+          property: host
+          envVarKey: VITE_API_URL_INTERNAL
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false

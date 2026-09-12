@@ -30,3 +30,34 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# =============================================
+# SECURITY — Never commit secrets or user data
+# =============================================
+.env
+.env.local
+.env.production
+backend/.env
+ai-service/.env
+
+# Uploaded user files (never commit user data)
+uploads/
+backend/uploads/
+
+# ChromaDB vector store (local AI data, can be large)
+chroma_db/
+ai-service/chroma_db/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+
+# Tool Caches & IDE Agent configs
+graphify-out/cache/
+.agents/

@@ -13,9 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SsoCallbackRouteImport } from './routes/sso-callback'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppChatRouteImport } from './routes/app.chat'
+import { Route as AppEvaluationsRouteImport } from './routes/app.evaluations'
 import { Route as AppKnowledgeRouteImport } from './routes/app.knowledge'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppUploadRouteImport } from './routes/app.upload'
@@ -40,6 +42,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SsoCallbackRoute = SsoCallbackRouteImport.update({
+  id: '/sso-callback',
+  path: '/sso-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -53,6 +60,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
 const AppChatRoute = AppChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEvaluationsRoute = AppEvaluationsRouteImport.update({
+  id: '/evaluations',
+  path: '/evaluations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppKnowledgeRoute = AppKnowledgeRouteImport.update({
@@ -76,8 +88,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/sso-callback': typeof SsoCallbackRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
+  '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
@@ -87,8 +101,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/sso-callback': typeof SsoCallbackRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
+  '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
@@ -100,8 +116,10 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/sso-callback': typeof SsoCallbackRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
+  '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
@@ -114,8 +132,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/sso-callback'
     | '/app/analytics'
     | '/app/chat'
+    | '/app/evaluations'
     | '/app/knowledge'
     | '/app/settings'
     | '/app/upload'
@@ -125,8 +145,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/sso-callback'
     | '/app/analytics'
     | '/app/chat'
+    | '/app/evaluations'
     | '/app/knowledge'
     | '/app/settings'
     | '/app/upload'
@@ -137,8 +159,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/sso-callback'
     | '/app/analytics'
     | '/app/chat'
+    | '/app/evaluations'
     | '/app/knowledge'
     | '/app/settings'
     | '/app/upload'
@@ -150,6 +174,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  SsoCallbackRoute: typeof SsoCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sso-callback': {
+      id: '/sso-callback'
+      path: '/sso-callback'
+      fullPath: '/sso-callback'
+      preLoaderRoute: typeof SsoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/': {
       id: '/app/'
       path: '/'
@@ -201,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/app/chat'
       preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/evaluations': {
+      id: '/app/evaluations'
+      path: '/evaluations'
+      fullPath: '/app/evaluations'
+      preLoaderRoute: typeof AppEvaluationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/knowledge': {
@@ -230,6 +269,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRoute
+  AppEvaluationsRoute: typeof AppEvaluationsRoute
   AppKnowledgeRoute: typeof AppKnowledgeRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppUploadRoute: typeof AppUploadRoute
@@ -239,6 +279,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRoute,
+  AppEvaluationsRoute: AppEvaluationsRoute,
   AppKnowledgeRoute: AppKnowledgeRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppUploadRoute: AppUploadRoute,
@@ -252,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  SsoCallbackRoute: SsoCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

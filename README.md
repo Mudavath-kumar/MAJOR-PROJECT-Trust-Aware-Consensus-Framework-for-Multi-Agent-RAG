@@ -1,790 +1,203 @@
-# NovaAI Landing Replica
+# TrustRAG — Enterprise Evidence-First AI Platform
 
-Exact recreation prompt — NovaAI landing page
+> Multi-agent RAG consensus system with real-time evaluation matrices, audit trails, and Clerk authentication.
 
-Recreate this page pixel-faithfully. Stack: React + TypeScript + Vite + Tailwind CSS + lucide-react. Do not invent alternate copy, layout, fonts, colors, or effects.
-
----
-
-Page identity
-
-- Title: `NOVA_AI — Today AI Aligns With Bold Dreams`
-
-- Brand: lowercase `novaai` with a Lucide `Hexagon` icon (size 24, strokeWidth 1.5) to the left
-
-- Overall feel: dark cinematic AI marketing site; full-viewport scroll-scrubbed video background; white typography with drop shadows; frosted glass UI chips; sparse editorial layout; no purple gradients, no cream paper look, no card grids of icons
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
 ---
 
-Assets (use these exact URLs)
+## What is TrustRAG?
 
-Hero scroll video (CloudFront — required):
+TrustRAG is an enterprise-grade Retrieval-Augmented Generation (RAG) platform that:
+
+- **Runs 5 concurrent AI agents** (Retriever, Fact-Checker, Critic, Trust Assessor, Reasoner)  
+- **Computes a RAG Evaluation Matrix** for every query: Faithfulness, Context Precision, Answer Relevance, Hallucination Risk, Consensus Alignment  
+- **Enforces strict user data isolation** — all ChromaDB collections and MongoDB documents are scoped to `user_id`  
+- **Provides an Audit Trail** with compliance-ready JSON/CSV exports  
+- **Supports multi-file upload** of PDF, DOCX, TXT, Markdown, CSV (up to 10 files × 25 MB each)
+
+---
+
+## Architecture
 
 ```
-
-https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260729_102822_0e6c87e8-c141-4744-bf32-ad30db296371.mp4
-
+┌─────────────────────────────────┐
+│        React Frontend           │
+│  TanStack Start + Clerk Auth    │
+│  Port 3000 (dev) / Render       │
+└──────────────┬──────────────────┘
+               │ REST API (Bearer + x-user-email)
+┌──────────────▼──────────────────┐
+│       Express Backend           │
+│  MongoDB + Clerk JWT validation │
+│  Port 3001 (dev) / Render       │
+└──────────────┬──────────────────┘
+               │ HTTP (AI_SERVICE_URL)
+┌──────────────▼──────────────────┐
+│       FastAPI AI Service        │
+│  ChromaDB + BAAI embeddings     │
+│  5-Agent consensus pipeline     │
+│  Port 8000 (dev) / Render       │
+└─────────────────────────────────┘
 ```
 
-Video content: abstract 3D forms (hanging white cables with glowing gold tips → organic white spherical / brain-like folds with warm orange core), soft blue-grey mist / grain background, floating bokeh particles. 1920×1080.
+---
 
-Optional local mirrors for reliability: `/hero.mp4` (same file) and `/hero-poster.jpg` (first-frame still). Prefer CloudFront URL in production code; local copy is fine for offline/dev.
+## Local Development
 
-Portrait (“Talk with Mitha”) — exact URL:
+### Prerequisites
 
+- **Node.js 20+** and **Bun** (frontend + backend)
+- **Python 3.11+** with pip (AI service)
+- **MongoDB** (local or Atlas)
+- Clerk account with API keys
+
+### 1. Clone and install
+
+```bash
+git clone <your-repo-url>
+cd trustarc-core
+
+# Frontend + root dependencies
+bun install
+
+# Backend
+cd backend && npm install && cd ..
+
+# AI Service
+cd ai-service && pip install -r requirements.txt && cd ..
 ```
 
-https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260728_050334_5b076e26-0ce7-4898-b432-d764190e448f.png&w=1280&q=85
+### 2. Configure environment variables
 
+**Root `.env.local`** (frontend):
+```env
+VITE_API_URL=http://localhost:3001/api/v1
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 ```
 
-Display as `h-24 w-20` (`96×80px`), `rounded-lg`, `object-cover`. Alt: `Mitha, co-founder of NovaAI`.
-
----
-
-Fonts
-
-- Load Google Fonts Inter weights 400, 500, 600, 700
-
-- Body: `font-family: 'Inter', system-ui, sans-serif`
-
-- Tailwind: both `font-sans` and `font-mono` map to Inter (mono labels still use `font-mono` class but render Inter)
-
-- Antialiased text; selection color `rgba(255,255,255,0.2)`
-
-- Page bg: `#0a0a0a`; default text white
-
----
-
-Global structure
-
+**`backend/.env`**:
+```env
+NODE_ENV=development
+PORT=3001
+MONGODB_URI=mongodb://localhost:27017/trustrag
+JWT_SECRET=your-super-secret-jwt-key
+CLERK_SECRET_KEY=sk_test_...
+CLERK_PUBLISHABLE_KEY=pk_test_...
+AI_SERVICE_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:3000
 ```
 
-relative root
-
-  ScrollVideo (fixed inset-0 z-0, pointer-events-none)
-
-  relative z-10 wrapper
-
-    Navbar (fixed top)
-
-    main
-
-      SectionOne (min-h-screen / 100svh)
-
-      spacer div h-[80vh] (aria-hidden)  ← critical for scroll video length
-
-      SectionTwo (min-h-screen / 100svh)
-
+**`ai-service/.env`** (or environment variables):
+```env
+GOOGLE_API_KEY=...
+GROQ_API_KEY=...
+OPENROUTER_API_KEY=...
+CHROMA_DB_PATH=./chroma_db
+EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
 ```
 
-Horizontal padding rhythm everywhere: `px-5 sm:px-8 md:px-12`.  
+### 3. Run all services
 
-Section top padding under fixed nav: `pt-24 sm:pt-28`.  
+Open 3 terminals:
 
-Bottom padding: `pb-12 md:pb-16`.
+```bash
+# Terminal 1 — Frontend
+bun run dev
 
----
+# Terminal 2 — Backend
+cd backend && npm run dev
 
-Scroll-scrubbed video background (exact behavior)
-
-Fixed full-bleed layer `z-0`, bg `#0a0a0a`, `overflow-hidden`, `pointer-events-none`.
-
-Layers (bottom → top):
-
-1. Poster `<img>` — full cover; fades out (`opacity-0`, 500ms) once video has a decoded frame or frame cache is ready
-
-2. `<video>` — muted, playsInline, preload=auto, object-cover; visible only while video has a frame and canvas frame-cache is not ready; then fade out
-
-3. `<canvas>` — full cover; draws scrubbed frames; fades in when ready
-
-Scroll mapping:
-
-- `progress = scrollY / (scrollHeight - innerHeight)`, clamped 0–1
-
-- Smooth with lerp: `smoothed += (target - smoothed) * 0.12` each `requestAnimationFrame`
-
-- Draw with object-cover math (scale max, center crop)
-
-Frame cache (preferred smooth path):
-
-- Offscreen video loads same URL
-
-- Extract up to 90 frames (or `duration * 12`, min 24), max width 960px
-
-- Wait until visible video has `loadeddata` + 300ms yield before extraction starts
-
-- On ready, canvas draws cached `ImageBitmap`s by smoothed progress index
-
-Fallback: seek the visible `<video>` to `smoothed * (duration - 0.05)` when frames aren’t ready (seek if delta > 0.04s)
-
-Canvas DPR: `min(devicePixelRatio, 2)`
-
-Do not autoplay as a normal looping background — motion is scroll-driven only.
-
----
-
-Reveal animation (every text/UI block)
-
-IntersectionObserver, threshold `0.15`.  
-
-Hidden: `translate-y-8 opacity-0`  
-
-Visible: `translate-y-0 opacity-100`  
-
-Transition: `all 700ms ease-out`, `will-change-transform`  
-
-Per-element `transition-delay` in ms as specified below.
-
----
-
-Glass / material system (exact tokens)
-
-Reuse these consistently:
-
-| Token | Classes |
-
-|--------|---------|
-
-| Glass panel | `bg-white/15 backdrop-blur-md` (or `bg-white/10` for larger panels) |
-
-| Glass border | `border border-white/15` or `border-white/20` or `border-white/25` |
-
-| Left-accent badge | `border-l-2 border-white bg-white/15 px-3 py-1.5 backdrop-blur-md` + mono uppercase label |
-
-| Primary CTA | solid white pill/rounded, black text, hover `bg-white/85` |
-
-| Secondary CTA | glass border + `bg-white/10` or `bg-white/15`, white text |
-
-| Text over video | white + `drop-shadow-md` / `drop-shadow-lg` |
-
-| Mono labels | `font-mono text-[10px]` or `text-[11px]` or `text-xs`, `uppercase`, `tracking-[0.15em]` |
-
----
-
-Navbar (fixed, z-50)
-
-- Full width, `border-b border-white/15`
-
-- Row: logo left | center nav (md+) | CTA right
-
-- Logo: Hexagon + `novaai` (`text-lg sm:text-xl font-medium tracking-tight`)
-
-- Links (hidden below md): `Projects` with superscript `6` (`font-mono text-[10px] text-white/60`), `About`, `Blog`, `Contact` — `text-sm text-white/85`, hover `text-white`, gap `gap-8 lg:gap-10`
-
-- CTA: `Get Free Consultation` — `rounded-md border border-white/20 bg-white/15 backdrop-blur-md px-4 py-2 text-xs sm:px-5 sm:text-sm`, hover `bg-white/25`
-
-- Reveal delays: logo 0; links `100 + i*100` ms; CTA `500` ms
-
----
-
-Section One — Hero
-
-Full viewport flex column `justify-between`.
-
-Top row (`flex-col gap-8` → `sm:flex-row justify-between`):
-
-Left — service list (gap-2), each reveal delay `150 + i*120`:
-
+# Terminal 3 — AI Service
+cd ai-service && uvicorn app.main:app --reload --port 8000
 ```
 
-/ AI AUTOMATION
-
-/ AI INTEGRATION
-
-/ AI AGENT DEVELOPMENT
-
-```
-
-Style: `font-mono text-xs uppercase tracking-[0.15em] text-white/90 drop-shadow-md`
-
-Right — intro (`max-w-xs sm:text-right`, delay 300):
-
-> We design automation that brings clarity, precision, and efficiency to the way your company operates.  
-
-`text-lg sm:text-xl leading-relaxed text-white drop-shadow-md`
-
-Bottom row (`flex-col gap-8` → `md:flex-row items-end justify-between`):
-
-Left:
-
-1. Badge delay 150: `We Automate 100+ Businesses` — left-accent glass badge, `font-mono text-[11px] uppercase tracking-[0.15em]`, `mb-5`
-
-2. H1 delay 280:
-
-```
-
-Clear. Precise.
-
-Automated.
-
-```
-
-`text-5xl sm:text-6xl lg:text-7xl font-normal leading-[1.05] tracking-tight text-white drop-shadow-lg`
-
-Right — glass contact card (delay 420):
-
-- Container: `flex items-center gap-4 rounded-xl bg-white/15 p-3 backdrop-blur-md`
-
-- Image: portrait URL above, `h-24 w-20 rounded-lg object-cover`
-
-- Text column (`gap-1.5 pr-2`):
-
-  - `Talk with Mitha` — `text-sm font-medium text-white`
-
-  - `Co-founder of NovaAI` — mono `text-[10px] uppercase tracking-[0.15em] text-white/60`
-
-  - Button: `Book 15-mins call` + Lucide `ChevronRight` size 14 — `rounded-full bg-white px-4 py-2 text-xs font-medium text-black`, hover `bg-white/85`, `mt-1.5`
+Visit http://localhost:3000 — sign in with Clerk, upload docs, start querying.
 
 ---
 
-Mid spacer
+## Deployment to Render (One Click)
 
-`div` with `h-[80vh]` between sections so scroll progress has room to scrub the video between hero and section two.
+### Prerequisites
 
----
+1. [MongoDB Atlas free cluster](https://www.mongodb.com/atlas) — get a connection string
+2. [Clerk account](https://clerk.com) — get publishable key and secret key
+3. (Optional) Google Gemini/Groq/OpenRouter API keys for AI agents
 
-Section Two — Capability
+### Steps
 
-Same full-viewport flex `justify-between` shell.
+1. **Fork** this repository to your GitHub account
+2. Click the **Deploy to Render** button at the top of this README
+3. Render will detect `render.yaml` and create 3 services automatically
+4. **Set the following environment variables** in the Render dashboard for each service:
 
-Top row:
+#### `trustrag-ai-service` (Docker service)
+| Variable | Value |
+|---|---|
+| `GOOGLE_API_KEY` | Your Google AI Studio API key |
+| `GROQ_API_KEY` | Your Groq API key |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key |
 
-Left badge delay 120: `Insight On Demand` — same left-accent glass badge as hero.
+#### `trustrag-backend` (Node service)
+| Variable | Value |
+|---|---|
+| `MONGODB_URI` | Your MongoDB Atlas connection string |
+| `CLERK_SECRET_KEY` | `sk_live_...` from Clerk dashboard |
+| `CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk dashboard |
 
-Right copy delay 220 (`max-w-sm sm:text-right`):
+#### `trustrag-frontend` (Node service)
+| Variable | Value |
+|---|---|
+| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk dashboard |
 
-> Our AI doesn't just respond — it interprets, sharpens, and delivers the signal you need.  
+5. **Configure Clerk** for production:
+   - Add your Render frontend URL to Clerk's allowed origins
+   - Add your Render backend URL to Clerk's allowed origins
+   - Set `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/signup` in Clerk dashboard
 
-`text-lg sm:text-xl leading-relaxed text-white drop-shadow-md`
+6. Deploy all services — the AI service takes ~5 minutes on first deploy (builds PyTorch image)
 
-Bottom area (`flex-1 justify-end`, `flex-col gap-12` → `md:flex-row items-end justify-between gap-16`):
-
-Left column (`max-w-xl`):
-
-1. H2 delay 180:
-
-```
-
-Learn to see
-
-brilliantly.
-
-```
-
-Same headline scale as H1 (`text-5xl sm:text-6xl lg:text-7xl … drop-shadow-lg`)
-
-2. Body delay 320 (`mt-6 max-w-md text-sm sm:text-base text-white/80 drop-shadow-md`):
-
-> From the first sketch to the final render, Nova turns raw intent into decisions your team can act on — quietly, precisely, at speed.
-
-3. CTAs delay 420 (`mt-8 flex flex-wrap gap-3`):
-
-   - Primary pill: `Run the demo` + ChevronRight 14 — `rounded-full bg-white px-5 py-2.5 text-xs sm:text-sm font-medium text-black`, hover `bg-white/85`
-
-   - Secondary: `Free consultation` — `rounded-full border border-white/25 bg-white/10 backdrop-blur-md px-5 py-2.5 text-xs sm:text-sm`, hover `bg-white/20`
-
-Right — frosted capability panel  
-
-`w-full max-w-md rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md px-5 sm:px-6`
-
-Three rows (dividers `border-b border-white/15` except last), each `flex gap-5 py-5`, reveal delay `300 + i*110`:
-
-| # | Title | Body |
-
-|---|--------|------|
-
-| 01 | Real-time vision | Reads context as it happens and surfaces what matters before you ask. |
-
-| 02 | Layered insight | Moves from rough outline to sharp output without losing the thread. |
-
-| 03 | Adaptive speed | Learns your cadence and tightens every pass as you work. |
-
-- Index: `font-mono text-[11px] tracking-[0.15em] text-white/55`
-
-- Title: `text-base sm:text-lg font-medium text-white` + ChevronRight 16 (`text-white/40`, hover: translate-x-0.5 + `text-white`)
-
-- Body: `mt-1.5 text-sm leading-relaxed text-white/70`
+> **Note:** The AI service uses a 10 GB persistent disk for ChromaDB vector storage. This persists across deploys.
 
 ---
 
-Interactions / motion checklist
+## RAG Evaluation Matrix
 
-1. Scroll scrub maps page scroll → video timeline (smoothed)
+Every AI chat response includes a 5-point evaluation matrix:
 
-2. Staggered fade-up reveals on enter viewport (700ms, per-delay)
+| Metric | Description | Range |
+|---|---|---|
+| **Faithfulness** | % of answer propositions grounded in retrieved context | 0–100% |
+| **Context Precision** | Average cosine similarity of retrieved chunks to query | 0–100% |
+| **Answer Relevance** | Semantic relevance of answer to the original query | 0–100% |
+| **Hallucination Risk** | Derived from critic agent + semantic entropy | low/medium/high |
+| **Composite Confidence** | Weighted combination of all metrics | 0–100% |
 
-3. Button / link color transitions `duration-300`
-
-4. Capability chevrons nudge right on hover
-
-5. Poster → video → canvas opacity crossfades `duration-500`
-
-6. No looping autoplay of hero video
-
----
-
-Responsive rules
-
-- Nav links hidden below `md`
-
-- Hero/section stacks vertically on mobile; side-by-side from `sm`/`md` as specified
-
-- Prefer `supports-[height:100svh]:min-h-[100svh]` plus `min-h-screen`
-
-- Touch: video `playsInline` + muted
+View the full matrix by clicking **"RAG Eval"** on any assistant message in the chat interface. Export the full audit trail from the **Evaluations** page.
 
 ---
 
-Do not
+## Security
 
-- Do not replace Inter with another display font
-
-- Do not use a different video URL than the CloudFront URL above
-
-- Do not use the old Pexels portrait
-
-- Do not rebuild section two as icon card stacks
-
-- Do not put opaque solid backgrounds over the video (only glass / transparent wrappers)
-
-- Do not remove the `80vh` spacer
+- **User data isolation**: All MongoDB queries and ChromaDB vector searches are scoped to `user_id`
+- **File upload hardening**: Strict MIME type + extension allowlist, 25 MB limit, path traversal prevention
+- **Rate limiting**: Global Express rate limiter on all API routes
+- **Helmet.js**: Secure HTTP headers on all responses
+- **CORS**: Strict origin allowlist in production mode
+- **Clerk JWT**: All API routes require valid Clerk Bearer token
 
 ---
 
-Acceptance
-
-Top of page: fixed glass nav + service list + intro + “Clear. Precise. Automated.” + Mitha glass card over scroll video.  
-
-Scrolling scrubbing advances the CloudFront video smoothly.  
-
-After spacer: “Insight On Demand” + “Learn to see brilliantly.” + dual CTAs + three-item frosted capability panel.  
-
-Visual match to current NovaAI page at `localhost:5199`.
-
-You are an expert Senior Frontend Engineer and Product Designer.
-
-Build a modern, premium frontend for an AI SaaS application called TrustRAG.
-
-Tagline:
-
-"Reliable AI through Trust, Evidence, and Consensus."
-
-The application is NOT a normal chatbot. It is an Explainable AI platform that uses Multi-Agent Retrieval-Augmented Generation (RAG) to answer questions using uploaded documents.
-
-Use:
-
-- Next.js 16 (App Router)
-
-- React 19
-
-- TypeScript
-
-- Tailwind CSS v4
-
-- shadcn/ui
-
-- Framer Motion
-
-- Lucide Icons
-
-- Zustand
-
-- React Hook Form
-
-- React Markdown
-
-Create a fully responsive dark-themed UI inspired by ChatGPT, Claude, Cursor IDE, Vercel Dashboard, and Linear.
-
---------------------------------------------------
-
-APPLICATION LAYOUT
-
---------------------------------------------------
-
-Create:
-
-- Collapsible Sidebar
-
-- Sticky Top Navbar
-
-- Main Content Area
-
-- Responsive Layout
-
-- Dark/Light Theme Toggle
-
---------------------------------------------------
-
-SIDEBAR
-
---------------------------------------------------
-
-Dashboard
-
-AI Chat
-
-Upload Documents
-
-Knowledge Base
-
-Analytics
-
-Settings
-
---------------------------------------------------
-
-TOP NAVBAR
-
---------------------------------------------------
-
-Application Logo
-
-Global Search
-
-Notifications
-
-Theme Toggle
-
-User Avatar
-
---------------------------------------------------
-
-PAGE 1 — DASHBOARD
-
---------------------------------------------------
-
-Create a beautiful dashboard showing:
-
-- Total Documents
-
-- Total Queries
-
-- Average Confidence
-
-- Average Trust Score
-
-Recent Activity Card
-
-Recent Uploaded Documents
-
-Quick Actions
-
-System Status
-
-Modern statistic cards.
-
---------------------------------------------------
-
-PAGE 2 — DOCUMENT UPLOAD
-
---------------------------------------------------
-
-Modern drag-and-drop uploader.
-
-Support:
-
-- PDF
-
-- DOCX
-
-- TXT
-
-- Markdown
-
-Show:
-
-Upload Progress
-
-Processing Status
-
-Embedding Status
-
-Chunk Count
-
-Document Metadata
-
-Uploaded Documents Table
-
---------------------------------------------------
-
-PAGE 3 — KNOWLEDGE BASE
-
---------------------------------------------------
-
-Display uploaded documents.
-
-Features:
-
-Search
-
-Filter
-
-Delete
-
-Preview
-
-Document Details
-
-Chunk Viewer
-
-Metadata
-
---------------------------------------------------
-
-PAGE 4 — AI CHAT
-
---------------------------------------------------
-
-This is the main feature.
-
-Layout:
-
-Left:
-
-Conversation
-
-Right:
-
-Evidence Panel
-
-Input:
-
-Ask a question about uploaded documents...
-
-Response card must contain:
-
-✅ Generated Answer
-
-✅ Confidence Score
-
-✅ Trust Score
-
-✅ Consensus Score
-
-✅ Supporting Sources
-
-✅ Retrieved Chunks
-
-✅ Agent Decisions
-
-Buttons:
-
-Copy
-
-Regenerate
-
-Thumbs Up
-
-Thumbs Down
-
-Streaming typing animation.
-
-Markdown support.
-
-Syntax Highlighting.
-
---------------------------------------------------
-
-RIGHT EVIDENCE PANEL
-
---------------------------------------------------
-
-Display:
-
-Retrieved Chunks
-
-Similarity Score
-
-Source Document
-
-Evidence Ranking
-
-Trust Level
-
-Highlighted Text
-
---------------------------------------------------
-
-AI EXECUTION TIMELINE
-
---------------------------------------------------
-
-Above every answer show an animated timeline.
-
-Retrieving Documents
-
-↓
-
-Research Agent
-
-↓
-
-Fact Verification
-
-↓
-
-Trust Assessment
-
-↓
-
-Reasoning
-
-↓
-
-Consensus Engine
-
-↓
-
-Final Response
-
-Each step should animate when completed.
-
---------------------------------------------------
-
-PAGE 5 — ANALYTICS
-
---------------------------------------------------
-
-Display charts:
-
-Confidence Distribution
-
-Trust Distribution
-
-Queries Per Day
-
-Documents Uploaded
-
-Latency
-
-Hallucination Rate
-
-Use Recharts.
-
---------------------------------------------------
-
-PAGE 6 — SETTINGS
-
---------------------------------------------------
-
-Allow configuration for:
-
-Theme
-
-LLM Model
-
-Embedding Model
-
-Chunk Size
-
-Top-K Retrieval
-
-Temperature
-
-Consensus Threshold
-
---------------------------------------------------
-
-COMPONENTS
-
---------------------------------------------------
-
-Reusable:
-
-Cards
-
-Tables
-
-Dialogs
-
-Buttons
-
-Progress Bars
-
-Badges
-
-Charts
-
-Skeleton Loaders
-
-Empty States
-
-Tooltips
-
-Breadcrumbs
-
---------------------------------------------------
-
-ANIMATIONS
-
---------------------------------------------------
-
-Use Framer Motion.
-
-Smooth page transitions.
-
-Hover animations.
-
-Loading skeletons.
-
-Animated counters.
-
-Streaming response animation.
-
---------------------------------------------------
-
-DESIGN
-
---------------------------------------------------
-
-Premium SaaS.
-
-Rounded corners.
-
-Glassmorphism.
-
-Soft shadows.
-
-Excellent spacing.
-
-Dark mode by default.
-
-Modern enterprise quality.
-
---------------------------------------------------
-
-IMPORTANT
-
---------------------------------------------------
-
-Do NOT build a generic CRUD dashboard.
-
-Do NOT build a simple chatbot.
-
-Build a premium AI research platform where the AI answer, evidence, trust score, confidence score, and consensus process are the core user experience.
-
-The code should be modular, scalable, and production-ready with reusable components and feature-based folder structure. bro fist which i gave u prompt for coll animaton use that thems for this poject accdong this project use that prompt desing which i gave u firstly those desing as it use for this rag project make sure it works
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://trustarc-core.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/119b8107-31f1-4ca1-bb21-8373500b2561).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, TanStack Router/Start, TypeScript, Lucide React |
+| Auth | Clerk (OAuth + JWT) |
+| Backend | Node.js, Express, Mongoose, TypeScript |
+| Database | MongoDB Atlas |
+| AI Service | Python 3.11, FastAPI, ChromaDB |
+| Embeddings | `BAAI/bge-small-en-v1.5` via SentenceTransformers |
+| AI Models | Google Gemini / Groq LLaMA / OpenRouter |
+| Storage | Backblaze B2 (optional, graceful fallback) |
+| Deployment | Render Blueprint (`render.yaml`) |

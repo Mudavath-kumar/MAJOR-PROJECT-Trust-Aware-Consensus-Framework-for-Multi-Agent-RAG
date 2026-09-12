@@ -32,10 +32,12 @@ def _get_client(api_key: str):
 
 
 def _get_active_provider() -> str:
-    if settings.GEMINI_API_KEY and _gemini_available:
+    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY.startswith("AIza") and _gemini_available:
         return "gemini"
     if settings.OPENROUTER_API_KEY:
         return "openrouter"
+    if settings.GEMINI_API_KEY and _gemini_available:
+        return "gemini"
     return "unavailable"
 
 
@@ -52,8 +54,11 @@ async def call_llm(
     if chosen_model and not chosen_model.startswith("gemini"):
         chosen_model = settings.GEMINI_MODEL
 
-    # ── 1. Google Gemini API (Free: 15 RPM, 1M tokens/day) ─────────────────
-    if key and _gemini_available:
+    prefer_gemini = bool(key and key.startswith("AIza") and _gemini_available)
+
+    async def _try_gemini() -> Optional[str]:
+        if not (key and _gemini_available):
+            return None
         try:
             client = _get_client(key)
             response = await client.aio.models.generate_content(
@@ -67,15 +72,16 @@ async def call_llm(
             )
             if response and response.text:
                 return response.text
-            logger.warning("Gemini returned an empty response. Trying Ollama fallback...")
+            logger.warning("Gemini returned an empty response.")
         except Exception as e:
             logger.warning("Gemini failed (model=%s): %s", chosen_model, e)
+        return None
 
-    # ── 2. OpenRouter fallback ──────────────────────────────────────────────
-    if settings.OPENROUTER_API_KEY:
+    async def _try_openrouter() -> Optional[str]:
+        if not settings.OPENROUTER_API_KEY:
+            return None
         try:
             import httpx
-
             headers = {
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
                 "X-Title": settings.OPENROUTER_APP_NAME,
@@ -102,6 +108,24 @@ async def call_llm(
                     return content
         except Exception as e:
             logger.warning("OpenRouter failed (model=%s): %s", settings.OPENROUTER_MODEL, e)
+        return None
+
+    # Try preferred provider first
+    if prefer_gemini:
+        res = await _try_gemini()
+        if res:
+            return res
+        res = await _try_openrouter()
+        if res:
+            return res
+    else:
+        # If Gemini key is not an official AIza key, use OpenRouter first to avoid 404/403 lag
+        res = await _try_openrouter()
+        if res:
+            return res
+        res = await _try_gemini()
+        if res:
+            return res
 
     # ── 3. Ollama Local Fallback (runs offline) ──────────────────────────────
     try:

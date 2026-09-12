@@ -1,0 +1,52 @@
+# ─── TrustRAG AI Service — Production Dockerfile ────────────────────────────
+# Python 3.11 + PyTorch CPU + SentenceTransformers + ChromaDB + FastAPI/Uvicorn
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM python:3.11-slim
+
+# System dependencies (needed for chromadb native extensions + PyTorch)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy and install Python dependencies first (layer cache optimization)
+COPY ai-service/requirements.txt ./requirements.txt
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+        torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy AI service source code
+COPY ai-service/ ./
+
+# Create ChromaDB persistent storage directory
+RUN mkdir -p /chroma_db && chmod 777 /chroma_db
+
+# Pre-download the embedding model (baked into image for cold-start speed)
+RUN python -c "\
+from sentence_transformers import SentenceTransformer; \
+SentenceTransformer('BAAI/bge-small-en-v1.5'); \
+print('Embedding model pre-loaded successfully')"
+
+# Non-root user for security
+RUN useradd -m -u 1001 trustrag && \
+    chown -R trustrag:trustrag /app /chroma_db
+USER trustrag
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start FastAPI with Uvicorn (single worker, memory-efficient on Render free tier)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--timeout-keep-alive", "30"]

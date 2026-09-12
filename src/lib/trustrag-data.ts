@@ -13,12 +13,72 @@ export type TrustDoc = {
 };
 
 export const DOCUMENTS: TrustDoc[] = [
-  { id: "d1", name: "clinical-trial-phase-iii.pdf", type: "PDF", size: "4.2 MB", chunks: 318, uploaded: "2 hours ago", status: "ready", trust: 94, tags: ["research", "medical"] },
-  { id: "d2", name: "q3-financial-report.pdf", type: "PDF", size: "1.8 MB", chunks: 142, uploaded: "6 hours ago", status: "ready", trust: 91, tags: ["finance"] },
-  { id: "d3", name: "security-policy.docx", type: "DOCX", size: "620 KB", chunks: 58, uploaded: "Yesterday", status: "ready", trust: 88, tags: ["policy"] },
-  { id: "d4", name: "architecture-notes.md", type: "MD", size: "94 KB", chunks: 27, uploaded: "Yesterday", status: "processing", trust: 0, tags: ["engineering"] },
-  { id: "d5", name: "customer-interviews.txt", type: "TXT", size: "310 KB", chunks: 76, uploaded: "3 days ago", status: "ready", trust: 79, tags: ["research"] },
-  { id: "d6", name: "vendor-agreement-2026.pdf", type: "PDF", size: "2.1 MB", chunks: 164, uploaded: "5 days ago", status: "ready", trust: 85, tags: ["legal"] },
+  {
+    id: "d1",
+    name: "clinical-trial-phase-iii.pdf",
+    type: "PDF",
+    size: "4.2 MB",
+    chunks: 318,
+    uploaded: "2 hours ago",
+    status: "ready",
+    trust: 94,
+    tags: ["research", "medical"],
+  },
+  {
+    id: "d2",
+    name: "q3-financial-report.pdf",
+    type: "PDF",
+    size: "1.8 MB",
+    chunks: 142,
+    uploaded: "6 hours ago",
+    status: "ready",
+    trust: 91,
+    tags: ["finance"],
+  },
+  {
+    id: "d3",
+    name: "security-policy.docx",
+    type: "DOCX",
+    size: "620 KB",
+    chunks: 58,
+    uploaded: "Yesterday",
+    status: "ready",
+    trust: 88,
+    tags: ["policy"],
+  },
+  {
+    id: "d4",
+    name: "architecture-notes.md",
+    type: "MD",
+    size: "94 KB",
+    chunks: 27,
+    uploaded: "Yesterday",
+    status: "processing",
+    trust: 0,
+    tags: ["engineering"],
+  },
+  {
+    id: "d5",
+    name: "customer-interviews.txt",
+    type: "TXT",
+    size: "310 KB",
+    chunks: 76,
+    uploaded: "3 days ago",
+    status: "ready",
+    trust: 79,
+    tags: ["research"],
+  },
+  {
+    id: "d6",
+    name: "vendor-agreement-2026.pdf",
+    type: "PDF",
+    size: "2.1 MB",
+    chunks: 164,
+    uploaded: "5 days ago",
+    status: "ready",
+    trust: 85,
+    tags: ["legal"],
+  },
 ];
 
 export const CHUNKS = [
@@ -61,8 +121,16 @@ export const CHUNKS = [
 ];
 
 export const AGENT_STEPS = [
-  { key: "retrieve", label: "Retrieving documents", detail: "18 candidate chunks scanned across 6 sources" },
-  { key: "research", label: "Research agent", detail: "Drafted a grounded outline from top-8 chunks" },
+  {
+    key: "retrieve",
+    label: "Retrieving documents",
+    detail: "18 candidate chunks scanned across 6 sources",
+  },
+  {
+    key: "research",
+    label: "Research agent",
+    detail: "Drafted a grounded outline from top-8 chunks",
+  },
   { key: "verify", label: "Fact verification", detail: "7 of 7 claims matched to source text" },
   { key: "trust", label: "Trust assessment", detail: "Source authority and recency weighted" },
   { key: "reason", label: "Reasoning", detail: "Resolved a conflict between p.42 and p.57" },

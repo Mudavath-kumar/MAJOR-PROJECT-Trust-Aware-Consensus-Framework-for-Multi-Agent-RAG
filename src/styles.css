@@ -135,8 +135,10 @@
 }
 
 @theme inline {
-  --font-sans: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-mono: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-sans:
+    "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono:
+    "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
 @utility glass {
@@ -173,14 +175,63 @@
   }
 }
 
+@keyframes video-zoom {
+  0% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@utility animate-video-zoom {
+  animation: video-zoom 25s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 700ms ease-out both;
+}
+
 @keyframes timeline-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 35%, transparent); }
-  50% { box-shadow: 0 0 0 7px transparent; }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px transparent;
+  }
 }
 
 @keyframes timeline-flow {
-  from { background-position: 0 0; }
-  to { background-position: 0 18px; }
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 18px;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
 }
 
 @utility animate-timeline-pulse {
@@ -212,7 +263,14 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
-    font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family:
+      "Figtree",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Helvetica,
+      Arial,
+      sans-serif;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: geometricPrecision;
   }
@@ -235,4 +293,18 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Suppress any Lovable injected logos, badges, toolbars or widgets */
+#lovable-badge,
+[id*="lovable-badge"],
+[class*="lovable-badge"],
+[id*="lovable"],
+[class*="lovable"],
+a[href*="lovable.dev"],
+button[aria-label*="lovable" i] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
