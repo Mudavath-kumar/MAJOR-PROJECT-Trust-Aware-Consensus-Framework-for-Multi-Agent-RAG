@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Shield, Zap, Database, Check } from "lucide-react";
+import { Eye, EyeOff, Check, ArrowRight, Shield, Zap, BarChart3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSignIn, useSignUp, useAuth } from "@clerk/clerk-react";
 
@@ -15,52 +15,23 @@ function GoogleMark() {
   );
 }
 
-// ── TrustRAG brand icon ──────────────────────────────────────────────────────
-function BrandIcon() {
+// ── TrustRAG Hexagon brand icon ───────────────────────────────────────────────
+function BrandIcon({ size = 26 }: { size?: number }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
-      <circle cx="12" cy="4" r="2.5" fill="currentColor" fillOpacity="0.9" />
-      <circle cx="19" cy="8" r="2.5" fill="currentColor" fillOpacity="0.9" />
-      <circle cx="19" cy="16" r="2.5" fill="currentColor" fillOpacity="0.9" />
-      <circle cx="12" cy="20" r="2.5" fill="currentColor" fillOpacity="0.9" />
-      <circle cx="5" cy="16" r="2.5" fill="currentColor" fillOpacity="0.9" />
-      <circle cx="5" cy="8" r="2.5" fill="currentColor" fillOpacity="0.9" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden>
+      <path d="M32 4L56 18V46L32 60L8 46V18L32 4Z" stroke="rgba(255,255,255,0.85)" strokeWidth="3.5" strokeLinejoin="round" fill="rgba(255,255,255,0.12)" />
+      <path d="M32 14L46 22V38L32 46L18 38V22L32 14Z" fill="rgba(255,255,255,0.9)" />
+      <circle cx="32" cy="32" r="5" fill="rgba(30,64,175,0.9)" />
     </svg>
   );
 }
 
-// ── Step card ────────────────────────────────────────────────────────────────
-function StepCard({
-  num,
-  label,
-  active,
-}: {
-  num: number;
-  label: string;
-  active: boolean;
-}) {
+// ── Feature pill ─────────────────────────────────────────────────────────────
+function FeaturePill({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
-    <div
-      className={`flex flex-1 flex-col justify-between rounded-2xl p-3.5 transition-all duration-300 min-h-[110px] ${
-        active
-          ? "bg-white text-gray-900 shadow-lg"
-          : "bg-white/20 border border-white/25 text-white backdrop-blur-md"
-      }`}
-    >
-      <span
-        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-          active ? "bg-[#1d4ed8] text-white" : "bg-white/25 text-white"
-        }`}
-      >
-        {num}
-      </span>
-      <p
-        className={`text-[12px] font-medium leading-snug line-clamp-2 ${
-          active ? "text-gray-900" : "text-white/95"
-        }`}
-      >
-        {label}
-      </p>
+    <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 backdrop-blur-sm">
+      <Icon size={13} className="text-white/80" />
+      <span className="text-[12px] font-medium text-white/90">{label}</span>
     </div>
   );
 }
@@ -87,13 +58,13 @@ function PasswordField({
         placeholder={placeholder || "••••••••••••••"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-xl border border-gray-100 bg-[#f8f9fc] px-3.5 pr-10 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+        className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 pr-11 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
       />
       <button
         type="button"
         tabIndex={-1}
         onClick={() => setShow(!show)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
       >
         {show ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
@@ -181,9 +152,6 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     setGoogleLoading(true);
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:8080";
     try {
-      // Always use signIn.authenticateWithRedirect for OAuth.
-      // Clerk automatically creates an account if none exists — using signUp OAuth
-      // causes Clerk to redirect new users to the hosted Account Portal instead.
       await signIn!.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: `${origin}/sso-callback`,
@@ -195,202 +163,113 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     }
   };
 
-  const steps = [
-    { label: "Register your account" },
-    { label: "Set up your profile information" },
-    { label: "Verify your identity through passport/ID" },
-  ];
-
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-[#14151a] p-3 sm:p-6 lg:p-10 font-sans">
-      {/* ── Main rounded modal card ────────────────────────────────────────── */}
-      <div className="relative flex w-full max-w-[1100px] flex-col overflow-hidden rounded-[28px] sm:rounded-[36px] bg-white p-3 shadow-2xl lg:flex-row lg:gap-4 lg:p-3.5">
-        
-        {/* ── Left panel: blue gradient ──────────────────────────────────── */}
+    <main className="flex min-h-screen w-full items-center justify-center bg-black p-4 sm:p-6 lg:p-8">
+      {/* ── Outer card ──────────────────────────────────────────────────────── */}
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.4)] lg:flex lg:min-h-[620px]">
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            LEFT PANEL — Gradient branding (desktop: 44% wide, mobile: top strip)
+        ═══════════════════════════════════════════════════════════════════ */}
         <div
-          className="relative flex flex-col justify-between overflow-hidden rounded-[24px] sm:rounded-[28px] p-6 sm:p-8 lg:w-[490px] lg:shrink-0 lg:p-10 min-h-[380px] lg:min-h-[640px]"
+          className="relative flex flex-col justify-between overflow-hidden p-7 sm:p-8 lg:w-[44%] lg:shrink-0 lg:p-10 lg:py-12"
           style={{
-            background: "linear-gradient(145deg, #133bb7 0%, #2564df 45%, #4696ff 85%, #69aaff 100%)",
+            background:
+              "linear-gradient(145deg, #1034a6 0%, #1e50e2 40%, #3b82f6 80%, #60a5fa 100%)",
           }}
         >
-          {/* Subtle radial ambient glow */}
+          {/* Ambient top glow */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: "radial-gradient(ellipse 65% 55% at 50% 30%, rgba(255,255,255,0.22) 0%, transparent 70%)",
+              background:
+                "radial-gradient(ellipse 70% 50% at 50% 10%, rgba(255,255,255,0.2) 0%, transparent 65%)",
+            }}
+          />
+          {/* Bottom mesh glow */}
+          <div
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-1/2"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 60% at 50% 100%, rgba(30,64,175,0.4) 0%, transparent 70%)",
             }}
           />
 
-          {/* Top: Brand Logo */}
+          {/* Logo row */}
           <div className="relative z-10 flex items-center gap-2.5">
-            <BrandIcon />
-            <span className="text-lg font-semibold tracking-tight text-white">TrustRAG</span>
+            <BrandIcon size={28} />
+            <span className="text-xl font-bold tracking-tight text-white">TrustRAG</span>
           </div>
 
-          {/* Middle: Badge & Headline */}
-          <div className="relative z-10 my-auto space-y-4 pt-8 lg:pt-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3.5 py-1 text-xs font-medium text-white backdrop-blur-md shadow-sm">
-              {signup ? "Join Us to Build 🤩" : "Welcome Back 👋"}
+          {/* Hero text — hidden on small mobile, shown from sm */}
+          <div className="relative z-10 my-6 lg:my-0 lg:flex-1 lg:flex lg:flex-col lg:justify-center space-y-5 lg:py-8">
+            {/* Badge */}
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3.5 py-1 text-[11px] font-semibold tracking-wide text-white uppercase backdrop-blur-sm">
+              {signup ? "Create Account" : "Welcome Back"}
             </span>
 
-            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[42px] lg:leading-[1.15]">
-              {signup ? "Start your Journey" : "Continue your Journey"}
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-[38px] lg:leading-[1.12]">
+              {signup ? (
+                <>Unlock AI you<br className="hidden sm:block" /> can trust</>
+              ) : (
+                <>Your evidence-first<br className="hidden sm:block" /> AI workspace</>
+              )}
             </h1>
 
-            <p className="text-sm font-normal text-white/85 max-w-[340px]">
+            <p className="max-w-[300px] text-sm text-white/75 leading-relaxed">
               {signup
-                ? "Follow these simple steps to set up your account."
-                : "Log back in to inspect trust scores and multi-agent consensus."}
+                ? "Multi-agent RAG with real confidence scores, source citations, and consensus reasoning."
+                : "Inspect trust scores, confidence metrics, and multi-agent consensus from your documents."}
             </p>
+
+            {/* Feature pills */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <FeaturePill icon={Shield} label="Trust-aware" />
+              <FeaturePill icon={Zap} label="Multi-agent" />
+              <FeaturePill icon={BarChart3} label="Confidence scores" />
+            </div>
           </div>
 
-          {/* Bottom: 3 Step Cards */}
-          <div className="relative z-10 flex gap-2.5 pt-6">
-            {steps.map((s, i) => (
-              <StepCard
-                key={i}
-                num={i + 1}
-                label={s.label}
-                active={i === 0}
-              />
-            ))}
+          {/* Bottom quote */}
+          <div className="relative z-10 hidden lg:block">
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+              <p className="text-[12.5px] italic text-white/80 leading-relaxed">
+                "TrustRAG gave us visibility into why the AI answered the way it did — not just what it said."
+              </p>
+              <p className="mt-2 text-[11px] font-semibold text-white/60">— Research Lead, AI Systems Lab</p>
+            </div>
           </div>
         </div>
 
-        {/* ── Right panel: clean white form ──────────────────────────────── */}
-        <div className="flex flex-1 flex-col justify-center px-4 py-8 sm:px-10 sm:py-10 lg:px-14">
-          <div className="mx-auto w-full max-w-[380px]">
-            {/* Header */}
-            <h2 className="text-center text-2xl sm:text-[28px] font-bold tracking-tight text-gray-900">
-              {signup ? "Join Us" : "Welcome Back"}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-              {/* Email input */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-700">
-                  Email address
-                </label>
-                <div className="relative">
-                  <input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    placeholder="johndoe@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 w-full rounded-xl border border-gray-100 bg-[#f8f9fc] px-3.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
-                  />
-                </div>
-              </div>
-
-              {/* Full Name & Username row for signup */}
-              {signup && (
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">Full Name</label>
-                    <input
-                      required
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Juliette Karapetyan"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="h-11 w-full rounded-xl border border-gray-100 bg-[#f8f9fc] px-3 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">Username</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        autoComplete="username"
-                        placeholder="julietux"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="h-11 w-full rounded-xl border border-gray-100 bg-[#f8f9fc] px-3 pr-8 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
-                      />
-                      {username.trim().length > 2 && (
-                        <Check
-                          size={15}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-500"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Password */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-gray-700">Password</label>
-                  {!signup && (
-                    <a
-                      href="#forgot"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setError("Please use Google sign-in or check Clerk dashboard for password reset.");
-                      }}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Forgot?
-                    </a>
-                  )}
-                </div>
-                <PasswordField
-                  value={password}
-                  onChange={setPassword}
-                  autoComplete={signup ? "new-password" : "current-password"}
-                />
-                {signup && (
-                  <p className="text-[11px] leading-relaxed text-gray-400">
-                    At least 8 characters. Uppercase letters, lowercase letters, numbers, and symbols.
-                  </p>
-                )}
-              </div>
-
-              {/* Error notification */}
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-                  {error}
-                </div>
-              )}
-
-              {/* Continue button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-2 h-11 w-full rounded-xl bg-[#2354e6] text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#1d45c7] active:scale-[0.99] disabled:opacity-60"
-              >
-                {submitting ? "Please wait…" : "Continue"}
-              </button>
-            </form>
-
-            {/* Toggle link */}
-            <p className="mt-4 text-center text-xs text-gray-500">
-              {signup ? "Already have an account? " : "Don't have an account? "}
-              <Link
-                to={signup ? "/login" : "/signup"}
-                className="font-semibold text-blue-600 hover:underline"
-              >
-                {signup ? "Log in" : "Sign up"}
-              </Link>
-            </p>
-
-            {/* Or Divider */}
-            <div className="my-4 flex items-center gap-3 text-xs text-gray-400">
-              <span className="h-px flex-1 bg-gray-200" />
-              Or
-              <span className="h-px flex-1 bg-gray-200" />
+        {/* ═══════════════════════════════════════════════════════════════════
+            RIGHT PANEL — White form
+        ═══════════════════════════════════════════════════════════════════ */}
+        <div className="flex flex-1 flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-10">
+          <div className="mx-auto w-full max-w-[400px]">
+            {/* Heading */}
+            <div className="mb-7">
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                {signup ? "Create your account" : "Sign in to TrustRAG"}
+              </h2>
+              <p className="mt-1.5 text-sm text-gray-500">
+                {signup
+                  ? "Already have an account? "
+                  : "Don't have an account? "}
+                <Link
+                  to={signup ? "/login" : "/signup"}
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  {signup ? "Log in" : "Sign up free"}
+                </Link>
+              </p>
             </div>
 
-            {/* Google Sign-in */}
+            {/* Google button */}
             <button
               type="button"
               onClick={handleGoogleAuth}
               disabled={googleLoading}
-              className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow active:scale-[0.99] disabled:opacity-60"
             >
               <GoogleMark />
               {googleLoading
@@ -400,11 +279,125 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
                 : "Sign in with Google"}
             </button>
 
-            {/* Privacy Policy disclaimer */}
+            {/* Divider */}
+            <div className="my-5 flex items-center gap-3">
+              <span className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs font-medium text-gray-400">or continue with email</span>
+              <span className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Full Name + Username row (signup only) */}
+              {signup && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">Full Name</label>
+                    <input
+                      required
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Jane Smith"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">Username</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        autoComplete="username"
+                        placeholder="janesmith"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 pr-9 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                      />
+                      {username.trim().length > 2 && (
+                        <Check size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-700">
+                  Email address
+                </label>
+                <input
+                  required
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-gray-700">Password</label>
+                  {!signup && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setError(
+                          "Use the 'Forgot password' flow via Google, or contact support."
+                        )
+                      }
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <PasswordField
+                  value={password}
+                  onChange={setPassword}
+                  autoComplete={signup ? "new-password" : "current-password"}
+                />
+                {signup && (
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Min. 8 characters — mix of uppercase, lowercase, numbers &amp; symbols.
+                  </p>
+                )}
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 leading-relaxed">
+                  {error}
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="group mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg active:scale-[0.99] disabled:opacity-60"
+              >
+                {submitting ? (
+                  "Please wait…"
+                ) : (
+                  <>
+                    {signup ? "Create account" : "Sign in"}
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Privacy */}
             {signup && (
-              <p className="mt-5 text-center text-[10.5px] leading-relaxed text-gray-400">
-                By signing up I confirm that I carefully have read and agree to the TrustRAG{" "}
-                <span className="font-medium text-gray-600">Privacy Policy and Terms of Service</span>.
+              <p className="mt-5 text-center text-[11px] leading-relaxed text-gray-400">
+                By signing up, you agree to our{" "}
+                <span className="font-medium text-gray-600">Terms of Service</span> and{" "}
+                <span className="font-medium text-gray-600">Privacy Policy</span>.
               </p>
             )}
           </div>
