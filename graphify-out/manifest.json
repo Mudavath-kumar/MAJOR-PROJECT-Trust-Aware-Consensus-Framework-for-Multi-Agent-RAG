@@ -539,12 +539,6 @@
     "ast_hash": "4fbecce330baeda4e130e4751f82ccce",
     "semantic_hash": "4fbecce330baeda4e130e4751f82ccce"
   },
-  ".lovable/project.json": {
-    "mtime": 1788889774.6843843,
-    "seen": 1789118619.764547,
-    "ast_hash": "04de58174576161ff4ef4453a10982c8",
-    "semantic_hash": "04de58174576161ff4ef4453a10982c8"
-  },
   "ai-service/app/agents/critic.py": {
     "mtime": 1788935435.9913354,
     "seen": 1789118619.764547,

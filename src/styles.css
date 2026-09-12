@@ -295,7 +295,7 @@
   }
 }
 
-/* Suppress any Lovable injected logos, badges, toolbars or widgets */
+/* Suppress third-party injected watermarks, badges, toolbars or widgets */
 #lovable-badge,
 [id*="lovable-badge"],
 [class*="lovable-badge"],
