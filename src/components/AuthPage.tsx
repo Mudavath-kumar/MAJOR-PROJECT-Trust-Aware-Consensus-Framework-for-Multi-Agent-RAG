@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Check, ArrowRight, Shield, Zap, BarChart3 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSignIn, useSignUp, useAuth } from "@clerk/clerk-react";
 
 // ── Google icon ──────────────────────────────────────────────────────────────
@@ -89,12 +89,21 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   // If already authenticated, redirect straight to /app
   useEffect(() => {
     if (authLoaded && isSignedIn) {
       void navigate({ to: "/app" });
     }
   }, [authLoaded, isSignedIn, navigate]);
+
+  // Ensure video begins playing reliably across all browsers
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -164,20 +173,50 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   };
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-black p-4 sm:p-6 lg:p-8">
-      {/* ── Outer card ──────────────────────────────────────────────────────── */}
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-[0_32px_80px_rgba(0,0,0,0.4)] lg:flex lg:min-h-[620px]">
+    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4 sm:p-6 lg:p-8">
+      {/* ── Background animated video theme (outside the card) ───────────── */}
+      <div className="fixed inset-0 z-0 overflow-hidden bg-[#1d8fb8]">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/693205bf-8048-456a-879e-4e0a1b85a098.webp"
+          aria-label="Painted alpine panorama: a lone hiker with a pink backpack faces a snow-capped peak above a sea of clouds"
+          className="absolute inset-0 h-full w-full object-cover filter saturate-[0.86]"
+        >
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_123836_11a3c5e0-713f-4bef-a8e9-7dd93bdea3b0.mp4"
+            type="video/mp4"
+          />
+        </video>
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            LEFT PANEL — Gradient branding (desktop: 44% wide, mobile: top strip)
-        ═══════════════════════════════════════════════════════════════════ */}
+        {/* Ambient light scrim: keeps the animated video bright and clear */}
         <div
-          className="relative flex flex-col justify-between overflow-hidden p-7 sm:p-8 lg:w-[44%] lg:shrink-0 lg:p-10 lg:py-12"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(145deg, #1034a6 0%, #1e50e2 40%, #3b82f6 80%, #60a5fa 100%)",
+              "linear-gradient(180deg, rgba(6, 22, 34, 0.20) 0%, rgba(6, 22, 34, 0.05) 50%, rgba(6, 22, 34, 0.15) 100%)",
           }}
-        >
+        />
+      </div>
+
+      {/* ── Frosted glass blur outer frame (blurs card corners & edges) ── */}
+      <div className="relative z-10 w-full max-w-5xl rounded-[36px] bg-white/25 p-2.5 sm:p-3 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_0_rgba(255,255,255,0.2)]">
+        {/* ── Solid inner card (not blurred inside, pristine contrast) ── */}
+        <div className="overflow-hidden rounded-[26px] bg-white lg:flex lg:min-h-[620px]">
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              LEFT PANEL — Vibrant gradient branding (desktop: 44% wide)
+          ═══════════════════════════════════════════════════════════════════ */}
+          <div
+            className="relative flex flex-col justify-between overflow-hidden p-7 sm:p-8 lg:w-[44%] lg:shrink-0 lg:p-10 lg:py-12"
+            style={{
+              background:
+                "linear-gradient(145deg, #1034a6 0%, #1e50e2 40%, #3b82f6 80%, #60a5fa 100%)",
+            }}
+          >
           {/* Ambient top glow */}
           <div
             className="pointer-events-none absolute inset-0"
@@ -242,9 +281,9 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            RIGHT PANEL — White form
+            RIGHT PANEL — Crisp solid white form (not blurred inside)
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex flex-1 flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-10">
+        <div className="flex flex-1 flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-10 bg-white">
           <div className="mx-auto w-full max-w-[400px]">
             {/* Heading */}
             <div className="mb-7">
@@ -402,6 +441,9 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             )}
           </div>
         </div>
+        {/* End of solid inner card */}
+        </div>
+      {/* End of frosted glass outer frame */}
       </div>
     </main>
   );
