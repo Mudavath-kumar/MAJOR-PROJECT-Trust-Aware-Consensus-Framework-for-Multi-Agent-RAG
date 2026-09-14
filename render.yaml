@@ -60,14 +60,12 @@ services:
         fromService:
           name: trustrag-ai-service
           type: web
-          property: host
-          envVarKey: AI_SERVICE_URL_INTERNAL
+          property: hostURL
       - key: FRONTEND_URL
         fromService:
           name: trustrag-frontend
           type: web
-          property: host
-          envVarKey: FRONTEND_URL_INTERNAL
+          property: hostURL
       - key: BACKBLAZE_KEY_ID
         sync: false
       - key: BACKBLAZE_APPLICATION_KEY
@@ -92,8 +90,7 @@ services:
         fromService:
           name: trustrag-backend
           type: web
-          property: host
-          envVarKey: VITE_API_URL_INTERNAL
+          property: hostURL
       - key: VITE_CLERK_PUBLISHABLE_KEY
         sync: false
       - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
