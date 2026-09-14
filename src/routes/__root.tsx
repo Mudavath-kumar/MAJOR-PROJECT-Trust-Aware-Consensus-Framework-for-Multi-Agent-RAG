@@ -12,11 +12,10 @@ import { ClerkProvider } from "@clerk/clerk-react";
 
 import appCss from "../styles.css?url";
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  "pk_test_dmFsaWQtZWxmLTk4NDQuY2xlcmsuYWNjb3VudHMuZGV2JA";
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-}
 
 function NotFoundComponent() {
   return (
@@ -43,6 +42,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const errorMessage = error instanceof Error ? error.message : (typeof error === "string" ? error : "An unexpected error occurred");
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -51,7 +51,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {errorMessage}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
