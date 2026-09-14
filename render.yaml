@@ -1,6 +1,8 @@
 # ─── TrustRAG — Render Blueprint ─────────────────────────────────────────────
-# Deploys 3 services: Frontend (Node), Backend (Node), AI Service (Docker)
-# 1-click deploy: https://render.com/deploy
+# Deploys 2 services on Render Free Tier (No Credit Card Required):
+#   1. AI Service (FastAPI + ChromaDB Docker container)
+#   2. Backend (Node.js / Express + MongoDB)
+# Frontend is deployed on Vercel: https://vercel.com
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -11,12 +13,8 @@ services:
     dockerfilePath: ./Dockerfile.ai-service
     dockerContext: .
     region: oregon
-    plan: standard  # 2GB RAM minimum for embedding model + ChromaDB
+    plan: free
     healthCheckPath: /health
-    disk:
-      name: chroma-db-storage
-      mountPath: /chroma_db
-      sizeGB: 10
     envVars:
       - key: CHROMA_DB_PATH
         value: /chroma_db
@@ -37,7 +35,7 @@ services:
   - type: web
     name: trustrag-backend
     runtime: node
-    plan: starter
+    plan: free
     region: oregon
     rootDir: .
     buildCommand: cd backend && npm install && npm run build
@@ -49,7 +47,7 @@ services:
       - key: PORT
         value: "3001"
       - key: MONGODB_URI
-        sync: false    # set via Render dashboard — use MongoDB Atlas free tier
+        sync: false    # MongoDB Atlas free tier connection string
       - key: JWT_SECRET
         generateValue: true
       - key: CLERK_SECRET_KEY
@@ -62,38 +60,10 @@ services:
           type: web
           property: host
       - key: FRONTEND_URL
-        fromService:
-          name: trustrag-frontend
-          type: web
-          property: host
+        sync: false    # Your Vercel frontend URL (e.g. https://your-project.vercel.app)
       - key: BACKBLAZE_KEY_ID
         sync: false
       - key: BACKBLAZE_APPLICATION_KEY
         sync: false
       - key: BACKBLAZE_BUCKET_NAME
-        sync: false
-
-  # ── 3. Frontend (TanStack Start) ────────────────────────────────────────────
-  - type: web
-    name: trustrag-frontend
-    runtime: node
-    plan: starter
-    region: oregon
-    rootDir: .
-    buildCommand: bun install && bun run build
-    startCommand: bun run start
-    healthCheckPath: /
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: VITE_API_URL
-        fromService:
-          name: trustrag-backend
-          type: web
-          property: host
-      - key: VITE_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: CLERK_SECRET_KEY
         sync: false

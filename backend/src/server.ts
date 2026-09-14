@@ -28,10 +28,16 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In production, only allow the configured frontend URL
+      // In production, allow the configured frontend URL(s) and any Vercel deployment URL
       if (env.NODE_ENV === "production") {
-        const allowed = [env.FRONTEND_URL];
-        if (!origin || allowed.includes(origin)) {
+        const configured = env.FRONTEND_URL
+          ? env.FRONTEND_URL.split(",").map((u) => u.trim().replace(/\/$/, ""))
+          : [];
+        const normalizedOrigin = origin ? origin.replace(/\/$/, "") : "";
+        const isVercel =
+          normalizedOrigin.endsWith(".vercel.app") ||
+          normalizedOrigin.includes("vercel.app");
+        if (!origin || configured.includes(normalizedOrigin) || isVercel) {
           callback(null, true);
         } else {
           callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
