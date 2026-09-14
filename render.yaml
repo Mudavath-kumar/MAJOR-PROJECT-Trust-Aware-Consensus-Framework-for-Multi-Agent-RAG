@@ -60,12 +60,12 @@ services:
         fromService:
           name: trustrag-ai-service
           type: web
-          property: hostURL
+          property: host
       - key: FRONTEND_URL
         fromService:
           name: trustrag-frontend
           type: web
-          property: hostURL
+          property: host
       - key: BACKBLAZE_KEY_ID
         sync: false
       - key: BACKBLAZE_APPLICATION_KEY
@@ -90,7 +90,7 @@ services:
         fromService:
           name: trustrag-backend
           type: web
-          property: hostURL
+          property: host
       - key: VITE_CLERK_PUBLISHABLE_KEY
         sync: false
       - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
