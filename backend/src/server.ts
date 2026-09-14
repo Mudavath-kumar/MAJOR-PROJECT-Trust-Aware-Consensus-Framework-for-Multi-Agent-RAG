@@ -65,6 +65,17 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(globalLimiter);
 
+// Root welcome endpoint
+app.get("/", (req, res) => {
+  res.json({
+    name: "TrustRAG API Server",
+    status: "online",
+    health: "/api/v1/health",
+    version: "1.0.0",
+    docs: "https://github.com/Mudavath-kumar/MAJOR-PROJECT-Trust-Aware-Consensus-Framework-for-Multi-Agent-RAG",
+  });
+});
+
 // Health check endpoint
 app.get("/api/v1/health", async (req, res) => {
   const aiHealth = await AIService.checkHealth();
