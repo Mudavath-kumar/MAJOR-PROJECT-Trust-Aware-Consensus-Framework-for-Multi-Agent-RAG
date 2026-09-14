@@ -36,7 +36,13 @@ export const env = {
   // Use env var; only fall back to dev default if not in production
   JWT_SECRET: JWT_SECRET || "dev_only_secret_replace_before_production_deploy_32chars",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
-  AI_SERVICE_URL: process.env.AI_SERVICE_URL || "http://127.0.0.1:8000",
+  // Render fromService property:host returns a bare hostname (no protocol).
+  // We normalise it to always be a full URL so axios requests succeed.
+  AI_SERVICE_URL: (() => {
+    const raw = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    return `https://${raw}`;
+  })(),
   AI_SERVICE_TIMEOUT_MS: parseInt(process.env.AI_SERVICE_TIMEOUT_MS || "120000", 10),
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10),
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || "500", 10),

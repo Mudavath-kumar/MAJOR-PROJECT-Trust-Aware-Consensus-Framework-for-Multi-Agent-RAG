@@ -1,8 +1,14 @@
 # ─── TrustRAG — Render Blueprint ─────────────────────────────────────────────
 # Deploys 2 services on Render Free Tier (No Credit Card Required):
-#   1. AI Service (FastAPI + ChromaDB Docker container)
-#   2. Backend (Node.js / Express + MongoDB)
-# Frontend is deployed on Vercel: https://vercel.com
+#   1. AI Service  — FastAPI + ChromaDB (Docker)
+#   2. Backend     — Node.js Express + MongoDB Atlas
+# Frontend is deployed separately on Vercel (100% free, no card needed)
+#
+# HOW TO DEPLOY:
+#   1. Push this file to GitHub (it's already there!)
+#   2. Go to https://dashboard.render.com/blueprints → New Blueprint
+#   3. Connect your GitHub repo, leave Blueprint Path blank, branch = main
+#   4. Click Apply — then fill in secrets (GOOGLE_API_KEY, MONGODB_URI, etc.)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -21,7 +27,7 @@ services:
       - key: EMBEDDING_MODEL
         value: BAAI/bge-small-en-v1.5
       - key: GOOGLE_API_KEY
-        sync: false   # set via Render dashboard
+        sync: false
       - key: OPENROUTER_API_KEY
         sync: false
       - key: GROQ_API_KEY
@@ -47,7 +53,7 @@ services:
       - key: PORT
         value: "3001"
       - key: MONGODB_URI
-        sync: false    # MongoDB Atlas free tier connection string
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: CLERK_SECRET_KEY
@@ -60,7 +66,7 @@ services:
           type: web
           property: host
       - key: FRONTEND_URL
-        sync: false    # Your Vercel frontend URL (e.g. https://your-project.vercel.app)
+        sync: false
       - key: BACKBLAZE_KEY_ID
         sync: false
       - key: BACKBLAZE_APPLICATION_KEY
