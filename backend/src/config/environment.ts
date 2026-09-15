@@ -51,4 +51,7 @@ export const env = {
   B2_KEY_ID: process.env.B2_KEY_ID || "",
   B2_APPLICATION_KEY: process.env.B2_APPLICATION_KEY || "",
   B2_BUCKET_NAME: process.env.B2_BUCKET_NAME || "",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
+  TAVILY_API_KEY: process.env.TAVILY_API_KEY || "",
 };
