@@ -28,38 +28,39 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In production, allow the configured frontend URL(s) and any Vercel deployment URL
-      if (env.NODE_ENV === "production") {
-        const configured = env.FRONTEND_URL
-          ? env.FRONTEND_URL.split(",").map((u) => u.trim().replace(/\/$/, ""))
-          : [];
-        const normalizedOrigin = origin ? origin.replace(/\/$/, "") : "";
-        const isVercel =
-          normalizedOrigin.endsWith(".vercel.app") ||
-          normalizedOrigin.includes("vercel.app");
-        if (!origin || configured.includes(normalizedOrigin) || isVercel) {
-          callback(null, true);
-        } else {
-          callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
-        }
-      } else {
-        // In development, allow any localhost port (e.g. 8080, 8081, 5173, 3000)
-        if (
-          !origin ||
-          origin.startsWith("http://localhost:") ||
-          origin.startsWith("http://127.0.0.1:")
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
+      // Always allow .vercel.app deployments (our frontend host)
+      if (!origin) return callback(null, true);
+
+      const normalized = origin.replace(/\/$/, "");
+
+      if (normalized.includes("vercel.app")) {
+        return callback(null, true);
+      }
+
+      // Allow localhost for development
+      if (
+        normalized.startsWith("http://localhost:") ||
+        normalized.startsWith("http://127.0.0.1:")
+      ) {
+        return callback(null, true);
+      }
+
+      // Allow any explicitly configured FRONTEND_URL(s)
+      if (env.FRONTEND_URL) {
+        const allowed = env.FRONTEND_URL.split(",").map((u) => u.trim().replace(/\/$/, ""));
+        if (allowed.includes(normalized)) {
+          return callback(null, true);
         }
       }
+
+      return callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-user-email", "x-user-name"],
   }),
 );
+
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
