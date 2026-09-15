@@ -5,7 +5,11 @@
  * local-only data as successfully persisted or indexed knowledge.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1";
+let rawBase = (import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1").trim().replace(/\/+$/, "");
+if (!rawBase.endsWith("/api/v1") && !rawBase.endsWith("/v1")) {
+  rawBase += "/api/v1";
+}
+const API_BASE_URL = rawBase;
 
 export class ApiClient {
   private static getToken(): string | null {

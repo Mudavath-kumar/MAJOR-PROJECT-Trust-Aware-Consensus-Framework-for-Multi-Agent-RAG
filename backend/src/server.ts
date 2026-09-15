@@ -28,39 +28,22 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Always allow .vercel.app deployments (our frontend host)
-      if (!origin) return callback(null, true);
-
-      const normalized = origin.replace(/\/$/, "");
-
-      if (normalized.includes("vercel.app")) {
-        return callback(null, true);
-      }
-
-      // Allow localhost for development
-      if (
-        normalized.startsWith("http://localhost:") ||
-        normalized.startsWith("http://127.0.0.1:")
-      ) {
-        return callback(null, true);
-      }
-
-      // Allow any explicitly configured FRONTEND_URL(s)
-      if (env.FRONTEND_URL) {
-        const allowed = env.FRONTEND_URL.split(",").map((u) => u.trim().replace(/\/$/, ""));
-        if (allowed.includes(normalized)) {
-          return callback(null, true);
-        }
-      }
-
-      return callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
+      // Allow all origins (reflection) for seamless multi-environment frontend deployments
+      callback(null, true);
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-user-email", "x-user-name"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-user-email",
+      "x-user-name",
+      "Accept",
+      "Origin",
+      "X-Requested-With",
+    ],
   }),
 );
-
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -77,8 +60,8 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check endpoint
-app.get("/api/v1/health", async (req, res) => {
+// Health check endpoint - available at /api/v1/health, /v1/health, and /health
+const healthHandler = async (_req: express.Request, res: express.Response) => {
   const aiHealth = await AIService.checkHealth();
   const ready = isDbConnected() && aiHealth.status === "healthy";
   res.json({
@@ -89,15 +72,26 @@ app.get("/api/v1/health", async (req, res) => {
     timestamp: new Date().toISOString(),
     ai_service: aiHealth,
   });
-});
+};
 
-// API Routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/documents", documentRoutes);
-app.use("/api/v1/chat", chatRoutes);
-app.use("/api/v1/evidence", evidenceRoutes);
-app.use("/api/v1/analytics", analyticsRoutes);
-app.use("/api/v1/settings", settingsRoutes);
+app.get("/api/v1/health", healthHandler);
+app.get("/v1/health", healthHandler);
+app.get("/health", healthHandler);
+
+// API Routes - mount on both /api/v1 and /v1 for full client URL compatibility
+const apiRoutes: [string, express.Router][] = [
+  ["/auth", authRoutes],
+  ["/documents", documentRoutes],
+  ["/chat", chatRoutes],
+  ["/evidence", evidenceRoutes],
+  ["/analytics", analyticsRoutes],
+  ["/settings", settingsRoutes],
+];
+
+for (const [routePath, router] of apiRoutes) {
+  app.use(`/api/v1${routePath}`, router);
+  app.use(`/v1${routePath}`, router);
+}
 
 // Global error handler
 app.use(errorHandler);
