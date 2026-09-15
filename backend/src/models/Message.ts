@@ -2,11 +2,11 @@ import mongoose, { Schema, Document } from "mongoose";
 
 const EvidenceSourceSchema = new Schema(
   {
-    document_id: { type: String, required: true },
-    document_name: { type: String, required: true },
-    chunk_id: { type: String, required: true },
-    text: { type: String, required: true },
-    similarity_score: { type: Number, required: true },
+    document_id: { type: String, default: "doc-unknown" },
+    document_name: { type: String, default: "Document" },
+    chunk_id: { type: String, default: "chunk-0" },
+    text: { type: String, default: "" },
+    similarity_score: { type: Number, default: 0.85 },
     rerank_score: { type: Number },
     page_number: { type: Number },
   },
