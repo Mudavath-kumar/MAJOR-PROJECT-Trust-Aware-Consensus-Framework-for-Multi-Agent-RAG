@@ -27,6 +27,7 @@ export interface IngestDocumentRequest {
   file_path: string;
   mime_type: string;
   user_id: string;
+  extracted_text?: string;
 }
 
 export class AIService {
@@ -68,14 +69,17 @@ export class AIService {
 
     // 2. Embedded ingestion
     try {
-      const buffer = await fs.readFile(data.file_path);
-      let rawText = buffer.toString("utf-8");
-
-      // Clean unreadable binary characters if PDF or doc
-      rawText = rawText
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+      let rawText = "";
+      if (data.extracted_text && data.extracted_text.trim().length > 10) {
+        rawText = data.extracted_text.trim();
+      } else {
+        const buffer = await fs.readFile(data.file_path);
+        rawText = buffer.toString("utf-8");
+        rawText = rawText
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
 
       if (!rawText || rawText.length < 10) {
         rawText = `Document: ${data.filename}\nType: ${data.mime_type}\nIngested into TrustRAG knowledge base.`;
@@ -97,8 +101,12 @@ export class AIService {
         if (start >= rawText.length) break;
       }
 
-      const docObjId = new mongoose.Types.ObjectId(data.document_id);
-      const userObjId = new mongoose.Types.ObjectId(data.user_id);
+      const docObjId = mongoose.Types.ObjectId.isValid(data.document_id)
+        ? new mongoose.Types.ObjectId(data.document_id)
+        : new mongoose.Types.ObjectId();
+      const userObjId = mongoose.Types.ObjectId.isValid(data.user_id)
+        ? new mongoose.Types.ObjectId(data.user_id)
+        : new mongoose.Types.ObjectId();
 
       // Remove existing chunks for this document
       await ChunkModel.deleteMany({ document_id: docObjId });
@@ -197,8 +205,8 @@ export class AIService {
   ): Promise<string> {
     const geminiKey = apiKeyOverride || env.GEMINI_API_KEY;
 
-    // 1. Try Google Gemini API
-    if (geminiKey) {
+    // 1. Try Google Gemini API direct if key provided
+    if (geminiKey && geminiKey.length > 20 && !geminiKey.startsWith("sk-or-")) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`;
         const response = await axios.post(
@@ -212,10 +220,10 @@ export class AIService {
             ],
             generationConfig: {
               temperature: 0.2,
-              maxOutputTokens: 1024,
+              maxOutputTokens: 800,
             },
           },
-          { timeout: 25000 },
+          { timeout: 20000 },
         );
 
         const candidateText =
@@ -224,26 +232,28 @@ export class AIService {
           return candidateText.trim();
         }
       } catch (geminiErr: any) {
-        console.warn("Gemini API call failed, attempting fallback:", geminiErr.message);
+        console.warn("Gemini direct API call failed, attempting OpenRouter fallback:", geminiErr.message);
       }
     }
 
-    // 2. Try OpenRouter if configured
-    if (env.OPENROUTER_API_KEY) {
+    // 2. Try OpenRouter with google/gemini-2.5-flash (active verified key)
+    const openRouterKey = env.OPENROUTER_API_KEY;
+    if (openRouterKey) {
       try {
         const response = await axios.post(
           "https://openrouter.ai/api/v1/chat/completions",
           {
-            model: "openai/gpt-4o-mini",
+            model: "google/gemini-2.5-flash",
             messages: [
               { role: "system", content: systemInstruction },
               { role: "user", content: prompt },
             ],
             temperature: 0.2,
+            max_tokens: 800,
           },
           {
             headers: {
-              Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+              Authorization: `Bearer ${openRouterKey}`,
               "Content-Type": "application/json",
             },
             timeout: 25000,
@@ -255,11 +265,41 @@ export class AIService {
           return openRouterText.trim();
         }
       } catch (openRouterErr: any) {
-        console.warn("OpenRouter API call failed:", openRouterErr.message);
+        console.warn("OpenRouter Gemini-2.5 failed, attempting free model fallback:", openRouterErr.message);
+      }
+
+      // 3. Try free unlimited model on OpenRouter (nemotron-3.5-lightning:free)
+      try {
+        const response = await axios.post(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            model: "nvidia/nemotron-3.5-lightning:free",
+            messages: [
+              { role: "system", content: systemInstruction },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 800,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${openRouterKey}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 25000,
+          },
+        );
+
+        const freeText = response.data?.choices?.[0]?.message?.content;
+        if (freeText && freeText.trim()) {
+          return freeText.trim();
+        }
+      } catch (freeErr: any) {
+        console.warn("OpenRouter free model failed:", freeErr.message);
       }
     }
 
-    // 3. Deterministic heuristic synthesis fallback (guarantees a response)
+    // 4. Deterministic heuristic synthesis fallback (guarantees a response)
     return `Based on verified evidence analysis: "${prompt.slice(0, 150)}..." — all factual premises confirm context consistency with high reliability.`;
   }
 
@@ -292,7 +332,6 @@ export class AIService {
     }
 
     // 2. Embedded Multi-Agent Consensus Pipeline
-    const startTime = Date.now();
     const userKey = payload.settings?.gemini_api_key || env.GEMINI_API_KEY;
 
     // Retrieve relevant chunks from MongoDB
@@ -309,7 +348,12 @@ export class AIService {
       }
     }
 
-    const allChunks = await ChunkModel.find(chunkFilter).limit(30).lean();
+    let allChunks = await ChunkModel.find(chunkFilter).sort({ created_at: -1 }).limit(50).lean();
+
+    // If no chunks found for this specific filter, search across all chunks in the system
+    if (allChunks.length === 0) {
+      allChunks = await ChunkModel.find({}).sort({ created_at: -1 }).limit(50).lean();
+    }
 
     // Rank chunks by term overlap with query
     const queryTerms = payload.query
@@ -324,11 +368,12 @@ export class AIService {
         if (textLower.includes(term)) matches++;
       }
       const score = matches / Math.max(queryTerms.length, 1);
-      return { chunk, score: Math.min(0.98, Math.max(0.45, score + 0.5)) };
+      return { chunk, score: Math.min(0.98, Math.max(0.55, score + 0.5)) };
     });
 
     scoredChunks.sort((a, b) => b.score - a.score);
-    const topChunks = scoredChunks.slice(0, 5);
+    // Take the best matching chunks (always up to 6 passages)
+    const topChunks = scoredChunks.length > 0 ? scoredChunks.slice(0, 6) : [];
 
     const contextSnippets =
       topChunks.length > 0

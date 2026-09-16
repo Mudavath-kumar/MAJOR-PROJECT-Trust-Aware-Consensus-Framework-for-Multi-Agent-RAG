@@ -92,6 +92,7 @@ export const uploadDocument = async (req: AuthRequest, res: Response): Promise<v
         file_path: tempPath,
         mime_type: file.mimetype,
         user_id: req.user?._id || "",
+        extracted_text: (req.body.extracted_text as string) || "",
       });
 
       const readyDocument = await DocumentModel.findByIdAndUpdate(

@@ -84,28 +84,26 @@ export const authenticate = async (
     }
   }
 
-  // 4. In development mode, provide safe fallback to demo user
-  if (env.NODE_ENV !== "production") {
-    try {
-      let demoUser = await User.findOne({ email: "demo@trustrag.ai" });
-      if (!demoUser) {
-        demoUser = await User.create({
-          name: "Mudavath Kumar",
-          email: "demo@trustrag.ai",
-          password_hash: "demo_password",
-          role: "user",
-        });
-      }
-      req.user = {
-        _id: demoUser._id.toString(),
-        email: demoUser.email,
-        role: demoUser.role,
-        name: demoUser.name,
-      };
-      return next();
-    } catch {
-      // Ignore if DB is still connecting
+  // 4. Safe fallback to default demo user for seamless guest interaction on Vercel
+  try {
+    let demoUser = await User.findOne({ email: "demo@trustrag.ai" });
+    if (!demoUser) {
+      demoUser = await User.create({
+        name: "Mudavath Kumar",
+        email: "demo@trustrag.ai",
+        password_hash: "demo_password",
+        role: "user",
+      });
     }
+    req.user = {
+      _id: demoUser._id.toString(),
+      email: demoUser.email,
+      role: demoUser.role,
+      name: demoUser.name,
+    };
+    return next();
+  } catch (err) {
+    console.error("Auth fallback error:", err);
   }
 
   res.status(401).json({ error: "Authentication required. Please log in." });

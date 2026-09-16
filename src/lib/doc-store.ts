@@ -190,6 +190,7 @@ export async function ingestFile(file: File): Promise<StoredDoc> {
   try {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("extracted_text", text);
     const uploadResult = await ApiClient.uploadDocument(formData);
     if (uploadResult?.document?._id) {
       docId = uploadResult.document._id;
