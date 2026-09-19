@@ -15,7 +15,8 @@ logger = logging.getLogger("trustrag.main")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    logger.info("TrustRAG AI Service starting — embeddings via Gemini API")
+    mode = "Gemini text-embedding-004" if settings.GEMINI_API_KEY else "sparse fallback"
+    logger.info("TrustRAG AI Service starting — embeddings via %s", mode)
     yield
 
 app = FastAPI(
@@ -28,6 +29,7 @@ app = FastAPI(
 _ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "https://major-project-trust-aware-consensus.vercel.app",
 ]
 # Allow the Render backend service URL if set
 if settings.BACKEND_URL:
@@ -47,11 +49,13 @@ app.include_router(rag_router)
 async def health():
     llm_status = get_llm_status()
     ready = is_embedding_model_ready()
+    gemini_embeddings = bool(settings.GEMINI_API_KEY)
     return {
         "status": "healthy" if ready else "starting",
         "service": "trustrag-ai-service",
         "llm": llm_status,
-        "embedding_model": settings.EMBEDDING_MODEL_NAME,
+        "embedding_model": "gemini-text-embedding-004" if gemini_embeddings else "sparse-fallback",
+        "embedding_source": "gemini_api" if gemini_embeddings else "sparse_fallback",
         "vector_store": "MongoDB Atlas Vector Search",
         "ready": ready,
     }

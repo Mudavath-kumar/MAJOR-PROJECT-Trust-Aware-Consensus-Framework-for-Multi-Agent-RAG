@@ -32,7 +32,7 @@ class Settings:
     ).lower() in {"1", "true", "yes", "on"}
 
     CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")  # unused, kept for compat
-    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "gemini-text-embedding-004")
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/trustrag")
 
     # Render backend URL — used to whitelist CORS

@@ -9,7 +9,8 @@ _ready = False
 
 
 def is_embedding_model_ready() -> bool:
-    return bool(settings.GEMINI_API_KEY)
+    # Always ready: Gemini API is used if key available, sparse fallback otherwise
+    return True
 
 
 def get_embedding_model():
