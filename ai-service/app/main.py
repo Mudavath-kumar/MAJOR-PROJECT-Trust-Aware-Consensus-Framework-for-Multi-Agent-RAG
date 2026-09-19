@@ -11,10 +11,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
+logger = logging.getLogger("trustrag.main")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # No local model to load — embeddings use Gemini API
     logger.info("TrustRAG AI Service starting — embeddings via Gemini API")
     yield
 
