@@ -28,6 +28,7 @@ export interface IngestDocumentRequest {
   mime_type: string;
   user_id: string;
   extracted_text?: string;
+  file_buffer?: Buffer;  // raw bytes for cross-container transfer
 }
 
 export class AIService {
@@ -59,11 +60,23 @@ export class AIService {
   ): Promise<{ chunks_count: number; status: string }> {
     // 1. Try external AI service if configured
     try {
-      const res = await aiClient.post("/rag/ingest", data, { timeout: 120000 });
+      const payload: any = {
+        document_id: data.document_id,
+        filename: data.filename,
+        file_path: data.file_path,
+        mime_type: data.mime_type,
+        user_id: data.user_id,
+      };
+      // Always send base64 content so the AI service works cross-container
+      if (data.file_buffer && data.file_buffer.length > 0) {
+        payload.file_content_b64 = data.file_buffer.toString("base64");
+      }
+      const res = await aiClient.post("/rag/ingest", payload, { timeout: 120000 });
       if (res.data && res.data.chunks_count !== undefined) {
         return res.data;
       }
-    } catch {
+    } catch (err: any) {
+      console.warn("[AIService] External ingest failed, falling back:", err.message);
       // Fall through to embedded ingestion
     }
 

@@ -1,6 +1,8 @@
 import os
 import asyncio
 import logging
+import base64
+import tempfile
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -34,7 +36,8 @@ class QueryRequest(BaseModel):
 class IngestRequest(BaseModel):
     document_id: str
     filename: str
-    file_path: str
+    file_path: str  # local path (used when on same host)
+    file_content_b64: Optional[str] = None  # base64-encoded bytes (cross-host transfer)
     mime_type: Optional[str] = ""
     user_id: str
 
@@ -43,8 +46,25 @@ class DeleteDocumentRequest(BaseModel):
 
 @router.post("/ingest")
 async def ingest_document(req: IngestRequest):
+    tmp_path = None
     try:
-        raw_text = extract_text_from_file(req.file_path, req.mime_type or "")
+        # Resolve the file to extract from:
+        # Priority 1 — base64 content sent by backend (cross-container safe)
+        # Priority 2 — file_path (works only when backend & AI service share a filesystem)
+        work_path = req.file_path
+        if req.file_content_b64:
+            try:
+                file_bytes = base64.b64decode(req.file_content_b64)
+                ext = os.path.splitext(req.filename)[1] or ".bin"
+                fd, tmp_path = tempfile.mkstemp(suffix=ext, prefix="trustrag_ingest_")
+                with os.fdopen(fd, "wb") as f:
+                    f.write(file_bytes)
+                work_path = tmp_path
+                logger.info("Ingest: using base64 content (%d bytes) for %s", len(file_bytes), req.filename)
+            except Exception as decode_err:
+                logger.warning("Failed to decode base64 content: %s — falling back to file_path", decode_err)
+
+        raw_text = extract_text_from_file(work_path, req.mime_type or "")
         if not raw_text.strip():
             raise ValueError("Document contains no extractable text")
 
@@ -71,14 +91,18 @@ async def ingest_document(req: IngestRequest):
             metadatas=metas
         )
 
+        logger.info("Ingest complete: %s -> %d chunks", req.filename, len(chunks))
         return {
             "status": "ready",
             "document_id": req.document_id,
             "chunks_count": len(chunks)
         }
     except Exception as e:
-        logger.error(f"Ingestion failed: {e}")
+        logger.error("Ingestion failed for %s: %s", req.filename, e)
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 @router.delete("/documents/{document_id}")
 async def delete_document(document_id: str, req: DeleteDocumentRequest):

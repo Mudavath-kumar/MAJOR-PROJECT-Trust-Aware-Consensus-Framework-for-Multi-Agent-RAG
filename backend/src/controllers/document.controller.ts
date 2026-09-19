@@ -93,6 +93,7 @@ export const uploadDocument = async (req: AuthRequest, res: Response): Promise<v
         mime_type: file.mimetype,
         user_id: req.user?._id || "",
         extracted_text: (req.body.extracted_text as string) || "",
+        file_buffer: file.buffer,
       });
 
       const readyDocument = await DocumentModel.findByIdAndUpdate(
@@ -171,6 +172,7 @@ export const uploadMultipleDocuments = async (req: AuthRequest, res: Response): 
           file_path: tempPath,
           mime_type: file.mimetype,
           user_id: req.user?._id || "",
+          file_buffer: file.buffer,
         });
 
         const readyDocument = await DocumentModel.findByIdAndUpdate(
