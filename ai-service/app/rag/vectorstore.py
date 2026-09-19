@@ -27,12 +27,16 @@ def _get_collection():
         if "embedding_index" not in existing:
             _col.create_search_index(SearchIndexModel(
                 definition={
-                    "fields": [{
-                        "type": "vector",
-                        "path": "embedding",
-                        "numDimensions": 384,
-                        "similarity": "cosine",
-                    }]
+                    "fields": [
+                        {
+                            "type": "vector",
+                            "path": "embedding",
+                            "numDimensions": 384,
+                            "similarity": "cosine",
+                        },
+                        {"type": "filter", "path": "document_id"},
+                        {"type": "filter", "path": "user_id"},
+                    ]
                 },
                 name="embedding_index",
                 type="vectorSearch",
@@ -96,45 +100,35 @@ def query_vector_store(
     document_ids: Optional[List[str]] = None,
     user_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    if not user_id and not document_ids:
-        logger.warning("query_vector_store: no filters — returning empty (data leak prevention)")
-        return []
-
     col = _get_collection()
 
-    # Build pre-filter for Atlas $vectorSearch
+    # Build filter — prefer document_ids scope, fall back to user_id
     pre_filter: Dict[str, Any] = {}
-    if user_id:
-        pre_filter["user_id"] = {"$eq": user_id}
     if document_ids and len(document_ids) == 1:
         pre_filter["document_id"] = {"$eq": document_ids[0]}
     elif document_ids:
         pre_filter["document_id"] = {"$in": document_ids}
+    elif user_id:
+        pre_filter["user_id"] = {"$eq": user_id}
 
     # Try Atlas Vector Search first
     try:
-        pipeline = [
-            {
-                "$vectorSearch": {
-                    "index": "embedding_index",
-                    "path": "embedding",
-                    "queryVector": query_embedding,
-                    "numCandidates": top_k * 10,
-                    "limit": top_k,
-                    **({"filter": pre_filter} if pre_filter else {}),
-                }
-            },
-            {
-                "$project": {
-                    "_id": 1,
-                    "text": 1,
-                    "metadata": 1,
-                    "score": {"$meta": "vectorSearchScore"},
-                }
-            },
-        ]
-        results = list(col.aggregate(pipeline))
+        vs_stage: Dict[str, Any] = {
+            "index": "embedding_index",
+            "path": "embedding",
+            "queryVector": query_embedding,
+            "numCandidates": top_k * 10,
+            "limit": top_k,
+        }
+        if pre_filter:
+            vs_stage["filter"] = pre_filter
+
+        results = list(col.aggregate([
+            {"$vectorSearch": vs_stage},
+            {"$project": {"_id": 1, "text": 1, "metadata": 1, "score": {"$meta": "vectorSearchScore"}}},
+        ]))
         if results:
+            logger.info("Atlas vectorSearch returned %d chunks", len(results))
             return [
                 {
                     "chunk_id": str(r["_id"]),
@@ -144,19 +138,21 @@ def query_vector_store(
                 }
                 for r in results
             ]
+        logger.warning("Atlas vectorSearch returned 0 results — falling back")
     except Exception as e:
-        logger.warning("Atlas $vectorSearch unavailable, falling back to keyword search: %s", e)
+        logger.warning("Atlas $vectorSearch failed: %s — falling back to keyword search", e)
 
-    # Fallback: keyword search (works on free local MongoDB too)
+    # Fallback: plain find — no user_id filter, just document scope
     filt: Dict[str, Any] = {}
-    if user_id:
-        filt["user_id"] = user_id
     if document_ids and len(document_ids) == 1:
         filt["document_id"] = document_ids[0]
     elif document_ids:
         filt["document_id"] = {"$in": document_ids}
+    elif user_id:
+        filt["user_id"] = user_id
 
     rows = list(col.find(filt, {"embedding": 0}).limit(top_k * 3))
+    logger.info("Keyword fallback returned %d chunks (filter=%s)", len(rows), filt)
     return [
         {
             "chunk_id": str(r["_id"]),
