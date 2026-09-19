@@ -26,6 +26,10 @@ const ChunkSchema = new Schema<IChunkRecord>(
 
 ChunkSchema.index({ document_id: 1, chunk_index: 1 });
 ChunkSchema.index({ text: "text" });
+// Note: MongoDB Atlas Vector Search index on `embedding` field must be created
+// via Atlas UI or Atlas CLI with:
+// { "fields": [{ "type": "vector", "path": "embedding", "numDimensions": 384, "similarity": "cosine" }] }
+// Index name: embedding_index
 
 export const ChunkModel = mongoose.model<IChunkRecord>("Chunk", ChunkSchema);
 export default ChunkModel;

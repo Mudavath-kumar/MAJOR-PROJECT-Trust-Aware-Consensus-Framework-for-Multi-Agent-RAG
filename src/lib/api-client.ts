@@ -236,8 +236,11 @@ export class ApiClient {
     });
   }
 
-  // Health check
+  // Health check — hits /health directly, not under /api/v1
   static async checkHealth() {
-    return this.request<{ status: string; backend: string; ai_service?: any }>("/health");
+    const baseWithoutV1 = API_BASE_URL.replace(/\/api\/v1$/, "").replace(/\/v1$/, "");
+    const response = await fetch(`${baseWithoutV1}/health`);
+    if (!response.ok) throw new Error(`Health check failed (${response.status})`);
+    return response.json() as Promise<{ status: string; backend: string; ai_service?: any }>;
   }
 }

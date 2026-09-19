@@ -73,12 +73,16 @@ export class AIService {
       if (data.extracted_text && data.extracted_text.trim().length > 10) {
         rawText = data.extracted_text.trim();
       } else {
-        const buffer = await fs.readFile(data.file_path);
-        rawText = buffer.toString("utf-8");
-        rawText = rawText
-          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
+        // Only read as text for plain-text formats; skip binary files
+        const ext = data.filename.split(".").pop()?.toLowerCase() ?? "";
+        if (["txt", "md", "csv", "json"].includes(ext)) {
+          const buffer = await fs.readFile(data.file_path);
+          rawText = buffer.toString("utf-8")
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+        // For PDF/DOCX, rely on extracted_text from the frontend or AI service
       }
 
       if (!rawText || rawText.length < 10) {
@@ -208,7 +212,7 @@ export class AIService {
     // 1. Try Google Gemini API direct if key provided
     if (geminiKey && geminiKey.length > 20 && !geminiKey.startsWith("sk-or-")) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
         const response = await axios.post(
           url,
           {

@@ -20,7 +20,7 @@ def compute_multi_agent_consensus(
     chunks = retrieved_chunks or []
     if chunks:
         context_precision = round(
-            sum(float(c.get("similarity_score", 0.8)) for c in chunks) / len(chunks), 4
+            min(1.0, sum(float(c.get("similarity_score", 0.8)) for c in chunks) / len(chunks)), 4
         )
     else:
         context_precision = round(conf_trust, 4) if conf_trust else 0.82

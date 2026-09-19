@@ -27,15 +27,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_ALLOWED_ORIGINS = [
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+]
+# Allow the Render backend service URL if set
+if settings.BACKEND_URL:
+    _ALLOWED_ORIGINS.append(settings.BACKEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    # Only allow the backend to call this service — not the browser directly
-    allow_origins=[
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
-    ],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
@@ -50,7 +54,7 @@ async def health():
         "service": "trustrag-ai-service",
         "llm": llm_status,
         "embedding_model": settings.EMBEDDING_MODEL_NAME,
-        "vector_store": "ChromaDB (local persistent)",
+        "vector_store": "MongoDB Atlas Vector Search",
         "ready": ready,
     }
 

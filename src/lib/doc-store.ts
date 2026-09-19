@@ -162,26 +162,26 @@ export function chunkText(text: string, size = 700) {
 }
 
 /**
- * Reads text in the browser. Plain formats are read directly; binary formats
- * (PDF/DOCX) are decoded best-effort.
+ * Reads text in the browser. Plain formats are read directly.
+ * For PDF/DOCX, we send the raw file to the backend AI service for proper extraction
+ * instead of attempting a lossy browser-side decode.
  */
 export async function extractText(file: File): Promise<string> {
   const ext = docType(file.name);
   if (ext === "PDF" || ext === "DOCX") {
-    const buf = await file.arrayBuffer();
-    const raw = new TextDecoder("utf-8", { fatal: false }).decode(buf);
-    const readable = raw
-      .replace(/[^\x20-\x7E\n]+/g, " ")
-      .replace(/\s{2,}/g, " ")
-      .trim();
-    return readable.length > 200 ? readable : `Document content from ${file.name} successfully extracted for semantic embedding and multi-agent reasoning.`;
+    // Return empty string — the backend AI service (Python/pdfplumber) will extract
+    // the real text from the temp file path. Sending binary-decoded garbage here
+    // would override the proper extraction.
+    return "";
   }
   return file.text();
 }
 
 export async function ingestFile(file: File): Promise<StoredDoc> {
   const text = await extractText(file);
-  const pieces = chunkText(text);
+  // Only chunk plain-text locally; binary files are chunked server-side
+  const ext = docType(file.name);
+  const pieces = (ext === "PDF" || ext === "DOCX") ? [] : chunkText(text);
 
   let docId = `doc-${Date.now()}`;
   let remoteChunkCount = pieces.length;
@@ -190,7 +190,7 @@ export async function ingestFile(file: File): Promise<StoredDoc> {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("extracted_text", text);
+    if (text) formData.append("extracted_text", text);
     const uploadResult = await ApiClient.uploadDocument(formData);
     if (uploadResult?.document?._id) {
       docId = uploadResult.document._id;
@@ -216,18 +216,20 @@ export async function ingestFile(file: File): Promise<StoredDoc> {
     status: "ready",
   };
 
-  const chunks: StoredChunk[] = (pieces.length > 0 ? pieces : [text || `Sample parsed content from ${file.name}`]).map((t, i) => ({
-    id: `${docId}-c${i}`,
-    docId,
-    docName: file.name,
-    index: i,
-    page: Math.floor(i / 3) + 1,
-    text: t,
-  }));
+  // Only write local chunks for plain-text files; binary files are stored server-side
+  if (pieces.length > 0) {
+    const chunks: StoredChunk[] = pieces.map((t, i) => ({
+      id: `${docId}-c${i}`,
+      docId,
+      docName: file.name,
+      index: i,
+      page: Math.floor(i / 3) + 1,
+      text: t,
+    }));
+    write(CHUNK_KEY, [...getChunks(), ...chunks]);
+  }
 
   write(DOC_KEY, [...getDocs(), doc]);
-  write(CHUNK_KEY, [...getChunks(), ...chunks]);
-
   return doc;
 }
 

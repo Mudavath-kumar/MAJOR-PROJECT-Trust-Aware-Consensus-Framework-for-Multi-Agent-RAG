@@ -44,8 +44,12 @@ Provide your grounded synthesis and list your key factual propositions."""
 
     latency_ms = int((time.time() - start_time) * 1000)
 
-    # Extract claims from output or synthesize
-    claims: List[str] = []
+    # Extract bullet-point propositions from the LLM output
+    claims: List[str] = [
+        line.lstrip("-•* ").strip()
+        for line in llm_output.splitlines()
+        if line.strip().startswith(("-", "•", "*")) and len(line.strip()) > 10
+    ][:4]  # cap at 4 propositions
 
     return {
         "agent_name": "retriever",

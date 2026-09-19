@@ -20,7 +20,9 @@ Formatting Guidelines:
 async def run_reasoner(query: str, context_chunks: List[Dict[str, Any]], model: str, api_key: str = "") -> Dict[str, Any]:
     started = time.time()
     context = "\n\n".join(
-        f"[{chunk.get('chunk_id', f'chunk_{i}')} | {chunk.get('document_name', 'Source')} (p.{chunk.get('page_number', 1)})]: {chunk.get('text', '')}"
+        f"[{chunk.get('chunk_id', f'chunk_{i}')} | "
+        f"{chunk.get('metadata', {}).get('document_name', 'Source')} "
+        f"(p.{chunk.get('metadata', {}).get('page', i + 1)})]: {chunk.get('text', '')}"
         for i, chunk in enumerate(context_chunks)
     )
     output = await call_llm(

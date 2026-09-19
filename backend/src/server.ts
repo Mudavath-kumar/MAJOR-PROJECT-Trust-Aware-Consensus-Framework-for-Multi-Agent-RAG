@@ -28,8 +28,22 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins (reflection) for seamless multi-environment frontend deployments
-      callback(null, true);
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      const allowed = [
+        env.FRONTEND_URL,
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "http://localhost:3000",
+      ].filter(Boolean);
+      if (allowed.some((o) => origin.startsWith(o as string))) {
+        return callback(null, true);
+      }
+      // Allow any Vercel preview/production deployment for this project
+      if (/\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -98,6 +112,31 @@ app.use(errorHandler);
 
 const PORT = env.PORT || 3001;
 
+// Keep-alive: ping self + AI service every 10 min to prevent Render free tier sleep
+const startKeepAlive = () => {
+  if (env.NODE_ENV !== "production") return;
+
+  const rawBackendUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  const BACKEND_URL = rawBackendUrl.startsWith("http") ? rawBackendUrl : `https://${rawBackendUrl}`;
+  const AI_URL = env.AI_SERVICE_URL;
+
+  setInterval(async () => {
+    try {
+      await fetch(`${BACKEND_URL}/health`);
+      console.log(`[keep-alive] backend pinged OK`);
+    } catch (e: any) {
+      console.warn(`[keep-alive] backend ping failed: ${e.message}`);
+    }
+
+    try {
+      await fetch(`${AI_URL}/health`);
+      console.log(`[keep-alive] ai-service pinged OK`);
+    } catch (e: any) {
+      console.warn(`[keep-alive] ai-service ping failed: ${e.message}`);
+    }
+  }, 10 * 60 * 1000); // every 10 minutes
+};
+
 // Start server
 const startServer = async () => {
   app.listen(PORT, () => {
@@ -109,6 +148,7 @@ const startServer = async () => {
     `);
   });
   void maintainDBConnection();
+  startKeepAlive();
 };
 
 startServer();

@@ -15,30 +15,28 @@ class Settings:
     PORT: int = int(os.getenv("PORT", "8000"))
     HOST: str = os.getenv("HOST", "0.0.0.0")
 
-    # Google Gemini — 100% Free (15 RPM, 1M tokens/day)
-    # Get free key at: https://aistudio.google.com/app/apikey (no credit card)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
-    # OpenRouter fallback/alternative provider
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
     OPENROUTER_SITE_URL: str = os.getenv("OPENROUTER_SITE_URL", "")
     OPENROUTER_APP_NAME: str = os.getenv("OPENROUTER_APP_NAME", "TrustRAG")
 
-    # Local Ollama fallback (runs offline, 100% free)
     OLLAMA_ENDPOINT: str = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2")
 
-    # Optional: Tavily free search (1000 queries/month)
     TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
     EXTERNAL_VERIFICATION_ENABLED: bool = os.getenv(
         "EXTERNAL_VERIFICATION_ENABLED", "true"
     ).lower() in {"1", "true", "yes", "on"}
 
-    # Vector store & embedding
-    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")  # unused, kept for compat
     EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/trustrag")
+
+    # Render backend URL — used to whitelist CORS
+    BACKEND_URL: str = os.getenv("BACKEND_URL", "")
 
     @property
     def DEFAULT_MODEL(self) -> str:

@@ -68,7 +68,7 @@ export const authenticate = async (
         dbUser = await User.create({
           name: userName,
           email: targetEmail,
-          password_hash: "clerk_oauth_user",
+          password_hash: "oauth_user_no_password",
           role: "user",
         });
       }
@@ -88,10 +88,11 @@ export const authenticate = async (
   try {
     let demoUser = await User.findOne({ email: "demo@trustrag.ai" });
     if (!demoUser) {
+      const bcrypt = await import("bcryptjs");
       demoUser = await User.create({
-        name: "Mudavath Kumar",
+        name: "TrustRAG Demo",
         email: "demo@trustrag.ai",
-        password_hash: "demo_password",
+        password_hash: await bcrypt.hash(`demo_${Date.now()}`, 10),
         role: "user",
       });
     }

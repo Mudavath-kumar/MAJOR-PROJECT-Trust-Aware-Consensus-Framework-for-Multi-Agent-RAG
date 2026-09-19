@@ -50,9 +50,13 @@ async def call_llm(
 ) -> str:
     key = api_key_override or settings.GEMINI_API_KEY
     chosen_model = model or settings.GEMINI_MODEL
-    # Normalize if a legacy groq/llama model name is passed
+    # Normalize legacy/non-gemini model names to the configured Gemini model
     if chosen_model and not chosen_model.startswith("gemini"):
+        logger.debug("Non-Gemini model '%s' requested, using configured model '%s'", chosen_model, settings.GEMINI_MODEL)
         chosen_model = settings.GEMINI_MODEL
+    # Strip the -latest suffix which causes 404 on the Gemini API
+    if chosen_model.endswith("-latest"):
+        chosen_model = chosen_model[:-len("-latest")]
 
     prefer_gemini = bool(key and key.startswith("AIza") and _gemini_available)
 
