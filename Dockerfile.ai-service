@@ -1,5 +1,6 @@
 # ─── TrustRAG AI Service — Production Dockerfile ────────────────────────────
-# Python 3.11 + SentenceTransformers + MongoDB Atlas Vector Search + FastAPI
+# Lightweight: no torch, no sentence-transformers — embeddings via Gemini API
+# RAM usage: ~150MB (fits Render free tier 512MB)
 # ─────────────────────────────────────────────────────────────────────────────
 
 FROM python:3.11-slim
@@ -7,12 +8,9 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
-    g++ \
     libffi-dev \
     libssl-dev \
     curl \
-    libmupdf-dev \
-    mupdf \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -20,24 +18,16 @@ WORKDIR /app
 COPY ai-service/requirements.txt ./requirements.txt
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-        torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY ai-service/ ./
-
-# Pre-download the embedding model (baked into image for cold-start speed)
-RUN python -c "\
-from sentence_transformers import SentenceTransformer; \
-SentenceTransformer('BAAI/bge-small-en-v1.5'); \
-print('Embedding model pre-loaded successfully')"
 
 RUN useradd -m -u 1001 trustrag && chown -R trustrag:trustrag /app
 USER trustrag
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--timeout-keep-alive", "30"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

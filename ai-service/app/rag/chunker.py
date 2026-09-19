@@ -73,8 +73,6 @@ def _extract_pdf_text(file_path: str) -> str:
         text = "\n".join(p for p in pages if p.strip())
         if _is_valid_text(text):
             return text
-    except ImportError:
-        pass
     except Exception:
         pass
 

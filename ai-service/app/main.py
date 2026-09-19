@@ -1,12 +1,11 @@
 import logging
-import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.llm_router import get_llm_status
 from .api.rag import router as rag_router
-from .rag.embeddings import get_embedding_model, is_embedding_model_ready
+from .rag.embeddings import is_embedding_model_ready
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,9 +14,8 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Load the model before advertising readiness. Otherwise the first upload
-    # pays the cold-start cost and can time out through the backend gateway.
-    await asyncio.to_thread(get_embedding_model)
+    # No local model to load — embeddings use Gemini API
+    logger.info("TrustRAG AI Service starting — embeddings via Gemini API")
     yield
 
 app = FastAPI(
