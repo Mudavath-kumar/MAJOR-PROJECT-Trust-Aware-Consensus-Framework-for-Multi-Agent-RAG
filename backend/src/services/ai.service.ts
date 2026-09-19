@@ -37,7 +37,7 @@ export class AIService {
    */
   static async checkHealth(): Promise<{ status: "healthy" | "offline"; service: string }> {
     try {
-      const res = await aiClient.get("/health", { timeout: 2000 });
+      const res = await aiClient.get("/health", { timeout: 10000 });
       if (res.data?.status === "healthy") {
         return res.data;
       }
@@ -59,7 +59,7 @@ export class AIService {
   ): Promise<{ chunks_count: number; status: string }> {
     // 1. Try external AI service if configured
     try {
-      const res = await aiClient.post("/rag/ingest", data, { timeout: 5000 });
+      const res = await aiClient.post("/rag/ingest", data, { timeout: 120000 });
       if (res.data && res.data.chunks_count !== undefined) {
         return res.data;
       }
@@ -327,7 +327,7 @@ export class AIService {
   }> {
     // 1. Try external AI service first if available
     try {
-      const res = await aiClient.post("/rag/query", payload, { timeout: 35000 });
+      const res = await aiClient.post("/rag/query", payload, { timeout: 90000 });
       if (res.data?.synthesis) {
         return res.data;
       }
