@@ -7,6 +7,10 @@ import ConsensusResult from "../models/ConsensusResult.js";
 import Settings from "../models/Settings.js";
 import { AIService } from "../services/ai.service.js";
 import { isDbConnected } from "../config/database.js";
+import DocumentModel from "../models/Document.js";
+import mongoose from "mongoose";
+import { assertRequestedDocumentIdsAreOwned } from "../utils/security-scope.js";
+import { decryptSecret } from "../utils/secret-box.js";
 
 export const getConversations = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -132,17 +136,35 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    const requestedDocumentIds = Array.isArray(document_ids)
+      ? document_ids.map((id: unknown) => String(id))
+      : undefined;
+    let scopedDocumentIds: string[] | undefined;
+    if (requestedDocumentIds?.length) {
+      const validRequestedIds = requestedDocumentIds.filter((id) => mongoose.isValidObjectId(id));
+      const ownedDocuments = await DocumentModel.find({
+        user_id: req.user?._id,
+        _id: { $in: validRequestedIds },
+      })
+        .select("_id")
+        .lean();
+      scopedDocumentIds = assertRequestedDocumentIdsAreOwned(
+        requestedDocumentIds,
+        ownedDocuments.map((document) => document._id.toString()),
+      );
+    }
+
     // Forward user's saved LLM settings to the AI pipeline
     let aiSettings: Record<string, unknown> | undefined;
     if (isDbConnected() && req.user?._id) {
       const saved = await Settings.findOne({ user_id: req.user._id }).lean();
       if (saved) {
         aiSettings = {
-          gemini_api_key:      (saved as any).gemini_api_key      || undefined,
-          tavily_api_key:      (saved as any).tavily_api_key      || undefined,
-          preferred_model:     (saved as any).preferred_model     || undefined,
-          consensus_threshold: (saved as any).consensus_threshold || undefined,
-          similarity_top_k:    (saved as any).similarity_top_k    || undefined,
+          gemini_api_key:      decryptSecret((saved as any).gemini_api_key) || undefined,
+          tavily_api_key:      decryptSecret((saved as any).tavily_api_key) || undefined,
+          preferred_model:     (saved as any).preferred_model     ?? undefined,
+          consensus_threshold: (saved as any).consensus_threshold ?? undefined,
+          similarity_top_k:    (saved as any).similarity_top_k    ?? undefined,
         };
       }
     }
@@ -151,9 +173,12 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       query: content,
       conversation_id: conversationId,
       user_id: req.user?._id || "",
-      document_ids,
+      document_ids: scopedDocumentIds,
       settings: aiSettings,
     });
+    if (!aiResult.synthesis.trim()) {
+      throw new Error("AI service returned no grounded synthesis");
+    }
 
     // Save user message to MongoDB
     const userMsg = await Message.create({
@@ -164,25 +189,27 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     });
 
     const evalMatrix = aiResult.evaluation_matrix || aiResult.consensus?.evaluation_matrix || {
-      faithfulness: 90,
-      context_precision: 85,
-      answer_relevance: 90,
-      consensus_alignment: Math.round((aiResult.consensus?.agreement_ratio || 0.9) * 100),
-      hallucination_risk: "low",
-      composite_confidence: aiResult.confidence_score,
+      faithfulness: 0,
+      context_precision: 0,
+      answer_relevance: 0,
+      consensus_alignment: 0,
+      hallucination_risk: "high",
+      composite_confidence: 0,
     };
 
     // Safe confidence score (supports both 0..1 and 0..100)
-    const rawConf = typeof aiResult.confidence_score === "number" ? aiResult.confidence_score : 92;
+    const rawConf = typeof aiResult.confidence_score === "number" ? aiResult.confidence_score : 0;
     const finalConfidence = rawConf <= 1 ? Math.round(rawConf * 100) : Math.min(Math.round(rawConf), 100);
 
     // Normalize evidence sources
-    const normalizedEvidence = (aiResult.evidence_sources || []).map((s: any, idx: number) => ({
-      document_id: s.document_id || s.chunk_id || `doc-${idx + 1}`,
-      document_name: s.document_name || `Source ${idx + 1}`,
-      chunk_id: s.chunk_id || `chunk-${idx + 1}`,
+    const normalizedEvidence = (aiResult.evidence_sources || [])
+      .filter((s: any) => s && typeof s.text === "string" && s.text.trim())
+      .map((s: any) => ({
+      document_id: s.document_id || "",
+      document_name: s.document_name || "Unknown source",
+      chunk_id: s.chunk_id || "",
       text: s.text || "",
-      similarity_score: typeof s.similarity_score === "number" ? s.similarity_score : 0.88,
+      similarity_score: typeof s.similarity_score === "number" ? s.similarity_score : 0,
       rerank_score: s.rerank_score,
       page_number: s.page_number,
     }));
@@ -191,30 +218,30 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     const asstMsg = await Message.create({
       conversation_id: conversationId,
       sender: "assistant",
-      content: aiResult.synthesis || "Response generated by TrustRAG multi-agent engine.",
+      content: aiResult.synthesis,
       confidence_score: finalConfidence,
       status: "done",
       evidence_sources: normalizedEvidence,
     });
 
     // Normalize consensus
-    const consensusStatusRaw = String(aiResult.consensus?.status || "reached").toLowerCase();
+    const consensusStatusRaw = String(aiResult.consensus?.status || "failed").toLowerCase();
     const consensusStatus =
       consensusStatusRaw === "failed"
         ? "failed"
         : consensusStatusRaw === "partial"
           ? "partial"
-          : "reached";
+        : "failed";
 
     const consensusScore =
       typeof aiResult.consensus?.consensus_score === "number"
         ? aiResult.consensus.consensus_score
-        : finalConfidence;
+        : 0;
 
     const agreementRatio =
       typeof aiResult.consensus?.agreement_ratio === "number"
         ? aiResult.consensus.agreement_ratio
-        : 0.93;
+        : 0;
 
     // Save consensus result with evaluation_matrix
     const consensusDoc = await ConsensusResult.create({
@@ -253,14 +280,14 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
                   ? "Source Trust Assessor"
                   : "Synthesizer and Reasoner";
 
-        const modelUsed = exec.model_used || exec.model || "gemini-1.5-flash";
+        const modelUsed = exec.model_used || exec.model || "unknown";
         const rawOutput = exec.raw_output || exec.output_response || exec.output || "";
         const confVal =
           typeof exec.confidence === "number"
             ? exec.confidence
             : typeof exec.confidence_score === "number"
               ? exec.confidence_score
-              : 0.94;
+              : 0;
         const confidence = confVal > 1 ? confVal / 100 : confVal;
 
         const latencyMs =
@@ -268,7 +295,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
             ? exec.latency_ms
             : typeof exec.execution_time_ms === "number"
               ? exec.execution_time_ms
-              : 150;
+              : 0;
 
         return AgentExecution.create({
           message_id: asstMsg._id,
@@ -297,6 +324,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       },
     });
   } catch (err: any) {
-    res.status(500).json({ error: "Failed to process message", message: err.message });
+    const statusCode = Number.isInteger(err?.statusCode) ? err.statusCode : 500;
+    res.status(statusCode).json({ error: statusCode === 403 ? "Document scope rejected" : "Failed to process message", message: err.message });
   }
 };

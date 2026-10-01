@@ -4,7 +4,9 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
   console.error("💥 Unhandled Error:", err);
 
   const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || "Internal Server Error";
+  const message = process.env.NODE_ENV === "development"
+    ? (err.message || "Internal Server Error")
+    : "Internal Server Error";
 
   res.status(statusCode).json({
     error: err.name || "Error",

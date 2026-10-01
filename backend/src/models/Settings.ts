@@ -5,7 +5,6 @@ export interface ISettingsRecord extends Document {
   gemini_api_key?: string;       // renamed from groq_api_key
   tavily_api_key?: string;
   hf_token?: string;
-  ollama_endpoint?: string;
   preferred_model: string;
   similarity_top_k: number;
   rerank_top_k?: number;
@@ -28,8 +27,7 @@ const SettingsSchema = new Schema<ISettingsRecord>(
     gemini_api_key:         { type: String },
     tavily_api_key:         { type: String },
     hf_token:               { type: String },
-    ollama_endpoint:        { type: String, default: "http://localhost:11434" },
-    preferred_model:        { type: String, default: "gemini-1.5-flash" },
+  preferred_model:        { type: String, default: "gemini-3.8-flash" },
     similarity_top_k:       { type: Number, default: 5 },
     rerank_top_k:           { type: Number, default: 3 },
     consensus_threshold:    { type: Number, default: 80 },

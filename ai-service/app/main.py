@@ -15,7 +15,7 @@ logger = logging.getLogger("trustrag.main")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    mode = "Gemini text-embedding-004" if settings.GEMINI_API_KEY else "sparse fallback"
+    mode = settings.EMBEDDING_MODEL_NAME if settings.GEMINI_API_KEY else "not configured"
     logger.info("TrustRAG AI Service starting — embeddings via %s", mode)
     yield
 
@@ -48,14 +48,14 @@ app.include_router(rag_router)
 @app.get("/health")
 async def health():
     llm_status = get_llm_status()
-    ready = is_embedding_model_ready()
+    ready = is_embedding_model_ready() and llm_status["provider"] != "unavailable"
     gemini_embeddings = bool(settings.GEMINI_API_KEY)
     return {
-        "status": "healthy" if ready else "starting",
+        "status": "healthy" if ready else "offline",
         "service": "trustrag-ai-service",
         "llm": llm_status,
-        "embedding_model": "gemini-text-embedding-004" if gemini_embeddings else "sparse-fallback",
-        "embedding_source": "gemini_api" if gemini_embeddings else "sparse_fallback",
+        "embedding_model": settings.EMBEDDING_MODEL_NAME if gemini_embeddings else None,
+        "embedding_source": "gemini_api" if gemini_embeddings else None,
         "vector_store": "MongoDB Atlas Vector Search",
         "ready": ready,
     }

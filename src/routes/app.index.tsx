@@ -102,16 +102,14 @@ function Dashboard() {
       .catch((error) => console.error("Unable to load dashboard data", error));
   }, []);
 
-  const metrics = (analytics?.metrics && Number(analytics.metrics.total_queries) > 0)
-    ? analytics.metrics
-    : {
-        total_documents_indexed: docs.filter((doc) => doc.status === "ready").length || docs.length || 6,
-        total_queries: 184,
-        avg_confidence_score: 94.2,
-        avg_consensus_score: 96.8,
-      };
+  const metrics = analytics?.metrics ?? {
+    total_documents_indexed: docs.filter((doc) => doc.status === "ready").length,
+    total_queries: 0,
+    avg_confidence_score: 0,
+    avg_consensus_score: 0,
+  };
   const recentDocs = docs.slice(0, 6);
-  const serviceHealthy = health?.backend === "online" || health?.ready === true || true;
+  const serviceHealthy = health?.ready === true;
 
   return (
     <>
@@ -233,7 +231,10 @@ function Dashboard() {
               {[
                 ["Backend API", health?.backend === "online" ? "Operational" : "Unavailable"],
                 ["Database", health?.database === "connected" ? "Operational" : "Unavailable"],
-                ["AI service", health?.ai_service?.status === "healthy" ? "Operational" : "Unavailable"],
+                [
+                  "AI service",
+                  health?.ai_service?.status === "healthy" ? "Operational" : "Unavailable",
+                ],
                 ["Workspace", serviceHealthy ? "Operational" : "Checking"],
               ].map(([name, state]) => (
                 <li key={name} className="flex items-center justify-between">
@@ -322,7 +323,7 @@ function Dashboard() {
               <div className="mt-4 border-t border-border/60 pt-3">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Trust {d.trust}%
+                    Trust {typeof d.trust === "number" ? `${d.trust}%` : "Not measured"}
                   </span>
                   <Link
                     to="/app/chat"

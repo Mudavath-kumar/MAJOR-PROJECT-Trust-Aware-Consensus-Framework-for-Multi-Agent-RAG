@@ -44,6 +44,10 @@ export const env = {
     return `https://${raw}`;
   })(),
   AI_SERVICE_TIMEOUT_MS: parseInt(process.env.AI_SERVICE_TIMEOUT_MS || "120000", 10),
+  AI_SERVICE_TOKEN:
+    process.env.AI_SERVICE_TOKEN ||
+    (NODE_ENV === "production" ? "" : "dev-only-trustrag-service-token-change-me"),
+  SETTINGS_ENCRYPTION_KEY: process.env.SETTINGS_ENCRYPTION_KEY || "",
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10),
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || "500", 10),
   B2_ENDPOINT: process.env.B2_ENDPOINT || "",
@@ -54,4 +58,19 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "",
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
   TAVILY_API_KEY: process.env.TAVILY_API_KEY || "",
+  // Comma-separated extra browser origins allowed to call the API.
+  CORS_ALLOWED_ORIGINS: (process.env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  // Preview deployments live on *.vercel.app; disable with ALLOW_VERCEL_PREVIEWS=false.
+  ALLOW_VERCEL_PREVIEWS: process.env.ALLOW_VERCEL_PREVIEWS !== "false",
+
+  // Clerk session-token verification. Provide CLERK_ISSUER (e.g.
+  // https://your-app.clerk.accounts.dev) and/or CLERK_JWKS_URL; otherwise the
+  // JWKS URL is derived from CLERK_PUBLISHABLE_KEY.
+  CLERK_ISSUER: (process.env.CLERK_ISSUER || "").replace(/\/+$/, ""),
+  CLERK_JWKS_URL: process.env.CLERK_JWKS_URL || "",
+  CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || "",
+
 };

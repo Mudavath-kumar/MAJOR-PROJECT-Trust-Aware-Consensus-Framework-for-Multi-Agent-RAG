@@ -44,6 +44,9 @@ export function ScrollVideo() {
     video.addEventListener("loadeddata", onLoadedData);
 
     const tick = () => {
+      raf = 0;
+      if (disposed) return;
+
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const target = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
       smoothed += (target - smoothed) * 0.12;
@@ -57,9 +60,15 @@ export function ScrollVideo() {
         const t = smoothed * (video.duration - 0.05);
         if (Math.abs(video.currentTime - t) > 0.04) video.currentTime = t;
       }
-      raf = requestAnimationFrame(tick);
+      if (Math.abs(target - smoothed) > 0.001) {
+        raf = requestAnimationFrame(tick);
+      }
     };
-    raf = requestAnimationFrame(tick);
+    const scheduleTick = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener("scroll", scheduleTick, { passive: true });
+    scheduleTick();
 
     // Build a frame cache from an offscreen copy for smooth scrubbing.
     const buildCache = async () => {
@@ -106,6 +115,7 @@ export function ScrollVideo() {
         if (disposed) return;
         framesRef.current = out;
         setCacheReady(true);
+        scheduleTick();
       } catch {
         /* fall back to live seeking */
       }
@@ -116,6 +126,7 @@ export function ScrollVideo() {
       disposed = true;
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", scheduleTick);
       video.removeEventListener("loadeddata", onLoadedData);
       framesRef.current.forEach((b) => b.close?.());
       framesRef.current = [];

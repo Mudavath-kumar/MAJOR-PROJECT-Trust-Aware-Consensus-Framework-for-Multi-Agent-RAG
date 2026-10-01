@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Copy, ExternalLink, FileText, MessageSquare, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/api-client";
-import { getChunks, removeDoc, type StoredDoc, useKnowledgeStore } from "@/lib/doc-store";
+import { removeDoc, type StoredDoc, useKnowledgeStore } from "@/lib/doc-store";
 import { EmptyState, Meter, MonoLabel, PageHeader, Panel } from "@/components/app/Primitives";
 
 export const Route = createFileRoute("/app/knowledge")({
@@ -62,48 +62,20 @@ function KnowledgeBase() {
     void ApiClient.getDocumentChunks(selected.id)
       .then(({ chunks: remoteChunks }) => {
         if (cancelled) return;
-        if (remoteChunks && remoteChunks.length > 0) {
-          setChunks(
-            remoteChunks.map((chunk: any, index: number) => ({
-              id: String(chunk.chunk_id ?? `${selected.id}-${index}`),
-              doc: selected.name,
-              page: Number(chunk.metadata?.page ?? 1),
-              similarity: null,
-              text: String(chunk.text ?? ""),
-            })),
-          );
-        } else {
-          // Fallback to local chunks
-          const local = getChunks().filter((c) => c.docId === selected.id);
-          setChunks(
-            local.map((c) => ({
-              id: c.id,
-              doc: c.docName,
-              page: c.page,
-              similarity: null,
-              text: c.text,
-            })),
-          );
-        }
+        setChunks(
+          remoteChunks.map((chunk: any, index: number) => ({
+            id: String(chunk.chunk_id ?? `${selected.id}-${index}`),
+            doc: selected.name,
+            page: Number(chunk.metadata?.page ?? 1),
+            similarity: null,
+            text: String(chunk.text ?? ""),
+          })),
+        );
       })
       .catch((error) => {
         if (!cancelled) {
-          // Graceful fallback to locally indexed chunks
-          const local = getChunks().filter((c) => c.docId === selected.id);
-          if (local.length > 0) {
-            setChunks(
-              local.map((c) => ({
-                id: c.id,
-                doc: c.docName,
-                page: c.page,
-                similarity: null,
-                text: c.text,
-              })),
-            );
-          } else {
-            setChunksError(error instanceof Error ? error.message : "Unable to load indexed chunks");
-            setChunks([]);
-          }
+          setChunksError(error instanceof Error ? error.message : "Unable to load indexed chunks");
+          setChunks([]);
         }
       })
       .finally(() => {
@@ -328,10 +300,10 @@ function KnowledgeBase() {
                     Source trust index
                   </span>
                   <span className="font-mono text-xs font-semibold tabular-nums text-emerald-400">
-                    {selected.trust}%
+                    {selected.trust !== undefined ? `${selected.trust}%` : "—"}
                   </span>
                 </div>
-                <Meter value={selected.trust} className="mt-2" />
+                <Meter value={selected.trust ?? 0} className="mt-2" />
               </div>
 
               <div className="mt-4 flex flex-wrap gap-1.5">

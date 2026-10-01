@@ -30,20 +30,36 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
+
+      const normalize = (value: string) => value.trim().replace(/\/+$/, "").toLowerCase();
       const allowed = [
         env.FRONTEND_URL,
         "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:8080",
         "http://localhost:3000",
-      ].filter(Boolean);
-      if (allowed.some((o) => origin.startsWith(o as string))) {
+        ...env.CORS_ALLOWED_ORIGINS,
+      ]
+        .filter(Boolean)
+        .map((value) => normalize(value as string));
+
+      const normalizedOrigin = normalize(origin);
+
+      // Exact match only. Substring matching let `http://localhost:3000.evil.com`
+      // (and any origin that merely started with an allowed value) through.
+      if (allowed.includes(normalizedOrigin)) {
         return callback(null, true);
       }
-      // Allow any Vercel preview/production deployment for this project
-      if (/\.vercel\.app$/.test(origin)) {
+
+      // Vercel preview deployments share the *.vercel.app suffix. This is a
+      // deliberate, opt-out allowance for preview builds; set
+      // ALLOW_VERCEL_PREVIEWS=false to require an explicit origin allowlist.
+      if (env.ALLOW_VERCEL_PREVIEWS && /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(normalizedOrigin)) {
         return callback(null, true);
       }
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
+
+      // Do not echo a CORS header for disallowed origins; just decline.
+      return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

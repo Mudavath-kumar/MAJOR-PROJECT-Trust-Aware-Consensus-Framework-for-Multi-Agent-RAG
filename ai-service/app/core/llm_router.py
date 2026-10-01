@@ -131,30 +131,10 @@ async def call_llm(
         if res:
             return res
 
-    # ── 3. Ollama Local Fallback (runs offline) ──────────────────────────────
-    try:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                f"{settings.OLLAMA_ENDPOINT}/api/generate",
-                json={
-                    "model": settings.OLLAMA_MODEL,
-                    "prompt": f"{system_prompt}\n\n{prompt}",
-                    "stream": False,
-                    "options": {"temperature": temperature},
-                },
-            )
-            if resp.status_code == 200:
-                return resp.json().get("response", "")
-    except Exception as e:
-        logger.warning("Ollama failed (endpoint=%s model=%s): %s", settings.OLLAMA_ENDPOINT, settings.OLLAMA_MODEL, e)
-
     raise RuntimeError(
         f"No LLM provider responded. "
         f"Gemini model tried: {chosen_model} | "
-        f"OpenRouter configured: {bool(settings.OPENROUTER_API_KEY)} | "
-        f"Ollama endpoint: {settings.OLLAMA_ENDPOINT}. "
+        f"OpenRouter configured: {bool(settings.OPENROUTER_API_KEY)}. "
         "Check the WARNING logs above for the specific failure."
     )
 
@@ -169,6 +149,5 @@ def get_llm_status() -> dict:
         ),
         "gemini_configured": bool(settings.GEMINI_API_KEY and _gemini_available),
         "openrouter_configured": bool(settings.OPENROUTER_API_KEY),
-        "ollama_endpoint": settings.OLLAMA_ENDPOINT,
         "free_tier": True,
     }

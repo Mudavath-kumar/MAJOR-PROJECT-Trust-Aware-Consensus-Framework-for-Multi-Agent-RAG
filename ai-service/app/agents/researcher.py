@@ -51,22 +51,28 @@ Provide your grounded synthesis and list your key factual propositions."""
         if line.strip().startswith(("-", "•", "*")) and len(line.strip()) > 10
     ][:4]  # cap at 4 propositions
 
+    retrieval_confidence = (
+        sum(float(c.get("similarity_score", 0.0)) for c in context_chunks) / len(context_chunks)
+        if context_chunks
+        else 0.0
+    )
+
     return {
         "agent_name": "retriever",
         "agent_role": "Primary Evidence & Context Extractor",
         "model_used": model,
         "claim_propositions": claims,
         "raw_output": llm_output,
-        "confidence": 0.94,
+        "confidence": max(0.0, min(1.0, retrieval_confidence)),
         "latency_ms": latency_ms,
         "sources_cited": [
             {
-                "document_id": c.get("metadata", {}).get("document_id", "doc-001"),
-                "document_name": c.get("metadata", {}).get("document_name", "Policy_Document.pdf"),
-                "chunk_id": c.get("chunk_id", "chunk-0"),
+                "document_id": c.get("metadata", {}).get("document_id", ""),
+                "document_name": c.get("metadata", {}).get("document_name", ""),
+                "chunk_id": c.get("chunk_id", ""),
                 "text": c.get("text", "")[:200],
-                "similarity_score": c.get("similarity_score", 0.92),
-                "page_number": c.get("metadata", {}).get("page", 1),
+                "similarity_score": c.get("similarity_score", 0.0),
+                "page_number": c.get("metadata", {}).get("page", 0),
             }
             for c in context_chunks[:3]
         ]

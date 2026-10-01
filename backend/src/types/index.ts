@@ -101,7 +101,6 @@ export interface ISettings {
   gemini_api_key?: string;
   tavily_api_key?: string;
   hf_token?: string;
-  ollama_endpoint?: string;
   preferred_model: string;
   similarity_top_k: number;
   rerank_top_k: number;

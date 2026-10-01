@@ -1,5 +1,12 @@
 from typing import List, Dict, Any
 
+
+def _score(value: Any) -> float:
+    if not isinstance(value, (int, float)):
+        return 0.0
+    normalized = float(value) / 100.0 if value > 1 else float(value)
+    return max(0.0, min(1.0, normalized))
+
 def compute_multi_agent_consensus(
     researcher: Dict[str, Any],
     fact_checker: Dict[str, Any],
@@ -9,43 +16,48 @@ def compute_multi_agent_consensus(
     retrieved_chunks: List[Dict[str, Any]] | None = None,
     threshold: float = 80.0
 ) -> Dict[str, Any]:
-    conf_a = researcher.get("confidence", 0.9)
-    conf_b = fact_checker.get("confidence", 0.9)
-    conf_c = critic.get("confidence", 0.9)
-
-    conf_trust = (trust_assessor or {}).get("confidence", 0.8)
-    conf_reasoner = (reasoner or {}).get("confidence", 0.85)
+    conf_a = _score(researcher.get("confidence"))
+    conf_b = _score(fact_checker.get("confidence"))
+    conf_c = _score(critic.get("confidence"))
+    conf_trust = _score((trust_assessor or {}).get("confidence"))
+    conf_reasoner = _score((reasoner or {}).get("confidence"))
 
     # 1. Context Precision / Relevance: Average similarity of top retrieved chunks
     chunks = retrieved_chunks or []
     if chunks:
         context_precision = round(
-            min(1.0, sum(float(c.get("similarity_score", 0.8)) for c in chunks) / len(chunks)), 4
+            min(1.0, sum(_score(c.get("similarity_score")) for c in chunks) / len(chunks)), 4
         )
     else:
-        context_precision = round(conf_trust, 4) if conf_trust else 0.82
+        context_precision = 0.0
 
     # 2. Faithfulness / Groundedness:
     # Evaluated by Critic agent assessing factual propositions against context
     critic_raw = (critic.get("raw_output") or "").lower()
     if "high" in critic_raw and "risk" in critic_raw:
-        faithfulness = 0.65
+        faithfulness = 0.2
         hallucination_risk = "high"
     elif "medium" in critic_raw and "risk" in critic_raw:
-        faithfulness = 0.84
+        faithfulness = 0.5
         hallucination_risk = "medium"
-    else:
-        faithfulness = 0.96
+    elif "low" in critic_raw and "risk" in critic_raw:
+        faithfulness = 0.8
         hallucination_risk = "low"
+    elif "no hallucination" in critic_raw or "no unsupported" in critic_raw:
+        faithfulness = 0.8
+        hallucination_risk = "low"
+    else:
+        faithfulness = 0.0
+        hallucination_risk = "high"
 
     # 3. Answer Relevance:
     # Reasoner confidence combined with fact-checker validation
-    answer_relevance = round(min(1.0, (conf_reasoner * 0.5 + conf_b * 0.5)), 3)
+    answer_relevance = round(conf_reasoner if (reasoner or {}).get("raw_output") else 0.0, 3)
 
     # 4. Consensus & Agreement Ratio:
     agent_scores = [conf_a, conf_b, conf_c, conf_trust, conf_reasoner]
     valid_scores = [s for s in agent_scores if s > 0]
-    avg_agent_score = sum(valid_scores) / len(valid_scores) if valid_scores else 0.85
+    avg_agent_score = sum(valid_scores) / len(valid_scores) if valid_scores else 0.0
     agreement_ratio = round(min(1.0, avg_agent_score), 2)
 
     # 5. Composite Confidence Score (0-100):
@@ -62,7 +74,12 @@ def compute_multi_agent_consensus(
     conflicts = []
     
     # Status determination
-    if consensus_score >= threshold:
+    synthesis = (reasoner or {}).get("raw_output", "") or researcher.get("raw_output", "")
+    if not synthesis.strip() or not chunks or faithfulness <= 0:
+        status = "failed"
+        consensus_score = 0.0
+        conflicts.append({"reason": "Grounded synthesis or critic verification was unavailable."})
+    elif consensus_score >= threshold:
         status = "reached"
     elif consensus_score >= 60.0:
         status = "partial"
@@ -87,14 +104,6 @@ def compute_multi_agent_consensus(
     }
 
     # Generate unified synthesis text
-    synthesis = (reasoner or {}).get("raw_output", "") or researcher.get("raw_output", "")
-    if not synthesis or len(synthesis) < 30:
-        synthesis = (
-            f"Multi-Agent Consensus verified (Score: {consensus_score}%).\n\n"
-            f"All claims have been evaluated by Retriever, Fact-Checker, and Critic agents "
-            f"with consistent agreement on primary compliance and policy directives."
-        )
-
     return {
         "status": status,
         "consensus_score": consensus_score,
@@ -103,4 +112,3 @@ def compute_multi_agent_consensus(
         "synthesis": synthesis,
         "evaluation_matrix": evaluation_matrix,
     }
-

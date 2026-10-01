@@ -15,13 +15,9 @@ function SSOCallbackPage() {
       <div className="flex flex-col items-center gap-4 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
 
-        <h2 className="text-lg font-semibold text-foreground">
-          Completing authentication…
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Completing authentication…</h2>
 
-        <p className="text-sm text-muted-foreground">
-          Redirecting you to your TrustRAG workspace.
-        </p>
+        <p className="text-sm text-muted-foreground">Redirecting you to your TrustRAG workspace.</p>
       </div>
 
       <AuthenticateWithRedirectCallback

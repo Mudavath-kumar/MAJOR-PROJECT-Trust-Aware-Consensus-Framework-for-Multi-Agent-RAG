@@ -1,4 +1,11 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useNavigate,
+  useRouterState,
+  Navigate,
+} from "@tanstack/react-router";
 import {
   Bell,
   BarChart3,
@@ -22,7 +29,6 @@ import { Button } from "@/components/ui/button";
 import { SignedIn, SignedOut, useClerk, useUser, useAuth } from "@clerk/clerk-react";
 import { ApiClient } from "@/lib/api-client";
 
-
 export const Route = createFileRoute("/app")({
   head: () => ({
     meta: [
@@ -40,7 +46,14 @@ export const Route = createFileRoute("/app")({
 });
 
 type NavItem = {
-  to: "/app" | "/app/chat" | "/app/upload" | "/app/knowledge" | "/app/analytics" | "/app/evaluations" | "/app/settings";
+  to:
+    | "/app"
+    | "/app/chat"
+    | "/app/upload"
+    | "/app/knowledge"
+    | "/app/analytics"
+    | "/app/evaluations"
+    | "/app/settings";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
@@ -165,38 +178,17 @@ function AppShell() {
                     className="relative rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <Bell size={18} />
-                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
                   </Button>
 
                   {notifOpen && (
                     <div className="absolute right-0 top-11 w-80 rounded-2xl border border-border bg-card p-4 shadow-xl backdrop-blur-2xl animate-rise z-50">
                       <div className="flex items-center justify-between pb-3 border-b border-border">
                         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground font-mono">
-                          Telemetry Alerts
-                        </span>
-                        <span className="text-[10px] rounded-full bg-accent/15 px-2 py-0.5 text-accent font-semibold">
-                          2 New
+                          Verified Alerts
                         </span>
                       </div>
-                      <div className="mt-3 space-y-2 text-xs">
-                        <div className="rounded-xl border border-border/80 bg-muted/30 p-2.5">
-                          <p className="font-medium text-foreground">Consensus Engine Normal</p>
-                          <p className="mt-0.5 text-muted-foreground text-[11px]">
-                            3 agents agreed with 96.8% agreement score.
-                          </p>
-                          <span className="mt-1 block font-mono text-[9px] text-muted-foreground">
-                            2m ago
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-border/80 bg-muted/30 p-2.5">
-                          <p className="font-medium text-foreground">Ingestion Pipeline Idle</p>
-                          <p className="mt-0.5 text-muted-foreground text-[11px]">
-                            All uploaded chunks embedded and verified.
-                          </p>
-                          <span className="mt-1 block font-mono text-[9px] text-muted-foreground">
-                            14m ago
-                          </span>
-                        </div>
+                      <div className="mt-3 rounded-xl border border-dashed border-border/80 bg-muted/30 p-3 text-xs text-muted-foreground">
+                        No new verified alerts.
                       </div>
                     </div>
                   )}

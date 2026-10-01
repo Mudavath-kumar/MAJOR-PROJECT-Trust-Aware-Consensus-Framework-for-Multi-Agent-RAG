@@ -32,15 +32,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_STEPS } from "@/lib/trustrag-data";
-import {
-  ingestFile,
-  ingestMultipleFiles,
-  retrieve,
-  scoreAnswer,
-  synthesizeAnswer,
-  useKnowledgeStore,
-  type Retrieved,
-} from "@/lib/doc-store";
+import { ingestFile, useKnowledgeStore } from "@/lib/doc-store";
 import { ApiClient } from "@/lib/api-client";
 import { Meter, MonoLabel, PageHeader, Panel, ScorePill } from "@/components/app/Primitives";
 import { Button } from "@/components/ui/button";
@@ -56,7 +48,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
-import { EvaluationMatrixModal, type EvaluationMatrixData } from "@/components/app/EvaluationMatrixModal";
+import type { EvaluationMatrixData } from "@/components/app/EvaluationMatrixModal";
 
 export const Route = createFileRoute("/app/chat")({
   head: () => ({
@@ -89,6 +81,17 @@ type AgentDetail = {
   status: "verified" | "flagged" | "neutral";
 };
 
+type Retrieved = {
+  id: string;
+  docId: string;
+  docName: string;
+  index: number;
+  page: number;
+  text: string;
+  similarity: number;
+  trust: "high" | "medium" | "low";
+};
+
 type Turn = {
   id: number;
   question: string;
@@ -100,7 +103,6 @@ type Turn = {
   consensusSummary: string;
   scopeDocs: string[];
   timestamp: string;
-  demo: boolean;
 };
 
 const SUGGESTIONS = [
@@ -351,11 +353,14 @@ function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draft = useRef<Turn | null>(null);
 
-  const [conversations, setConversations] = useState<{ _id: string; title: string; updated_at?: string }[]>([]);
+  const [conversations, setConversations] = useState<
+    { _id: string; title: string; updated_at?: string }[]
+  >([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
 
   // Helper to parse backend messages into UI turns
   const parseMessagesToTurns = (msgs: any[]): Turn[] => {
@@ -375,13 +380,24 @@ function ChatPage() {
               index: idx,
               page: source.page_number || 0,
               text: source.text || "",
-              similarity: source.similarity_score || 0.9,
-              trust: source.similarity_score >= 0.8 ? "high" : "medium",
+              similarity: typeof source.similarity_score === "number" ? source.similarity_score : 0,
+              trust:
+                source.similarity_score >= 0.8
+                  ? "high"
+                  : source.similarity_score >= 0.6
+                    ? "medium"
+                    : "low",
             })),
             scores: {
-              confidence: Math.round(asst.confidence_score || 90),
-              trust: 92,
-              consensus: 94,
+              confidence: typeof asst.confidence_score === "number" ? asst.confidence_score : 0,
+              trust:
+                typeof asst.consensus?.agreement_ratio === "number"
+                  ? Math.round(asst.consensus.agreement_ratio * 100)
+                  : 0,
+              consensus:
+                typeof asst.consensus?.consensus_score === "number"
+                  ? asst.consensus.consensus_score
+                  : 0,
             },
             agents: [],
             consensusSummary: "Verified consensus achieved from indexed documents.",
@@ -390,7 +406,6 @@ function ChatPage() {
               hour: "2-digit",
               minute: "2-digit",
             }),
-            demo: false,
           });
         }
       }
@@ -460,9 +475,7 @@ function ChatPage() {
 
   const filteredConversations = useMemo(() => {
     if (!searchQuery.trim()) return conversations;
-    return conversations.filter((c) =>
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+    return conversations.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [conversations, searchQuery]);
 
   // Active documents in scope (if scope is empty, all documents are searched)
@@ -491,55 +504,9 @@ function ChatPage() {
   };
 
   async function ask(q: string) {
-    // The backend RAG pipeline is the only source of evidence. Keep the
-    // transient UI state empty until its verified response arrives.
     const hits: Retrieved[] = [];
-    const scores = scoreAnswer(hits);
-
-    // Formulate real-time multi-agent propositions with Google Gemini
-    const agentRetriever: AgentDetail = {
-      name: "Retriever & Synthesizer",
-      role: "Evidence & Context Extractor",
-      model: "Google Gemini 2.5 Flash",
-      confidence: scores.confidence,
-      latencyMs: 340 + Math.round(Math.random() * 80),
-      propositions:
-        hits.length > 0
-          ? hits
-              .slice(0, 2)
-              .map(
-                (h) =>
-                  `Direct citation from ${h.docName} (p.${h.page}): "${h.text.slice(0, 110)}…"`,
-              )
-          : [`Grounded retrieval initiated for query: "${q.slice(0, 60)}"`],
-      status: "verified",
-    };
-
-    const agentFactChecker: AgentDetail = {
-      name: "Fact-Checker Verifier",
-      role: "External & Domain Cross-Verifier",
-      model: "Google Gemini 2.5 Flash",
-      confidence: scores.trust,
-      latencyMs: 420 + Math.round(Math.random() * 90),
-      propositions: [
-        `Cross-referenced claims against canonical enterprise compliance & technical benchmarks.`,
-        `Identified 0 factual contradictions or unauthorized domain assertions.`,
-      ],
-      status: "verified",
-    };
-
-    const agentCritic: AgentDetail = {
-      name: "Hallucination Auditor",
-      role: "Adversarial Consistency Critic",
-      model: "Google Gemini 2.5 Flash",
-      confidence: scores.consensus,
-      latencyMs: 290 + Math.round(Math.random() * 60),
-      propositions: [
-        `Evaluated semantic entropy (score: 0.04) across retrieved passages.`,
-        `Zero ungrounded hallucinations detected; all assertions are strictly derived from source chunks.`,
-      ],
-      status: "verified",
-    };
+    const scores = { confidence: 0, trust: 0, consensus: 0 };
+    setQueryError(null);
 
     const turn: Turn = {
       id: Date.now(),
@@ -547,11 +514,10 @@ function ChatPage() {
       answer: "Retrieving verified evidence from the indexed documents…",
       hits,
       scores,
-      agents: [agentRetriever, agentFactChecker, agentCritic],
-      consensusSummary: `Unanimous consensus achieved across 3 agents with ${scores.consensus}% alignment ratio.`,
+      agents: [],
+      consensusSummary: "Waiting for the authenticated backend consensus response.",
       scopeDocs: activeDocNames,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      demo: false,
     };
 
     draft.current = turn;
@@ -606,9 +572,9 @@ function ChatPage() {
                       ? "Trust Assessor"
                       : "Grounded Reasoner",
             role: ag.agent_role || "Consensus Agent",
-            model: ag.model_used || "Google Gemini 1.5 Flash",
-            confidence: Math.round((ag.confidence || 0.94) * 100),
-            latencyMs: ag.latency_ms || 320,
+            model: ag.model_used || "Unknown model",
+            confidence: typeof ag.confidence === "number" ? Math.round(ag.confidence * 100) : 0,
+            latencyMs: typeof ag.latency_ms === "number" ? ag.latency_ms : 0,
             propositions: ag.claim_propositions || [],
             status: "verified" as const,
           }));
@@ -618,86 +584,36 @@ function ChatPage() {
             answer: asst.content,
             hits: liveHits,
             scores: {
-              confidence: Math.round(asst.confidence_score || 94),
+              confidence:
+                typeof asst.confidence_score === "number" ? Math.round(asst.confidence_score) : 0,
               trust: Math.round(
-                asst.consensus?.agreement_ratio ? asst.consensus.agreement_ratio * 100 : 95,
+                typeof asst.consensus?.agreement_ratio === "number"
+                  ? asst.consensus.agreement_ratio * 100
+                  : 0,
               ),
-              consensus: Math.round(asst.consensus?.consensus_score || 94),
+              consensus:
+                typeof asst.consensus?.consensus_score === "number"
+                  ? Math.round(asst.consensus.consensus_score)
+                  : 0,
             },
             agents: liveAgents,
             consensusSummary: asst.consensus?.synthesis || turn.consensusSummary,
           };
           draft.current = updatedTurn;
           setReadyTurn(updatedTurn);
+        } else {
+          throw new Error("Backend did not provide a grounded assistant response");
         }
       } else {
         throw new Error("Backend did not provide a conversation");
       }
     } catch (error) {
-      // Offline / Demo / Test Fallback: retrieve grounded passages and synthesize with multi-agent consensus
-      console.warn("Backend unavailable, synthesizing with local grounded pipeline:", error);
-      const localHits = retrieve(q, activeDocIds || null, 4);
-      const localScores = scoreAnswer(localHits);
-      const localAnswer = synthesizeAnswer(q, localHits);
-
-      const agentRetrieverFallback: AgentDetail = {
-        name: "Retriever & Synthesizer",
-        role: "Evidence & Context Extractor",
-        model: "Local TF-IDF & Semantic Embeddings",
-        confidence: localScores.confidence,
-        latencyMs: 140,
-        propositions:
-          localHits.length > 0
-            ? localHits
-                .slice(0, 2)
-                .map(
-                  (h) =>
-                    `Direct citation from ${h.docName} (p.${h.page}): "${h.text.slice(0, 110)}…"`,
-                )
-            : [`Grounded retrieval completed across ${activeDocNames.length} scope sources.`],
-        status: "verified",
-      };
-
-      const agentFactCheckerFallback: AgentDetail = {
-        name: "Fact-Checker Verifier",
-        role: "Claim Verification Agent",
-        model: "Multi-Agent Verifier",
-        confidence: localScores.trust,
-        latencyMs: 220,
-        propositions: [
-          `Cross-referenced all synthesized propositions against source passages.`,
-          `Verified 0 contradictions or ungrounded assertions.`,
-        ],
-        status: "verified",
-      };
-
-      const agentCriticFallback: AgentDetail = {
-        name: "Hallucination Auditor",
-        role: "Adversarial Consistency Critic",
-        model: "Auditor Core",
-        confidence: localScores.consensus,
-        latencyMs: 180,
-        propositions: [
-          `Calculated semantic adherence score: 0.98.`,
-          `All claims strictly attributed to indexed passages.`,
-        ],
-        status: "verified",
-      };
-
-      const localTurn: Turn = {
-        id: Date.now(),
-        question: q,
-        answer: localAnswer,
-        hits: localHits,
-        scores: localScores,
-        agents: [agentRetrieverFallback, agentFactCheckerFallback, agentCriticFallback],
-        consensusSummary: `Multi-agent consensus achieved with ${localScores.consensus}% agreement ratio across 3 auditor agents.`,
-        scopeDocs: activeDocNames,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        demo: false,
-      };
-      draft.current = localTurn;
-      setReadyTurn(localTurn);
+      console.error("Backend RAG query failed", error);
+      setQueryError(error instanceof Error ? error.message : "The TrustRAG backend is unavailable");
+      setPending(null);
+      draft.current = null;
+      setStep(0);
+      setReadyTurn(null);
     }
   }
 
@@ -748,17 +664,28 @@ function ChatPage() {
 
   const stepDetails = useMemo(() => {
     const n = activeHitsCount;
-    const sourcesCount = new Set((draft.current?.hits ?? evidence).map((h) => h.docName)).size || 1;
+    const sourcesCount = new Set((draft.current?.hits ?? evidence).map((h) => h.docName)).size;
+    if (!readyTurn) {
+      return [
+        "Waiting for the authenticated retrieval service",
+        "Waiting for the reasoning service",
+        "Waiting for evidence verification",
+        "Waiting for source trust assessment",
+        "Waiting for consensus analysis",
+        "Waiting for the consensus result",
+        "The answer will appear only after verification",
+      ];
+    }
     return [
       `Scanned ${n} verified candidate chunk${n === 1 ? "" : "s"} across ${sourcesCount} active document${sourcesCount === 1 ? "" : "s"}`,
       "Synthesizing structured grounded proposition outline",
-      `100% of candidate assertions anchored to exact document passages`,
+      `${readyTurn.hits.length} evidence passage${readyTurn.hits.length === 1 ? "" : "s"} returned by the backend`,
       "Cross-referencing domain truth & statistical confidence calibration",
       "Auditing hallucination risk and resolving overlapping claims",
-      "3 of 3 independent agents reached complete consensus",
-      "Verified answer assembled with verbatim citations",
+      `${readyTurn.agents.length} agent execution${readyTurn.agents.length === 1 ? "" : "s"} recorded by the backend`,
+      "Verified answer assembled with returned citations",
     ];
-  }, [activeHitsCount, draft.current, evidence]);
+  }, [activeHitsCount, evidence, readyTurn]);
 
   function exportTranscript() {
     const body = turns
@@ -881,7 +808,10 @@ function ChatPage() {
 
               {/* Search filter */}
               <div className="mt-3 relative">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search
+                  size={12}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
                 <input
                   type="text"
                   value={searchQuery}
@@ -945,538 +875,544 @@ function ChatPage() {
         <div className="min-w-0 flex-1 w-full">
           {/* 📁 INTERACTIVE SOURCE DOCUMENT SELECTOR HUB (NEW MODERN DESIGN) */}
           <div className="mb-5 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm backdrop-blur-md">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
-              <Layers size={15} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Source Documents
-                </span>
-                <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
-                  {docs.length} Available
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Toggle documents below to scope retrieval. Selected files directly ground AI
-                answers.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setScope([])}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
-                scope.length === 0
-                  ? "bg-foreground text-background font-semibold shadow-sm"
-                  : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              All Sources ({docs.length})
-            </button>
-            {scope.length > 0 && (
-              <button
-                onClick={() => setScope([])}
-                className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
-              >
-                Clear Selection
-              </button>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleSourceUpload}
-              className="hidden"
-              accept=".pdf,.docx,.txt,.md,.csv,.json"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isUploadingSource}
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 rounded-lg gap-1.5 border-dashed border-accent/40 bg-accent/5 text-accent hover:bg-accent/15"
-            >
-              {isUploadingSource ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <Plus size={13} />
-              )}
-              <span>{isUploadingSource ? "Indexing…" : "Upload Source"}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Horizontal Document Pills with Badges */}
-        <div className="mt-3 flex flex-wrap gap-2 pt-1 max-h-40 overflow-y-auto pr-1">
-          {docs.map((doc) => {
-            const isSelected = scope.length === 0 || scope.includes(doc.id);
-            const isExplicit = scope.includes(doc.id);
-
-            return (
-              <button
-                key={doc.id}
-                type="button"
-                onClick={() => {
-                  setScope((prev) => {
-                    if (prev.includes(doc.id)) {
-                      return prev.filter((id) => id !== doc.id);
-                    } else {
-                      return [...prev, doc.id];
-                    }
-                  });
-                }}
-                className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
-                  isExplicit
-                    ? "border-accent bg-accent/15 text-foreground shadow-[0_0_12px_rgba(var(--color-accent)/0.18)]"
-                    : isSelected && scope.length === 0
-                      ? "border-border/80 bg-secondary/40 text-foreground hover:border-accent/40"
-                      : "border-border/40 bg-muted/20 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground"
-                }`}
-              >
-                {/* File Type Badge */}
-                <span
-                  className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase border ${getFileTypeColor(doc.type)}`}
-                >
-                  {doc.type}
-                </span>
-
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold max-w-[170px]">{doc.name}</p>
-                  <p className="font-mono text-[10px] text-muted-foreground">
-                    {doc.chunkCount} chunks · {doc.sizeLabel}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                  <Layers size={15} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      Source Documents
+                    </span>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                      {docs.length} Available
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Toggle documents below to scope retrieval. Selected files directly ground AI
+                    answers.
                   </p>
                 </div>
+              </div>
 
-                {doc.isUserUploaded && (
-                  <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
-                    Uploaded
-                  </span>
-                )}
-
-                <div
-                  className={`ml-1 flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
-                    isExplicit
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : isSelected && scope.length === 0
-                        ? "border-muted-foreground/40 bg-transparent"
-                        : "border-border bg-transparent"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setScope([])}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                    scope.length === 0
+                      ? "bg-foreground text-background font-semibold shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
                 >
-                  {isExplicit && <Check size={10} strokeWidth={3} />}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  All Sources ({docs.length})
+                </button>
+                {scope.length > 0 && (
+                  <button
+                    onClick={() => setScope([])}
+                    className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+                  >
+                    Clear Selection
+                  </button>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleSourceUpload}
+                  className="hidden"
+                  accept=".pdf,.docx,.txt,.md,.csv,.json"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isUploadingSource}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 rounded-lg gap-1.5 border-dashed border-accent/40 bg-accent/5 text-accent hover:bg-accent/15"
+                >
+                  {isUploadingSource ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Plus size={13} />
+                  )}
+                  <span>{isUploadingSource ? "Indexing…" : "Upload Source"}</span>
+                </Button>
+              </div>
+            </div>
 
-        {/* Current Scope Banner */}
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Zap size={13} className="text-amber-400" />
-            <span>
-              Active Grounding:{" "}
-              <strong className="text-foreground">
-                {scope.length === 0 ? "All Documents" : `${scope.length} Selected File(s)`}
-              </strong>{" "}
-              (
-              {scope.length === 0
-                ? docs.reduce((acc, d) => acc + d.chunkCount, 0)
-                : docs
-                    .filter((d) => scope.includes(d.id))
-                    .reduce((acc, d) => acc + d.chunkCount, 0)}{" "}
-              Chunks in Context)
-            </span>
-          </span>
-          <span className="text-[11px] font-mono">Real-time Multi-Agent RAG</span>
-        </div>
-      </div>
+            {/* Horizontal Document Pills with Badges */}
+            <div className="mt-3 flex flex-wrap gap-2 pt-1 max-h-40 overflow-y-auto pr-1">
+              {docs.map((doc) => {
+                const isSelected = scope.length === 0 || scope.includes(doc.id);
+                const isExplicit = scope.includes(doc.id);
 
-      {/* ========================================================================= */}
-      {/* 💬 CHAT & EVIDENCE WORKSPACE */}
-      {/* ========================================================================= */}
-      <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
-        {/* Left Column: Conversation */}
-        <div className="flex min-h-[72vh] flex-col">
-          <Conversation className="h-[clamp(460px,60vh,700px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
-            <ConversationContent className="gap-5 px-0 py-0 pr-1">
-              {turns.map((t) => (
-                <div key={t.id} className="space-y-4">
-                  {/* User message */}
-                  <Message from="user">
-                    <MessageContent className="bg-primary text-primary-foreground shadow-sm">
-                      {t.question}
-                    </MessageContent>
-                  </Message>
+                return (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => {
+                      setScope((prev) => {
+                        if (prev.includes(doc.id)) {
+                          return prev.filter((id) => id !== doc.id);
+                        } else {
+                          return [...prev, doc.id];
+                        }
+                      });
+                    }}
+                    className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+                      isExplicit
+                        ? "border-accent bg-accent/15 text-foreground shadow-[0_0_12px_rgba(var(--color-accent)/0.18)]"
+                        : isSelected && scope.length === 0
+                          ? "border-border/80 bg-secondary/40 text-foreground hover:border-accent/40"
+                          : "border-border/40 bg-muted/20 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground"
+                    }`}
+                  >
+                    {/* File Type Badge */}
+                    <span
+                      className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase border ${getFileTypeColor(doc.type)}`}
+                    >
+                      {doc.type}
+                    </span>
 
-                  {/* Assistant response card */}
-                  <Message from="assistant">
-                    <Panel className="animate-rise w-full p-5 shadow-sm">
-                      {/* Meta header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck size={16} className="text-accent" />
-                          <MonoLabel>Synthesized &amp; Verified Answer</MonoLabel>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400">
-                            {t.scores.consensus}% Consensus Reached
-                          </span>
-                          <span className="font-mono text-[10px] text-muted-foreground">
-                            {t.timestamp}
-                          </span>
-                        </div>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold max-w-[170px]">{doc.name}</p>
+                      <p className="font-mono text-[10px] text-muted-foreground">
+                        {doc.chunkCount} chunks · {doc.sizeLabel}
+                      </p>
+                    </div>
 
-                      {/* Scoped files pill */}
-                      <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Filter size={11} className="text-accent" />
-                        <span>Grounded in:</span>
-                        <span className="font-medium text-foreground truncate max-w-md">
-                          {t.scopeDocs.join(", ")}
-                        </span>
-                      </div>
+                    {doc.isUserUploaded && (
+                      <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
+                        Uploaded
+                      </span>
+                    )}
 
-                      {/* Answer Content */}
-                      <div className="mt-4">
-                        <Markdown
-                          text={t.answer}
-                          onCitationClick={(citIdx) => setSelectedCitation(citIdx)}
-                        />
-                      </div>
+                    <div
+                      className={`ml-1 flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                        isExplicit
+                          ? "border-accent bg-accent text-accent-foreground"
+                          : isSelected && scope.length === 0
+                            ? "border-muted-foreground/40 bg-transparent"
+                            : "border-border bg-transparent"
+                      }`}
+                    >
+                      {isExplicit && <Check size={10} strokeWidth={3} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-                      {/* Scores Pills */}
-                      <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                        <ScorePill
-                          label="Confidence"
-                          value={t.scores.confidence}
-                          tone={t.scores.confidence >= 75 ? "good" : "warn"}
-                        />
-                        <ScorePill
-                          label="Trust score"
-                          value={t.scores.trust}
-                          tone={t.scores.trust >= 75 ? "good" : "warn"}
-                        />
-                        <ScorePill
-                          label="Consensus"
-                          value={t.scores.consensus}
-                          tone={t.scores.consensus >= 80 ? "good" : "warn"}
-                        />
-                      </div>
-
-                      {/* 🤖 Expandable Multi-Agent Deliberation Breakdown */}
-                      <div className="mt-4 border-t border-border/70 pt-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedDeliberation((prev) => ({
-                              ...prev,
-                              [t.id]: !prev[t.id],
-                            }))
-                          }
-                          className="flex w-full items-center justify-between rounded-xl bg-secondary/40 px-3.5 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-secondary"
-                        >
-                          <span className="flex items-center gap-2">
-                            <BrainCircuit size={14} className="text-accent" />
-                            Multi-Agent Deliberation Telemetry (3 Agents)
-                          </span>
-                          <ChevronDown
-                            size={14}
-                            className={`transition-transform duration-200 ${
-                              expandedDeliberation[t.id] ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-
-                        {expandedDeliberation[t.id] && (
-                          <div className="mt-3 space-y-2.5 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in">
-                            {t.agents.map((agent, aIdx) => (
-                              <div
-                                key={aIdx}
-                                className="rounded-lg border border-border/60 bg-card p-3 text-xs"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-foreground">
-                                    {agent.name}
-                                  </span>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-[10px] text-muted-foreground">
-                                      {agent.latencyMs}ms
-                                    </span>
-                                    <span className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-accent">
-                                      {agent.model}
-                                    </span>
-                                  </div>
-                                </div>
-                                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-                                  {agent.propositions.map((prop, pIdx) => (
-                                    <li key={pIdx} className="flex items-start gap-1.5">
-                                      <Check
-                                        size={12}
-                                        className="mt-0.5 text-emerald-400 shrink-0"
-                                      />
-                                      <span>{prop}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Supporting Source Citations Bar */}
-                      {t.hits.length > 0 && (
-                        <div className="mt-4 border-t border-border/70 pt-3">
-                          <MonoLabel>Supporting verified passages</MonoLabel>
-                          <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
-                            {t.hits.map((c, i) => (
-                              <button
-                                key={c.id}
-                                type="button"
-                                onClick={() => setSelectedCitation(i + 1)}
-                                className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all ${
-                                  selectedCitation === i + 1
-                                    ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
-                                    : "border-border bg-muted/20 hover:bg-muted/50"
-                                }`}
-                              >
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/20 font-mono text-[10px] font-bold text-accent">
-                                  [{i + 1}]
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate font-semibold text-foreground">
-                                    {c.docName}
-                                  </p>
-                                  <p className="font-mono text-[10px] text-muted-foreground">
-                                    Page {c.page} · {Math.round(c.similarity * 100)}% match
-                                  </p>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action buttons */}
-                      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
-                        <button
-                          onClick={() => {
-                            void navigator.clipboard?.writeText(t.answer);
-                            setCopiedId(t.id);
-                            setTimeout(() => setCopiedId(null), 1500);
-                          }}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
-                        >
-                          {copiedId === t.id ? (
-                            <Check size={13} className="text-emerald-400" />
-                          ) : (
-                            <Copy size={13} />
-                          )}
-                          {copiedId === t.id ? "Copied" : "Copy Answer"}
-                        </button>
-                        <button
-                          onClick={() => ask(t.question)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
-                        >
-                          <RefreshCw size={13} /> Re-verify
-                        </button>
-                        <div className="ml-auto flex items-center gap-1">
-                          <button
-                            onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
-                            className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
-                              votes[t.id] === "up"
-                                ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10"
-                                : ""
-                            }`}
-                            aria-label="Helpful"
-                          >
-                            <ThumbsUp size={13} />
-                          </button>
-                          <button
-                            onClick={() => setVotes((v) => ({ ...v, [t.id]: "down" }))}
-                            className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
-                              votes[t.id] === "down"
-                                ? "text-destructive border-destructive/50 bg-destructive/10"
-                                : ""
-                            }`}
-                            aria-label="Not helpful"
-                          >
-                            <ThumbsDown size={13} />
-                          </button>
-                        </div>
-                      </div>
-                    </Panel>
-                  </Message>
-                </div>
-              ))}
-
-              {/* Pending Execution Card */}
-              {pending && (
-                <>
-                  <Message from="user">
-                    <MessageContent className="bg-primary text-primary-foreground">
-                      {pending}
-                    </MessageContent>
-                  </Message>
-                  <Message from="assistant">
-                    <Panel className="animate-rise w-full overflow-hidden p-0 shadow-lg">
-                      <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5 bg-card">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
-                        </span>
-                        <MonoLabel>Real-Time Multi-Agent Execution</MonoLabel>
-                        <span className="ml-auto font-mono text-[10px] font-semibold text-accent animate-pulse">
-                          {step >= AGENT_STEPS.length
-                            ? "Deliberation Complete · Generating"
-                            : readyTurn
-                              ? "Consensus Achieved · Finalizing"
-                              : "Agents Deliberating…"}
-                        </span>
-                      </div>
-
-                      <div className="p-5">
-                        <Timeline active={step} details={stepDetails} />
-                      </div>
-
-                      {step >= AGENT_STEPS.length && (
-                        <div className="border-t border-border bg-muted/20 px-5 py-4">
-                          <div className="mb-3 flex items-center gap-2">
-                            <ShieldCheck size={14} className="text-emerald-400" />
-                            <MonoLabel>Synthesizing Grounded Answer</MonoLabel>
-                          </div>
-                          <Markdown text={typed} />
-                          <span className="animate-caret ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 rounded-sm bg-accent" />
-                        </div>
-                      )}
-                    </Panel>
-                  </Message>
-                </>
-              )}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
-
-          {/* Dynamic Suggestion Chips */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => !pending && ask(s)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:border-accent/40"
-              >
-                <Sparkle size={12} className="text-accent" /> {s}
-              </button>
-            ))}
+            {/* Current Scope Banner */}
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Zap size={13} className="text-amber-400" />
+                <span>
+                  Active Grounding:{" "}
+                  <strong className="text-foreground">
+                    {scope.length === 0 ? "All Documents" : `${scope.length} Selected File(s)`}
+                  </strong>{" "}
+                  (
+                  {scope.length === 0
+                    ? docs.reduce((acc, d) => acc + d.chunkCount, 0)
+                    : docs
+                        .filter((d) => scope.includes(d.id))
+                        .reduce((acc, d) => acc + d.chunkCount, 0)}{" "}
+                  Chunks in Context)
+                </span>
+              </span>
+              <span className="text-[11px] font-mono">Real-time Multi-Agent RAG</span>
+            </div>
           </div>
 
-          {/* Modern Command Prompt Input */}
-          <PromptInput
-            onSubmit={(message) => {
-              if (!message.text.trim() || pending) return;
-              ask(message.text.trim());
-              setQuestion("");
-            }}
-            className="mt-3 rounded-2xl border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.06)] backdrop-blur-md"
-          >
-            <PromptInputTextarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder={
-                scope.length === 0
-                  ? `Ask anything — searching all ${docs.length} indexed documents…`
-                  : `Ask a question grounded in the ${scope.length} selected document(s)…`
-              }
-              className="min-h-20 px-4 py-3 text-sm placeholder:text-muted-foreground/60"
-            />
-            <PromptInputFooter className="items-center justify-between px-3 pb-2.5">
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
-                <span>
-                  {scope.length === 0 ? "Scope: All Sources" : `Scope: ${scope.length} File(s)`}
+          {/* ========================================================================= */}
+          {/* 💬 CHAT & EVIDENCE WORKSPACE */}
+          {/* ========================================================================= */}
+          <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
+            {/* Left Column: Conversation */}
+            <div className="flex min-h-[72vh] flex-col">
+              <Conversation className="h-[clamp(460px,60vh,700px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
+                <ConversationContent className="gap-5 px-0 py-0 pr-1">
+                  {turns.map((t) => (
+                    <div key={t.id} className="space-y-4">
+                      {/* User message */}
+                      <Message from="user">
+                        <MessageContent className="bg-primary text-primary-foreground shadow-sm">
+                          {t.question}
+                        </MessageContent>
+                      </Message>
+
+                      {/* Assistant response card */}
+                      <Message from="assistant">
+                        <Panel className="animate-rise w-full p-5 shadow-sm">
+                          {/* Meta header */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck size={16} className="text-accent" />
+                              <MonoLabel>Synthesized &amp; Verified Answer</MonoLabel>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400">
+                                {t.scores.consensus}% Consensus Score
+                              </span>
+                              <span className="font-mono text-[10px] text-muted-foreground">
+                                {t.timestamp}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Scoped files pill */}
+                          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <Filter size={11} className="text-accent" />
+                            <span>Grounded in:</span>
+                            <span className="font-medium text-foreground truncate max-w-md">
+                              {t.scopeDocs.join(", ")}
+                            </span>
+                          </div>
+
+                          {/* Answer Content */}
+                          <div className="mt-4">
+                            <Markdown
+                              text={t.answer}
+                              onCitationClick={(citIdx) => setSelectedCitation(citIdx)}
+                            />
+                          </div>
+
+                          {/* Scores Pills */}
+                          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                            <ScorePill
+                              label="Confidence"
+                              value={t.scores.confidence}
+                              tone={t.scores.confidence >= 75 ? "good" : "warn"}
+                            />
+                            <ScorePill
+                              label="Trust score"
+                              value={t.scores.trust}
+                              tone={t.scores.trust >= 75 ? "good" : "warn"}
+                            />
+                            <ScorePill
+                              label="Consensus"
+                              value={t.scores.consensus}
+                              tone={t.scores.consensus >= 80 ? "good" : "warn"}
+                            />
+                          </div>
+
+                          {/* 🤖 Expandable Multi-Agent Deliberation Breakdown */}
+                          <div className="mt-4 border-t border-border/70 pt-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedDeliberation((prev) => ({
+                                  ...prev,
+                                  [t.id]: !prev[t.id],
+                                }))
+                              }
+                              className="flex w-full items-center justify-between rounded-xl bg-secondary/40 px-3.5 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-secondary"
+                            >
+                              <span className="flex items-center gap-2">
+                                <BrainCircuit size={14} className="text-accent" />
+                                Multi-Agent Deliberation Telemetry (3 Agents)
+                              </span>
+                              <ChevronDown
+                                size={14}
+                                className={`transition-transform duration-200 ${
+                                  expandedDeliberation[t.id] ? "rotate-180" : ""
+                                }`}
+                              />
+                            </button>
+
+                            {expandedDeliberation[t.id] && (
+                              <div className="mt-3 space-y-2.5 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in">
+                                {t.agents.map((agent, aIdx) => (
+                                  <div
+                                    key={aIdx}
+                                    className="rounded-lg border border-border/60 bg-card p-3 text-xs"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-semibold text-foreground">
+                                        {agent.name}
+                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] text-muted-foreground">
+                                          {agent.latencyMs}ms
+                                        </span>
+                                        <span className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-accent">
+                                          {agent.model}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
+                                      {agent.propositions.map((prop, pIdx) => (
+                                        <li key={pIdx} className="flex items-start gap-1.5">
+                                          <Check
+                                            size={12}
+                                            className="mt-0.5 text-emerald-400 shrink-0"
+                                          />
+                                          <span>{prop}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Supporting Source Citations Bar */}
+                          {t.hits.length > 0 && (
+                            <div className="mt-4 border-t border-border/70 pt-3">
+                              <MonoLabel>Supporting verified passages</MonoLabel>
+                              <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                                {t.hits.map((c, i) => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => setSelectedCitation(i + 1)}
+                                    className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all ${
+                                      selectedCitation === i + 1
+                                        ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
+                                        : "border-border bg-muted/20 hover:bg-muted/50"
+                                    }`}
+                                  >
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/20 font-mono text-[10px] font-bold text-accent">
+                                      [{i + 1}]
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-semibold text-foreground">
+                                        {c.docName}
+                                      </p>
+                                      <p className="font-mono text-[10px] text-muted-foreground">
+                                        Page {c.page} · {Math.round(c.similarity * 100)}% match
+                                      </p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action buttons */}
+                          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+                            <button
+                              onClick={() => {
+                                void navigator.clipboard?.writeText(t.answer);
+                                setCopiedId(t.id);
+                                setTimeout(() => setCopiedId(null), 1500);
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
+                            >
+                              {copiedId === t.id ? (
+                                <Check size={13} className="text-emerald-400" />
+                              ) : (
+                                <Copy size={13} />
+                              )}
+                              {copiedId === t.id ? "Copied" : "Copy Answer"}
+                            </button>
+                            <button
+                              onClick={() => ask(t.question)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
+                            >
+                              <RefreshCw size={13} /> Re-verify
+                            </button>
+                            <div className="ml-auto flex items-center gap-1">
+                              <button
+                                onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
+                                className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
+                                  votes[t.id] === "up"
+                                    ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10"
+                                    : ""
+                                }`}
+                                aria-label="Helpful"
+                              >
+                                <ThumbsUp size={13} />
+                              </button>
+                              <button
+                                onClick={() => setVotes((v) => ({ ...v, [t.id]: "down" }))}
+                                className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
+                                  votes[t.id] === "down"
+                                    ? "text-destructive border-destructive/50 bg-destructive/10"
+                                    : ""
+                                }`}
+                                aria-label="Not helpful"
+                              >
+                                <ThumbsDown size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        </Panel>
+                      </Message>
+                    </div>
+                  ))}
+
+                  {/* Pending Execution Card */}
+                  {pending && (
+                    <>
+                      <Message from="user">
+                        <MessageContent className="bg-primary text-primary-foreground">
+                          {pending}
+                        </MessageContent>
+                      </Message>
+                      <Message from="assistant">
+                        <Panel className="animate-rise w-full overflow-hidden p-0 shadow-lg">
+                          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5 bg-card">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                            </span>
+                            <MonoLabel>Real-Time Multi-Agent Execution</MonoLabel>
+                            <span className="ml-auto font-mono text-[10px] font-semibold text-accent animate-pulse">
+                              {step >= AGENT_STEPS.length
+                                ? "Deliberation Complete · Generating"
+                                : readyTurn
+                                  ? "Consensus Achieved · Finalizing"
+                                  : "Agents Deliberating…"}
+                            </span>
+                          </div>
+
+                          <div className="p-5">
+                            <Timeline active={step} details={stepDetails} />
+                          </div>
+
+                          {step >= AGENT_STEPS.length && (
+                            <div className="border-t border-border bg-muted/20 px-5 py-4">
+                              <div className="mb-3 flex items-center gap-2">
+                                <ShieldCheck size={14} className="text-emerald-400" />
+                                <MonoLabel>Synthesizing Grounded Answer</MonoLabel>
+                              </div>
+                              <Markdown text={typed} />
+                              <span className="animate-caret ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 rounded-sm bg-accent" />
+                            </div>
+                          )}
+                        </Panel>
+                      </Message>
+                    </>
+                  )}
+                </ConversationContent>
+                <ConversationScrollButton />
+              </Conversation>
+
+              {/* Dynamic Suggestion Chips */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => !pending && ask(s)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:border-accent/40"
+                  >
+                    <Sparkle size={12} className="text-accent" /> {s}
+                  </button>
+                ))}
+              </div>
+
+              {queryError && (
+                <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {queryError}. No answer was generated without verified evidence.
+                </div>
+              )}
+
+              {/* Modern Command Prompt Input */}
+              <PromptInput
+                onSubmit={(message) => {
+                  if (!message.text.trim() || pending) return;
+                  ask(message.text.trim());
+                  setQuestion("");
+                }}
+                className="mt-3 rounded-2xl border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.06)] backdrop-blur-md"
+              >
+                <PromptInputTextarea
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder={
+                    scope.length === 0
+                      ? `Ask anything — searching all ${docs.length} indexed documents…`
+                      : `Ask a question grounded in the ${scope.length} selected document(s)…`
+                  }
+                  className="min-h-20 px-4 py-3 text-sm placeholder:text-muted-foreground/60"
+                />
+                <PromptInputFooter className="items-center justify-between px-3 pb-2.5">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
+                    <span>
+                      {scope.length === 0 ? "Scope: All Sources" : `Scope: ${scope.length} File(s)`}
+                    </span>
+                  </div>
+                  <PromptInputSubmit
+                    status={pending ? "submitted" : "ready"}
+                    disabled={!question.trim() || !!pending}
+                    className="rounded-full shadow-sm"
+                  />
+                </PromptInputFooter>
+              </PromptInput>
+            </div>
+
+            {/* Right Column: Evidence Inspector Panel */}
+            <Panel className="animate-rise h-fit p-5 xl:sticky xl:top-24">
+              <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <ScanSearch size={16} className="text-accent" />
+                  <MonoLabel>Evidence Inspector</MonoLabel>
+                </div>
+                <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                  {evidence.length} Chunks
                 </span>
               </div>
-              <PromptInputSubmit
-                status={pending ? "submitted" : "ready"}
-                disabled={!question.trim() || !!pending}
-                className="rounded-full shadow-sm"
-              />
-            </PromptInputFooter>
-          </PromptInput>
-        </div>
 
-        {/* Right Column: Evidence Inspector Panel */}
-        <Panel className="animate-rise h-fit p-5 xl:sticky xl:top-24">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
-            <div className="flex items-center gap-2">
-              <ScanSearch size={16} className="text-accent" />
-              <MonoLabel>Evidence Inspector</MonoLabel>
-            </div>
-            <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
-              {evidence.length} Chunks
-            </span>
-          </div>
+              {evidence.length === 0 ? (
+                <div className="mt-6 rounded-xl border border-dashed border-border p-6 text-center">
+                  <FileText size={24} className="mx-auto text-muted-foreground/50" />
+                  <p className="mt-2 text-xs font-semibold text-foreground">
+                    No Evidence Retrieved Yet
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Ask a question to see exact document chunks, similarity scores, and citations
+                    highlighted here.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3 max-h-[580px] overflow-y-auto pr-1">
+                  {evidence.map((c, i) => (
+                    <EvidenceCard
+                      key={c.id}
+                      rank={i + 1}
+                      doc={c.docName}
+                      page={c.page}
+                      similarity={c.similarity}
+                      trust={c.trust}
+                      text={c.text}
+                      isSelected={selectedCitation === i + 1}
+                      onClick={() => setSelectedCitation(i + 1)}
+                    />
+                  ))}
+                </div>
+              )}
 
-          {evidence.length === 0 ? (
-            <div className="mt-6 rounded-xl border border-dashed border-border p-6 text-center">
-              <FileText size={24} className="mx-auto text-muted-foreground/50" />
-              <p className="mt-2 text-xs font-semibold text-foreground">
-                No Evidence Retrieved Yet
-              </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Ask a question to see exact document chunks, similarity scores, and citations
-                highlighted here.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-3 max-h-[580px] overflow-y-auto pr-1">
-              {evidence.map((c, i) => (
-                <EvidenceCard
-                  key={c.id}
-                  rank={i + 1}
-                  doc={c.docName}
-                  page={c.page}
-                  similarity={c.similarity}
-                  trust={c.trust}
-                  text={c.text}
-                  isSelected={selectedCitation === i + 1}
-                  onClick={() => setSelectedCitation(i + 1)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Real-time Agent Consensus Breakdown */}
-          <div className="mt-5 border-t border-border pt-4">
-            <MonoLabel>Consensus Safeguards</MonoLabel>
-            <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <BadgeCheck size={14} className="mt-0.5 text-emerald-400 shrink-0" />
-                <span>
-                  <strong className="text-foreground">Retriever Agent:</strong> Top-K cosine
-                  similarity semantic filtering.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <SearchCheck size={14} className="mt-0.5 text-cyan-400 shrink-0" />
-                <span>
-                  <strong className="text-foreground">Fact-Checker:</strong> Cross-references
-                  propositions with domain truth.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ShieldCheck size={14} className="mt-0.5 text-amber-400 shrink-0" />
-                <span>
-                  <strong className="text-foreground">Critic Auditor:</strong> Adversarial check for
-                  ungrounded statements.
-                </span>
-              </li>
-            </ul>
-          </div>
-        </Panel>
+              {/* Real-time Agent Consensus Breakdown */}
+              <div className="mt-5 border-t border-border pt-4">
+                <MonoLabel>Consensus Safeguards</MonoLabel>
+                <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <BadgeCheck size={14} className="mt-0.5 text-emerald-400 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Retriever Agent:</strong> Top-K cosine
+                      similarity semantic filtering.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <SearchCheck size={14} className="mt-0.5 text-cyan-400 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Fact-Checker:</strong> Cross-references
+                      propositions with domain truth.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ShieldCheck size={14} className="mt-0.5 text-amber-400 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Critic Auditor:</strong> Adversarial check
+                      for ungrounded statements.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </Panel>
           </div>
         </div>
       </div>

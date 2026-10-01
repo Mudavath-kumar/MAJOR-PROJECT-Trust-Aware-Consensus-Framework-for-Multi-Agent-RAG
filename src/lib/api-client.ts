@@ -5,7 +5,9 @@
  * local-only data as successfully persisted or indexed knowledge.
  */
 
-let rawBase = (import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1").trim().replace(/\/+$/, "");
+let rawBase = (import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1")
+  .trim()
+  .replace(/\/+$/, "");
 if (!rawBase.endsWith("/api/v1") && !rawBase.endsWith("/v1")) {
   rawBase += "/api/v1";
 }
@@ -149,11 +151,18 @@ export class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.error || `Batch upload failed (${response.status})`);
+      throw new Error(
+        errorData.message || errorData.error || `Batch upload failed (${response.status})`,
+      );
     }
 
     return response.json() as Promise<{
-      documents: Array<{ _id: string; status: string; chunks_count: number; original_name: string }>;
+      documents: Array<{
+        _id: string;
+        status: string;
+        chunks_count: number;
+        original_name: string;
+      }>;
       total_uploaded: number;
       message: string;
     }>;
@@ -195,9 +204,12 @@ export class ApiClient {
   }
 
   static async deleteConversation(conversationId: string) {
-    return this.request<{ success: boolean; message: string }>(`/chat/conversations/${conversationId}`, {
-      method: "DELETE",
-    });
+    return this.request<{ success: boolean; message: string }>(
+      `/chat/conversations/${conversationId}`,
+      {
+        method: "DELETE",
+      },
+    );
   }
 
   static async getMessages(conversationId: string) {

@@ -57,24 +57,8 @@ export class StorageService {
     );
   }
 
-  /** Upload if configured; return "local-only" otherwise. Never throws. */
-  static async softUpload(key: string, body: Buffer, contentType: string): Promise<string> {
-    if (!storageConfigured || !client) return "local-only";
-    try {
-      return await StorageService.upload(key, body, contentType);
-    } catch (err) {
-      return "local-only";
-    }
-  }
-
-  /** Delete if configured; skip "local-only" keys silently. */
-  static async softDelete(key: string): Promise<void> {
-    if (!storageConfigured || !client || key === "local-only") return;
-    try {
-      await StorageService.delete(key);
-    } catch {
-      // non-fatal
-    }
+  static async deleteStoredObject(key: string): Promise<void> {
+    await StorageService.delete(key);
   }
 }
 

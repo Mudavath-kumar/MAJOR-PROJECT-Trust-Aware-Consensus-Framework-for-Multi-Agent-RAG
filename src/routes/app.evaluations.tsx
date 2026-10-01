@@ -113,7 +113,9 @@ const riskBadge = (risk?: string): string => {
 const ScoreBar = ({ value, label }: { value?: number; label: string }) => (
   <div className="flex flex-col gap-1">
     <div className="flex items-center justify-between">
-      <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{label}</span>
+      <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </span>
       <span className={cn("font-mono text-xs font-semibold tabular-nums", scoreColor(value))}>
         {value !== undefined ? `${value}%` : "—"}
       </span>
@@ -154,7 +156,12 @@ const MetricCard = ({
   <Panel className="animate-rise p-5">
     <div className="flex items-start justify-between">
       <MonoLabel>{label}</MonoLabel>
-      <span className={cn("flex h-8 w-8 items-center justify-center rounded-full bg-accent/10", color === "text-accent" ? "bg-accent/10" : "bg-muted/50")}>
+      <span
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-full bg-accent/10",
+          color === "text-accent" ? "bg-accent/10" : "bg-muted/50",
+        )}
+      >
         <Icon size={15} className={color} />
       </span>
     </div>
@@ -222,7 +229,12 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
           </span>
         </td>
         <td className="px-4 py-3">
-          <span className={cn("font-mono text-xs font-bold tabular-nums", scoreColor(m.composite_confidence ?? record.confidence_score))}>
+          <span
+            className={cn(
+              "font-mono text-xs font-bold tabular-nums",
+              scoreColor(m.composite_confidence ?? record.confidence_score),
+            )}
+          >
             {m.composite_confidence ?? record.confidence_score ?? "—"}
             {(m.composite_confidence ?? record.confidence_score) !== undefined && "%"}
           </span>
@@ -234,7 +246,10 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
           <button
             aria-label={expanded ? "Collapse" : "Expand"}
             className="inline-flex items-center gap-1 rounded-lg border border-border/60 px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); setExpanded((p) => !p); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((p) => !p);
+            }}
           >
             <Eye size={11} />
             {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
@@ -265,7 +280,12 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
                 )}
                 <div className="flex items-center gap-2 pt-1">
                   <MonoLabel className="text-[9px]">Hallucination Risk:</MonoLabel>
-                  <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider", riskBadge(m.hallucination_risk))}>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider",
+                      riskBadge(m.hallucination_risk),
+                    )}
+                  >
                     {riskIcon(m.hallucination_risk)}
                     {m.hallucination_risk ?? "N/A"}
                   </span>
@@ -540,7 +560,8 @@ function EvaluationsPage() {
           </div>
           <p className="mt-4 text-sm font-medium text-foreground">No evaluation records yet</p>
           <p className="mt-1.5 text-xs text-muted-foreground max-w-sm mx-auto">
-            Upload documents and send AI chat queries — each response will generate a full RAG evaluation matrix that appears here.
+            Upload documents and send AI chat queries — each response will generate a full RAG
+            evaluation matrix that appears here.
           </p>
         </Panel>
       )}

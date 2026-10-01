@@ -44,7 +44,7 @@ Audit for unsupported leaps and give your critique verdict."""
         "model_used": model,
         "claim_propositions": [],
         "raw_output": llm_output,
-        "confidence": 0.95,
+        "confidence": 0.0,
         "latency_ms": latency_ms,
         "sources_cited": []
     }

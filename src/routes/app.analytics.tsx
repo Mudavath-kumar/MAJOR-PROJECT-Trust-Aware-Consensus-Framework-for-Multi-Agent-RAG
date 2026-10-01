@@ -76,43 +76,25 @@ function Analytics() {
         if (!cancelled) setData(response);
       })
       .catch((reason) => {
-        if (!cancelled) setError(reason instanceof Error ? reason.message : "Unable to load analytics");
+        if (!cancelled)
+          setError(reason instanceof Error ? reason.message : "Unable to load analytics");
       });
     return () => {
       cancelled = true;
     };
   }, [range]);
 
-  const fallbackTrends = [
-    { date: "Mon", avg_score: 92.4, queries: 48 },
-    { date: "Tue", avg_score: 94.1, queries: 62 },
-    { date: "Wed", avg_score: 91.8, queries: 79 },
-    { date: "Thu", avg_score: 95.3, queries: 58 },
-    { date: "Fri", avg_score: 96.7, queries: 94 },
-    { date: "Sat", avg_score: 93.5, queries: 35 },
-    { date: "Sun", avg_score: 95.8, queries: 42 },
-  ];
-
-  const fallbackAgents = [
-    { agent: "Retriever", avg_confidence: 94, avg_latency_ms: 310 },
-    { agent: "Fact-Checker", avg_confidence: 97, avg_latency_ms: 420 },
-    { agent: "Auditor", avg_confidence: 95, avg_latency_ms: 280 },
-    { agent: "Consensus", avg_confidence: 98, avg_latency_ms: 190 },
-  ];
-
-  const metrics = (data?.metrics && Number(data.metrics.total_queries) > 0)
-    ? data.metrics
-    : {
-        total_queries: 418,
-        avg_confidence_score: 94.2,
-        consensus_rate: 97.5,
-        avg_consensus_score: 95.8,
-        avg_latency_ms: 320,
-        total_documents_indexed: 6,
-        total_chunks: 725,
-      };
-  const trends = data?.recent_trends?.length ? data.recent_trends : fallbackTrends;
-  const agents = data?.agent_performance?.length ? data.agent_performance : fallbackAgents;
+  const metrics = data?.metrics ?? {
+    total_queries: 0,
+    avg_confidence_score: 0,
+    consensus_rate: 0,
+    avg_consensus_score: 0,
+    avg_latency_ms: 0,
+    total_documents_indexed: 0,
+    total_chunks: 0,
+  };
+  const trends = Array.isArray(data?.recent_trends) ? data.recent_trends : [];
+  const agents = Array.isArray(data?.agent_performance) ? data.agent_performance : [];
 
   return (
     <>
@@ -139,7 +121,11 @@ function Analytics() {
         }
       />
 
-      {error && <p className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       {/* KPI Ribbon */}
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -193,13 +179,22 @@ function Analytics() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Confidence trend" hint="Average answer confidence for the last seven days">
+        <ChartCard
+          title="Confidence trend"
+          hint="Average answer confidence for the last seven days"
+        >
           <AreaChart data={trends}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis dataKey="date" {...AXIS} />
             <YAxis {...AXIS} />
             <Tooltip {...TOOLTIP} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-            <Area type="monotone" dataKey="avg_score" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.16} />
+            <Area
+              type="monotone"
+              dataKey="avg_score"
+              stroke="var(--chart-1)"
+              fill="var(--chart-1)"
+              fillOpacity={0.16}
+            />
           </AreaChart>
         </ChartCard>
 
@@ -213,7 +208,10 @@ function Analytics() {
           </BarChart>
         </ChartCard>
 
-        <ChartCard title="Questions per day" hint="Stored assistant responses for the last seven days">
+        <ChartCard
+          title="Questions per day"
+          hint="Stored assistant responses for the last seven days"
+        >
           <AreaChart data={trends}>
             <defs>
               <linearGradient id="q" x1="0" y1="0" x2="0" y2="1">
@@ -258,7 +256,13 @@ function Analytics() {
               strokeWidth={2}
               dot={false}
             />
-            <Line type="monotone" dataKey="queries" stroke="var(--chart-4)" strokeWidth={2} dot={false} />
+            <Line
+              type="monotone"
+              dataKey="queries"
+              stroke="var(--chart-4)"
+              strokeWidth={2}
+              dot={false}
+            />
           </LineChart>
         </ChartCard>
       </div>

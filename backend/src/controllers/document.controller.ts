@@ -65,8 +65,7 @@ export const uploadDocument = async (req: AuthRequest, res: Response): Promise<v
     const safeFilename = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
     const objectKey = `${req.user?._id}/${randomUUID()}-${safeFilename}`;
 
-    // Soft upload — skips B2 gracefully if not configured
-    const storagePath = await StorageService.softUpload(objectKey, file.buffer, file.mimetype);
+    const storagePath = await StorageService.upload(objectKey, file.buffer, file.mimetype);
 
     // Temp file for AI service ingestion
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "trustrag-"));
@@ -111,6 +110,7 @@ export const uploadDocument = async (req: AuthRequest, res: Response): Promise<v
         message: "File uploaded and indexed successfully.",
       });
     } catch (err: any) {
+      await StorageService.deleteStoredObject(storagePath).catch(() => undefined);
       await DocumentModel.findByIdAndUpdate(newDoc._id, {
         status: "failed",
         error_message: err.message,
@@ -148,7 +148,7 @@ export const uploadMultipleDocuments = async (req: AuthRequest, res: Response): 
       const safeFilename = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
       const objectKey = `${req.user?._id}/${randomUUID()}-${safeFilename}`;
 
-      const storagePath = await StorageService.softUpload(objectKey, file.buffer, file.mimetype);
+      const storagePath = await StorageService.upload(objectKey, file.buffer, file.mimetype);
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "trustrag-"));
       const tempPath = path.join(tempDir, safeFilename);
       await fs.writeFile(tempPath, file.buffer);
@@ -186,6 +186,7 @@ export const uploadMultipleDocuments = async (req: AuthRequest, res: Response): 
         );
         results.push(readyDocument ?? newDoc);
       } catch (err: any) {
+        await StorageService.deleteStoredObject(storagePath).catch(() => undefined);
         await DocumentModel.findByIdAndUpdate(newDoc._id, {
           status: "failed",
           error_message: err.message,
@@ -221,7 +222,7 @@ export const deleteDocument = async (req: AuthRequest, res: Response): Promise<v
     // Remove vectors first. Leaving them behind would make a deleted document
     // retrievable through the user's unscoped knowledge-base query.
     await AIService.deleteDocument((doc._id as any).toString(), req.user?._id || "");
-    await StorageService.softDelete(doc.storage_path);
+    await StorageService.deleteStoredObject(doc.storage_path);
     await DocumentModel.deleteOne({ _id: doc._id });
     res.json({ success: true, message: "Document deleted successfully" });
   } catch (err: any) {

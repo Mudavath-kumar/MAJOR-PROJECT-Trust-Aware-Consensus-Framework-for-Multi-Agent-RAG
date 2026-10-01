@@ -6,6 +6,7 @@ export interface IUserDocument extends Document {
   name: string;
   email: string;
   password_hash: string;
+  clerk_user_id?: string;
   role: UserRole;
   created_at: Date;
   updated_at: Date;
@@ -17,6 +18,8 @@ const UserSchema = new Schema<IUserDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password_hash: { type: String, required: true },
+    // Stable Clerk subject id. Sparse + unique so local (non-Clerk) users are unaffected.
+    clerk_user_id: { type: String, unique: true, sparse: true, index: true },
     role: { type: String, enum: ["user", "admin"], default: "user" },
   },
   {

@@ -2,11 +2,11 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.js";
 import Settings from "../models/Settings.js";
 import { isDbConnected } from "../config/database.js";
+import { encryptSecret, maskSecret } from "../utils/secret-box.js";
 
 interface ISettingsPayload {
   gemini_api_key?: string;
   tavily_api_key?: string;
-  ollama_endpoint?: string;
   preferred_model?: string;
   similarity_top_k?: number;
   consensus_threshold?: number;
@@ -23,14 +23,14 @@ export const getSettings = async (req: AuthRequest, res: Response): Promise<void
     if (!settings) {
       settings = await Settings.create({ user_id: req.user._id });
     }
-    const obj = settings.toObject();
+    const { gemini_api_key, tavily_api_key, ...safeSettings } = settings.toObject();
     res.json({
       settings: {
-        ...obj,
-        gemini_api_key_configured: !!settings.gemini_api_key,
-        tavily_api_key_configured:  !!settings.tavily_api_key,
-        gemini_api_key: settings.gemini_api_key ? "••••••••" + settings.gemini_api_key.slice(-4) : "",
-        tavily_api_key: settings.tavily_api_key  ? "••••••••" + settings.tavily_api_key.slice(-4)  : "",
+        ...safeSettings,
+        gemini_api_key_configured: Boolean(gemini_api_key),
+        tavily_api_key_configured: Boolean(tavily_api_key),
+        gemini_api_key: maskSecret(gemini_api_key),
+        tavily_api_key: maskSecret(tavily_api_key),
       },
     });
   } catch (err: any) {
@@ -44,21 +44,47 @@ export const updateSettings = async (req: AuthRequest, res: Response): Promise<v
       res.status(503).json({ error: "Database is unavailable" });
       return;
     }
-    const updates = req.body as ISettingsPayload;
-    const updatePayload: Record<string, unknown> = { ...updates };
-    // Don't overwrite with masked values
-    if (typeof updatePayload.gemini_api_key === "string" && (updatePayload.gemini_api_key as string).startsWith("••••")) {
-      delete updatePayload.gemini_api_key;
+    const updates = (req.body ?? {}) as ISettingsPayload;
+    const updatePayload: Record<string, unknown> = {};
+    const allowedFields: Array<keyof ISettingsPayload> = [
+      "preferred_model",
+      "similarity_top_k",
+      "consensus_threshold",
+      "enable_external_search",
+    ];
+    for (const field of allowedFields) {
+      if (updates[field] !== undefined) updatePayload[field] = updates[field];
     }
-    if (typeof updatePayload.tavily_api_key === "string" && (updatePayload.tavily_api_key as string).startsWith("••••")) {
-      delete updatePayload.tavily_api_key;
+
+    if (typeof updates.gemini_api_key === "string" && !updates.gemini_api_key.startsWith("••••")) {
+      updatePayload.gemini_api_key = encryptSecret(updates.gemini_api_key.trim());
+    }
+    if (typeof updates.tavily_api_key === "string" && !updates.tavily_api_key.startsWith("••••")) {
+      updatePayload.tavily_api_key = encryptSecret(updates.tavily_api_key.trim());
+    }
+
+    if (typeof updatePayload.similarity_top_k === "number") {
+      updatePayload.similarity_top_k = Math.max(1, Math.min(20, Math.round(updatePayload.similarity_top_k)));
+    }
+    if (typeof updatePayload.consensus_threshold === "number") {
+      updatePayload.consensus_threshold = Math.max(0, Math.min(100, updatePayload.consensus_threshold));
     }
     const settings = await Settings.findOneAndUpdate(
       { user_id: req.user._id },
       { $set: updatePayload },
       { new: true, upsert: true },
     );
-    res.json({ message: "Settings saved successfully", settings });
+    const saved = settings.toObject();
+    res.json({
+      message: "Settings saved successfully",
+      settings: {
+        ...saved,
+        gemini_api_key: maskSecret(saved.gemini_api_key),
+        tavily_api_key: maskSecret(saved.tavily_api_key),
+        gemini_api_key_configured: Boolean(saved.gemini_api_key),
+        tavily_api_key_configured: Boolean(saved.tavily_api_key),
+      },
+    });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to update settings", message: err.message });
   }

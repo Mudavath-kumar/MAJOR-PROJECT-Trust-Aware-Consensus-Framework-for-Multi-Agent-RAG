@@ -83,7 +83,7 @@ Verify each claim. Conclude if they are factually accurate, consistent, and free
         "model_used": model,
         "claim_propositions": [],
         "raw_output": llm_output,
-        "confidence": 0.92,
+        "confidence": 0.0,
         "latency_ms": latency_ms,
         "sources_cited": researcher_output.get("sources_cited", []) + [
             {"source_type": "tavily", **source} for source in external_sources

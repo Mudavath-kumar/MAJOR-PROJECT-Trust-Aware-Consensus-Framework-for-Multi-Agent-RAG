@@ -32,14 +32,18 @@ async def run_reasoner(query: str, context_chunks: List[Dict[str, Any]], model: 
         api_key_override=api_key,
         temperature=0.1,
     )
+    retrieval_confidence = (
+        sum(float(chunk.get("similarity_score", 0.0)) for chunk in context_chunks) / len(context_chunks)
+        if context_chunks
+        else 0.0
+    )
     return {
         "agent_name": "reasoner",
         "agent_role": "Grounded Reasoning & Answer Synthesizer",
         "model_used": model,
         "claim_propositions": [],
         "raw_output": output,
-        "confidence": 0.0 if not context_chunks else 0.88,
+        "confidence": max(0.0, min(1.0, retrieval_confidence)),
         "latency_ms": int((time.time() - started) * 1000),
         "sources_cited": [chunk.get("chunk_id") for chunk in context_chunks],
     }
-

@@ -2,9 +2,10 @@ import os
 import asyncio
 import logging
 import base64
+import hmac
 import tempfile
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from ..rag.chunker import chunk_text, extract_text_from_file
@@ -24,7 +25,18 @@ from ..consensus.engine import compute_multi_agent_consensus
 from ..core.config import settings
 
 logger = logging.getLogger("trustrag.api.rag")
-router = APIRouter(prefix="/rag", tags=["RAG"])
+async def require_service_token(x_trustrag_service_token: Optional[str] = Header(default=None)) -> None:
+    if not settings.SERVICE_TOKEN or not hmac.compare_digest(
+        x_trustrag_service_token or "", settings.SERVICE_TOKEN
+    ):
+        raise HTTPException(status_code=401, detail="Invalid internal service token")
+
+
+router = APIRouter(
+    prefix="/rag",
+    tags=["RAG"],
+    dependencies=[Depends(require_service_token)],
+)
 
 class QueryRequest(BaseModel):
     query: str
@@ -130,8 +142,8 @@ async def query_pipeline(req: QueryRequest):
         gemini_key = user_settings.get("gemini_api_key") or settings.GEMINI_API_KEY
         tavily_key = user_settings.get("tavily_api_key") or settings.TAVILY_API_KEY
         preferred_model = user_settings.get("preferred_model") or settings.GEMINI_MODEL
-        threshold = float(user_settings.get("consensus_threshold", 80.0))
-        top_k = int(user_settings.get("similarity_top_k", 5))
+        threshold = max(0.0, min(100.0, float(user_settings.get("consensus_threshold", 80.0))))
+        top_k = max(1, min(20, int(user_settings.get("similarity_top_k", 5))))
 
         # 1. Compute query embedding
         q_embeddings = compute_embeddings([req.query])
@@ -143,6 +155,7 @@ async def query_pipeline(req: QueryRequest):
             top_k=top_k,
             document_ids=req.document_ids,
             user_id=req.user_id,
+            query_text=req.query,
         )
 
         if not retrieved_chunks:
@@ -230,13 +243,45 @@ async def query_pipeline(req: QueryRequest):
             threshold=threshold
         )
 
+        # One bounded external verification/re-consensus pass. External web
+        # material is never promoted to user-document evidence.
+        if (
+            settings.EXTERNAL_VERIFICATION_ENABLED
+            and tavily_key
+            and consensus.get("status") != "reached"
+        ):
+            if not external_verification_enabled:
+                fact_checker_res = await run_fact_checker(
+                    query=req.query,
+                    researcher_output=researcher_res,
+                    model=preferred_model,
+                    api_key=gemini_key,
+                    tavily_key=tavily_key,
+                )
+            critic_res = await run_critic(
+                query=req.query,
+                researcher_output=researcher_res,
+                fact_checker_output=fact_checker_res,
+                model=preferred_model,
+                api_key=gemini_key,
+            )
+            consensus = compute_multi_agent_consensus(
+                researcher=researcher_res,
+                fact_checker=fact_checker_res,
+                critic=critic_res,
+                trust_assessor=trust_res,
+                reasoner=reasoner_res,
+                retrieved_chunks=retrieved_chunks,
+                threshold=threshold,
+            )
+
         # Prepare evidence sources
         evidence_sources = researcher_res.get("sources_cited", [])
         eval_matrix = consensus.get("evaluation_matrix", {})
 
         return {
-            "synthesis": consensus.get("synthesis", reasoner_res.get("raw_output", researcher_res.get("raw_output", ""))),
-            "confidence_score": consensus.get("consensus_score", 90),
+            "synthesis": consensus.get("synthesis", ""),
+            "confidence_score": consensus.get("consensus_score", 0),
             "consensus": consensus,
             "evaluation_matrix": eval_matrix,
             "agent_executions": [
@@ -247,6 +292,10 @@ async def query_pipeline(req: QueryRequest):
                 reasoner_res,
             ],
             "evidence_sources": evidence_sources,
+            "external_sources": [
+                source for source in fact_checker_res.get("sources_cited", [])
+                if source.get("source_type") == "tavily"
+            ],
         }
     except Exception as e:
         logger.error(f"Query pipeline error: {e}")

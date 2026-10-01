@@ -67,7 +67,7 @@ const PIPELINE = [
   {
     icon: Search,
     title: "Retrieve",
-    body: "Your question is embedded and searched against the authenticated user's Chroma index. The strongest passages are passed to the verification agents as context.",
+    body: "Your question is embedded and searched against the authenticated user's tenant-scoped vector index. The strongest passages are passed to the verification agents as context.",
   },
   {
     icon: FileSearch,
@@ -125,13 +125,6 @@ const USE_CASES = [
     title: "Research teams",
     body: "Build a shared corpus and let the whole team ask it questions in plain language.",
   },
-];
-
-const METRICS = [
-  { v: "128", k: "Documents indexed" },
-  { v: "1,394", k: "Questions answered" },
-  { v: "91.2%", k: "Average trust score" },
-  { v: "<2%", k: "Unsupported claims" },
 ];
 
 const FAQ = [
@@ -227,13 +220,13 @@ function Landing() {
               <Reveal delay={420}>
                 <div className="w-full max-w-xs rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                    Live pipeline
+                    Pipeline stages
                   </span>
                   <div className="mt-3 grid grid-cols-3 gap-3">
                     {[
-                      { k: "Confidence", v: "92%" },
-                      { k: "Trust", v: "88%" },
-                      { k: "Consensus", v: "76%" },
+                      { k: "Ingest", v: "01" },
+                      { k: "Retrieve", v: "02" },
+                      { k: "Verify", v: "03" },
                     ].map((m) => (
                       <div key={m.k}>
                         <div className="text-lg font-medium tabular-nums text-white">{m.v}</div>
@@ -294,13 +287,13 @@ function Landing() {
                       to="/app/chat"
                       className="inline-flex items-center gap-1 rounded-full bg-white px-5 py-2.5 text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85 sm:text-sm"
                     >
-                      Run the demo <ChevronRight size={14} />
+                      Open the console <ChevronRight size={14} />
                     </Link>
                     <Link
                       to="/app"
                       className="rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs text-white backdrop-blur-md transition-colors duration-300 hover:bg-white/20 sm:text-sm"
                     >
-                      Free consultation
+                      Sign in to continue
                     </Link>
                   </div>
                 </Reveal>
@@ -425,47 +418,33 @@ function Landing() {
               <Reveal delay={200}>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md sm:p-6">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                    Retrieved evidence
+                    Evidence explorer
                   </span>
-                  <div className="mt-4 space-y-3">
-                    {[
-                      { doc: "Q3-risk-register.pdf", sim: "0.91", trust: "high" },
-                      { doc: "vendor-msa-2026.docx", sim: "0.74", trust: "high" },
-                      { doc: "board-notes-may.md", sim: "0.41", trust: "medium" },
-                    ].map((e, i) => (
-                      <div key={e.doc} className="rounded-xl border border-white/15 bg-white/5 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="truncate text-sm text-white">
-                            <span className="font-mono text-[11px] text-white/50">[{i + 1}]</span>{" "}
-                            {e.doc}
-                          </span>
-                          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                            {e.sim} · {e.trust}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/15">
-                          <div
-                            className="h-full rounded-full bg-white"
-                            style={{ width: `${Number(e.sim) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                  <div className="mt-4 rounded-xl border border-white/15 bg-white/5 p-4">
+                    <p className="text-sm leading-relaxed text-white/80">
+                      Sign in to inspect the real chunks, similarity scores, and trust signals
+                      produced from your own documents.
+                    </p>
                   </div>
                 </div>
               </Reveal>
             </div>
           </section>
 
-          {/* Metrics */}
+          {/* Guarantees */}
           <section className="px-5 py-20 sm:px-8 md:px-12">
             <div className="grid gap-6 rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md sm:grid-cols-2 lg:grid-cols-4">
-              {METRICS.map((m, i) => (
-                <Reveal key={m.k} delay={100 + i * 90}>
+              {[
+                "Tenant-scoped retrieval",
+                "Backed by your configured storage",
+                "Measured consensus only",
+                "Fail-closed when evidence is missing",
+              ].map((label, i) => (
+                <Reveal key={label} delay={100 + i * 90}>
                   <div>
-                    <div className="text-4xl font-normal tabular-nums text-white">{m.v}</div>
+                    <div className="text-4xl font-normal tabular-nums text-white">0{i + 1}</div>
                     <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
-                      {m.k}
+                      {label}
                     </div>
                   </div>
                 </Reveal>

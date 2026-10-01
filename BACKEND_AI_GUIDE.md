@@ -1,135 +1,144 @@
-# TrustRAG — Backend & AI Service Architecture & Quickstart
+# TrustRAG backend and AI service
 
-> **Status:** Fully Implemented (Node.js/Express Backend + Python FastAPI AI Service)  
-> **Cost:** 100% Free Tier Stack (No Credit Card / Zero Subscriptions Required)
+This document describes the runtime that is actually deployed by this repository.
 
----
+## Runtime architecture
 
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   FRONTEND (TanStack / Vite)                │
-│                   Runs on: http://localhost:8080            │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ HTTP / REST
-┌──────────────────────────────▼──────────────────────────────┐
-│             BACKEND GATEWAY (Node.js + Express)             │
-│                   Runs on: http://localhost:3001            │
-│  - User Auth & JWT Sessions                                 │
-│  - Document upload / metadata management                    │
-│  - Chat history persistence                                 │
-│  - Evidence & Audit trail export                            │
-│  - Analytics aggregator                                     │
-│  - Database: MongoDB (Atlas Free Tier or Local)             │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ HTTP / JSON
-┌──────────────────────────────▼──────────────────────────────┐
-│           AI CONSENSUS ENGINE (Python + FastAPI)            │
-│                   Runs on: http://localhost:8000            │
-│  - Vector Store: ChromaDB (Local file-based, 100% free)     │
-│  - Embeddings: BAAI/bge-small-en-v1.5 (Local, 0 API cost)   │
-│  - Agent 1: Evidence Retriever & Synthesizer                │
-│  - Agent 2: Independent Fact-Checker (External validation)  │
-│  - Agent 3: Hallucination & Consistency Auditor (Critic)    │
-│  - Multi-Agent Consensus Matrix & Confidence Scorer (0-100) │
-│  - LLM: Groq Free Tier (Llama 3.3 70B @ 500 tok/s)          │
-│         or Offline Ollama (Llama 3.1)                       │
-└─────────────────────────────────────────────────────────────┘
+```text
+Browser (TanStack Start / React)
+        │ authenticated REST calls
+        ▼
+Express backend (Node.js / TypeScript)
+  ├─ Clerk or local JWT authentication
+  ├─ MongoDB metadata, conversations, audits
+  ├─ Backblaze B2 object storage
+  └─ authenticated internal calls
+        ▼
+FastAPI AI service (Python)
+  ├─ document extraction and chunking
+  ├─ Gemini Embedding 2 vectors
+  ├─ MongoDB Atlas Vector Search
+  ├─ Gemini or OpenRouter agent calls
+  ├─ optional Tavily verification
+  └─ fail-closed consensus/evidence response
 ```
 
----
+The AI service does not use ChromaDB, Hugging Face BGE embeddings, Ollama, or a
+local answer fallback. Those names remain in the original PRD as alternative
+design ideas, but they are not dependencies of the current implementation.
 
-## ⚡ Free Stack Details (0 Cost Guaranteed)
+## Local prerequisites
 
-| Component              | Free Technology Used                 | Why Chosen                                                                |
-| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| **LLM Inference**      | **Groq API** (Free Tier)             | Blazing fast (500 tokens/sec), free Llama 3.3 70B & 8B, no card required. |
-| **Local LLM Fallback** | **Ollama**                           | 100% offline, private, zero cost.                                         |
-| **Embeddings**         | `BAAI/bge-small-en-v1.5`             | Top MTEB leaderboard benchmark, runs locally via sentence-transformers.   |
-| **Vector DB**          | **ChromaDB**                         | Embedded local persistence (`./chroma_db`), zero setup fee or cloud cost. |
-| **Database**           | **MongoDB Atlas (M0 Free)** or Local | 512 MB free storage forever, ideal for auth and chat history.             |
-| **Web Search**         | **Tavily API** (Free Tier)           | 1,000 free search queries/month, clean markdown extraction.               |
+- Node.js 20+
+- pnpm (or npm for the backend)
+- Python 3.11+
+- MongoDB Atlas with an Atlas Vector Search index, or a compatible local MongoDB
+- Clerk credentials for browser authentication
+- Gemini and/or OpenRouter credentials
+- Backblaze B2 S3 credentials for document storage
 
----
+The frontend runs on `http://localhost:5174`, the backend on
+`http://localhost:3001`, and the AI service on `http://localhost:8000`.
 
-## 🚀 How to Run the Services
+## Configuration
 
-### 1. Run the Frontend (Already Running)
+Copy the examples and fill values locally:
 
-```bash
-bun run dev
-# Running at: http://localhost:8080
+```text
+backend/.env.example    -> backend/.env
+ai-service/.env.example -> ai-service/.env
+frontend values         -> .env.local
 ```
 
-### 2. Run the Express Backend
+The backend and AI service must share the same long random `AI_SERVICE_TOKEN`.
+Production also requires a separate `SETTINGS_ENCRYPTION_KEY`; it is used to
+encrypt provider keys saved through the Settings screen. Never commit any
+`.env` file or API key.
 
-Open a terminal in `Major-Project/trustarc-core`:
+Important AI values:
 
-```bash
-# Navigate to backend and install dependencies
+```env
+GEMINI_MODEL=gemini-3.8-flash
+EMBEDDING_MODEL_NAME=gemini-embedding-2
+MONGODB_URI=mongodb+srv://...
+```
+
+The Atlas vector index is named `embedding_index`, uses the `embedding` field,
+cosine similarity, and 384 dimensions. If the embedding dimension is changed,
+the index and all stored vectors must be rebuilt together.
+
+## Start locally
+
+Terminal 1 — AI service:
+
+```powershell
+cd ai-service
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Terminal 2 — backend:
+
+```powershell
 cd backend
 npm install
-
-# Start development server
 npm run dev
-# Backend runs at: http://localhost:3001
-# Health check: http://localhost:3001/api/v1/health
 ```
 
-### 3. Run the Python AI Service
+Terminal 3 — frontend:
 
-Open a second terminal in `Major-Project/trustarc-core`:
-
-```bash
-# Navigate to ai-service
-cd ai-service
-
-# Create virtual environment (optional but recommended)
-python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
-
-# Install requirements
-pip install -r requirements.txt
-
-# Start FastAPI server
-uvicorn app.main:app --reload --port 8000
-# AI Service runs at: http://localhost:8000
-# Swagger Docs: http://localhost:8000/docs
+```powershell
+pnpm install
+pnpm run dev
 ```
 
----
+Before using upload or chat, verify:
 
-## 🔑 Obtaining Free API Keys (Quick Links)
+```text
+GET http://localhost:8000/health        -> status healthy, ready true
+GET http://localhost:3001/api/v1/health -> status healthy, ready true
+```
 
-1. **Groq API Key (Free):**
-   - Visit [console.groq.com](https://console.groq.com/keys)
-   - Create a free account (Google/GitHub login, no credit card required)
-   - Click "Create API Key" and paste it into `ai-service/.env` or in the TrustRAG Settings UI.
+The backend deliberately reports `ready: false` when MongoDB or the AI service
+is unavailable. Uploads, retrieval, and answers do not silently fall back to
+local demo data.
 
-2. **Tavily Search API Key (Free, Optional):**
-   - Visit [tavily.com](https://tavily.com)
-   - Sign up for 1,000 free searches/month.
-   - Paste into `ai-service/.env` or the Settings page.
+## End-to-end data flow
 
-3. **MongoDB Atlas (Free, Optional):**
-   - Sign up at [mongodb.com/atlas](https://www.mongodb.com/atlas/database) for a free M0 cluster.
-   - Paste the connection string into `backend/.env`.
-   - _Note:_ The backend features an intelligent in-memory fallback, so it runs immediately even without MongoDB running!
+1. The authenticated browser uploads a file to the backend.
+2. The backend validates ownership, stores the object in Backblaze B2, and
+   creates a MongoDB document with `chunking` status.
+3. The backend sends the file bytes over the authenticated internal channel to
+   the AI service.
+4. The AI service extracts text, chunks it, computes Gemini embeddings, and
+   writes tenant-scoped chunks to MongoDB Atlas.
+5. Only after ingestion succeeds does the backend mark the document `ready`.
+   Failed ingestion removes the B2 object and marks the document `failed`.
+6. Chat verifies every selected document belongs to the authenticated user
+   before the AI service receives the query.
+7. Retrieval applies both `user_id` and selected document filters.
+8. Agents produce researcher, fact-checker, critic, trust, and reasoner output.
+   Consensus returns evidence and measured scores only when the required data
+   exists; otherwise the response is failed or evidence-free.
+9. The backend persists the conversation and audit records, and the frontend
+   renders only those server responses.
 
----
+## Production deployment
 
-## 🛡️ Multi-Agent Verification Flow
+`render.yaml` provisions the backend and AI services. Deploy the frontend on
+Vercel using `vercel.json`. Set these values in the platform secret manager:
 
-1. **User asks a question** in TrustRAG Chat.
-2. **Backend gateway** forwards query to FastAPI AI engine.
-3. **Retrieval phase**: ChromaDB retrieves highest-similarity chunks using `bge-small-en-v1.5`.
-4. **Agent 1 (Retriever)** forms grounded claims and synthesizes direct response.
-5. **Agent 2 (Fact-Checker)** evaluates propositions against external domain truth.
-6. **Agent 3 (Critic)** audits for hallucinations, unsupported leaps, and contradiction.
-7. **Consensus Engine**:
-   - Calculates weighted consensus score (0-100%).
-   - Flags dissenting claims with granular conflict resolution.
-   - Attaches verified source citations with exact page numbers.
-8. **Frontend displays** the live timeline, confidence gauge, agent consensus status, and clickable evidence citations.
+- `MONGODB_URI`
+- `GEMINI_API_KEY` and/or `OPENROUTER_API_KEY`
+- the same `AI_SERVICE_TOKEN` in both services
+- `SETTINGS_ENCRYPTION_KEY` in the backend
+- `B2_ENDPOINT`, `B2_REGION`, `B2_KEY_ID`, `B2_APPLICATION_KEY`, and
+  `B2_BUCKET_NAME`
+- `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `FRONTEND_URL`, and
+  `CORS_ALLOWED_ORIGINS`
+- Vercel `VITE_API_URL` pointing to the HTTPS backend API
+
+Rotate any credential that was ever pasted into chat, a terminal transcript, or
+source control before production deployment.

@@ -1,10 +1,25 @@
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from ..core.config import settings
 
 logger = logging.getLogger("trustrag.vectorstore")
 
 _col = None  # pymongo Collection
+
+
+def build_scope_filter(document_ids: Optional[List[str]], user_id: str) -> Dict[str, Any]:
+    """Build a tenant-scoped Mongo filter for both vector and fallback search."""
+    if not user_id:
+        raise ValueError("user_id is required for vector retrieval")
+
+    scope: Dict[str, Any] = {"user_id": user_id}
+    ids = [str(document_id) for document_id in (document_ids or []) if str(document_id).strip()]
+    if len(ids) == 1:
+        scope["document_id"] = ids[0]
+    elif ids:
+        scope["document_id"] = {"$in": ids}
+    return scope
 
 
 def _get_collection():
@@ -99,17 +114,18 @@ def query_vector_store(
     top_k: int = 5,
     document_ids: Optional[List[str]] = None,
     user_id: Optional[str] = None,
+    query_text: str = "",
 ) -> List[Dict[str, Any]]:
     col = _get_collection()
 
-    # Build filter — prefer document_ids scope, fall back to user_id
-    pre_filter: Dict[str, Any] = {}
-    if document_ids and len(document_ids) == 1:
-        pre_filter["document_id"] = {"$eq": document_ids[0]}
-    elif document_ids:
-        pre_filter["document_id"] = {"$in": document_ids}
-    elif user_id:
-        pre_filter["user_id"] = {"$eq": user_id}
+    if not user_id:
+        raise ValueError("user_id is required for vector retrieval")
+
+    scope_filter = build_scope_filter(document_ids, user_id)
+    pre_filter: Dict[str, Any] = {
+        key: (value if key != "user_id" else {"$eq": value})
+        for key, value in scope_filter.items()
+    }
 
     # Try Atlas Vector Search first
     try:
@@ -142,23 +158,30 @@ def query_vector_store(
     except Exception as e:
         logger.warning("Atlas $vectorSearch failed: %s — falling back to keyword search", e)
 
-    # Fallback: plain find — no user_id filter, just document scope
-    filt: Dict[str, Any] = {}
-    if document_ids and len(document_ids) == 1:
-        filt["document_id"] = document_ids[0]
-    elif document_ids:
-        filt["document_id"] = {"$in": document_ids}
-    elif user_id:
-        filt["user_id"] = user_id
+    # Fallback must use the exact same tenant and document scope.
+    filt = scope_filter
 
-    rows = list(col.find(filt, {"embedding": 0}).limit(top_k * 3))
-    logger.info("Keyword fallback returned %d chunks (filter=%s)", len(rows), filt)
+    rows = list(col.find(filt, {"embedding": 0}))
+    query_terms = {
+        term for term in re.findall(r"[a-z0-9]{3,}", query_text.lower())
+        if term not in {"the", "and", "for", "with", "from", "that", "this"}
+    }
+
+    scored_rows = []
+    for row in rows:
+        text_terms = set(re.findall(r"[a-z0-9]{3,}", str(row.get("text", "")).lower()))
+        score = len(query_terms & text_terms) / len(query_terms) if query_terms else 0.0
+        if score > 0:
+            scored_rows.append((score, row))
+
+    scored_rows.sort(key=lambda item: item[0], reverse=True)
+    logger.info("Keyword search returned %d chunks (filter=%s)", len(scored_rows), filt)
     return [
         {
-            "chunk_id": str(r["_id"]),
-            "text": r["text"],
-            "metadata": r.get("metadata", {}),
-            "similarity_score": 0.75,
+            "chunk_id": str(row["_id"]),
+            "text": row["text"],
+            "metadata": row.get("metadata", {}),
+            "similarity_score": round(float(score), 4),
         }
-        for r in rows[:top_k]
+        for score, row in scored_rows[:top_k]
     ]

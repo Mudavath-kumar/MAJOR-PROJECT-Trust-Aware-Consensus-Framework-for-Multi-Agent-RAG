@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { Response } from "express";
+import mongoose from "mongoose";
 import { AuthRequest } from "../middleware/auth.js";
 import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
@@ -7,42 +8,38 @@ import AgentExecution from "../models/AgentExecution.js";
 import ConsensusResult from "../models/ConsensusResult.js";
 import { isDbConnected } from "../config/database.js";
 
+/**
+ * Tenant isolation guard: a message may only be read by the user who owns the
+ * conversation it belongs to. Without this, any authenticated user could read
+ * another tenant's evidence by guessing a message id.
+ */
+const isMessageOwnedByUser = async (
+  messageId: string,
+  userId?: string,
+): Promise<boolean> => {
+  if (!userId || !mongoose.Types.ObjectId.isValid(messageId)) return false;
+  const message = await Message.findById(messageId).select("conversation_id").lean();
+  if (!message) return false;
+  const conversation = await Conversation.findOne({
+    _id: message.conversation_id,
+    user_id: userId,
+  })
+    .select("_id")
+    .lean();
+  return Boolean(conversation);
+};
+
 export const getEvidenceByMessageId = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { messageId } = req.params;
+    const messageId = req.params.messageId as string;
 
     if (!isDbConnected()) {
-      res.json({
-        message_id: messageId,
-        evidence_graph: {
-          nodes: [
-            { id: "query", label: "User Query", type: "root" },
-            { id: "retriever", label: "Retriever Agent", type: "agent" },
-            { id: "fact_checker", label: "Fact Checker", type: "agent" },
-            { id: "critic", label: "Critic Agent", type: "agent" },
-            { id: "chunk_1", label: "Policy_Document_2026.pdf (p.4)", type: "chunk" },
-            { id: "chunk_2", label: "Compliance_Audit_Q1.pdf (p.12)", type: "chunk" },
-          ],
-          edges: [
-            { source: "query", target: "retriever" },
-            { source: "retriever", target: "chunk_1" },
-            { source: "retriever", target: "chunk_2" },
-            { source: "retriever", target: "fact_checker" },
-            { source: "fact_checker", target: "critic" },
-          ],
-        },
-        sources: [
-          {
-            document_id: "doc-001",
-            document_name: "Policy_Document_2026.pdf",
-            chunk_id: "chunk-p4-c2",
-            text: "Section 4.2: Data encryption mandates AES-256 for all persistent storage volumes. Key rotation intervals shall not exceed 90 days.",
-            similarity_score: 0.96,
-            rerank_score: 0.98,
-            page_number: 4,
-          },
-        ],
-      });
+      res.status(503).json({ error: "Database unavailable — cannot retrieve verified evidence" });
+      return;
+    }
+
+    if (!(await isMessageOwnedByUser(messageId, req.user?._id))) {
+      res.status(404).json({ error: "Message not found" });
       return;
     }
 
@@ -70,9 +67,13 @@ export const getEvidenceByMessageId = async (req: AuthRequest, res: Response): P
 
 export const exportAuditTrail = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { messageId } = req.params;
+    const messageId = req.params.messageId as string;
     if (!isDbConnected()) {
       res.status(503).json({ error: "Database unavailable — cannot produce verified audit trail" });
+      return;
+    }
+    if (!(await isMessageOwnedByUser(messageId, req.user?._id))) {
+      res.status(404).json({ error: "Message not found" });
       return;
     }
     const message = await Message.findById(messageId);
@@ -149,13 +150,13 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
 
     const records = asstMessages.map((msg) => {
       const c = consensusMap.get(msg._id.toString());
-      const evalMatrix = (c as any)?.evaluation_matrix || {
-        faithfulness: Math.round(Number(msg.confidence_score || 90) * 0.95),
-        context_precision: 85,
-        answer_relevance: 92,
-        consensus_alignment: Math.round(Number(c?.agreement_ratio || 0.9) * 100),
-        hallucination_risk: (msg.confidence_score || 90) >= 80 ? "low" : "medium",
-        composite_confidence: msg.confidence_score || 90,
+      const evalMatrix = (c as any)?.evaluation_matrix ?? {
+        faithfulness: 0,
+        context_precision: 0,
+        answer_relevance: 0,
+        consensus_alignment: 0,
+        hallucination_risk: "high",
+        composite_confidence: 0,
       };
 
       return {
@@ -163,9 +164,9 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
         conversation_id: msg.conversation_id.toString(),
         query: queryByConv.get(msg.conversation_id.toString()) || "Document Query",
         answer: msg.content,
-        confidence_score: msg.confidence_score || 0,
-        consensus_status: c?.status || "reached",
-        consensus_score: c?.consensus_score || msg.confidence_score || 0,
+        confidence_score: msg.confidence_score ?? 0,
+        consensus_status: c?.status ?? "failed",
+        consensus_score: c?.consensus_score ?? msg.confidence_score ?? 0,
         evaluation_matrix: evalMatrix,
         sources_count: msg.evidence_sources?.length || 0,
         created_at: msg.created_at,
@@ -175,20 +176,20 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
     // Summary calculations
     const total = records.length;
     const avgFaith = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.faithfulness || 90), 0) / total)
-      : 94;
+      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.faithfulness ?? 0), 0) / total)
+      : 0;
     const avgPrecision = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.context_precision || 85), 0) / total)
-      : 88;
+      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.context_precision ?? 0), 0) / total)
+      : 0;
     const avgRelevance = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.answer_relevance || 90), 0) / total)
-      : 92;
+      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.answer_relevance ?? 0), 0) / total)
+      : 0;
     const hallucinationFreeCount = records.filter(
       (r) => r.evaluation_matrix.hallucination_risk === "low"
     ).length;
     const hallucinationFreeRate = total
       ? Math.round((hallucinationFreeCount / total) * 100)
-      : 96;
+      : 0;
 
     res.json({
       records,

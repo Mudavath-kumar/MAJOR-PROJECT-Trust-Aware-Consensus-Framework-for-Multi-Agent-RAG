@@ -12,7 +12,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig(({ command }) => ({
   css: {
     transformer: "lightningcss",
-    postcss: false,
   },
   resolve: {
     alias: {
