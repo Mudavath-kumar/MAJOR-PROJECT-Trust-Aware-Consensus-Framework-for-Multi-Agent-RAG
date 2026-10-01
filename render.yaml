@@ -71,14 +71,13 @@ services:
         sync: false
       - key: SETTINGS_ENCRYPTION_KEY
         sync: false
-      # AI_SERVICE_URL: fromService host gives a bare hostname; environment.ts
-      # normalises it to https://... automatically. Alternatively, set
-      # AI_SERVICE_URL manually in the Render dashboard to the full HTTPS URL.
+      # Render's hostport is the private-network hostname and port. The backend
+      # normalises it to http://... for service-to-service traffic.
       - key: AI_SERVICE_URL
         fromService:
           name: trustrag-ai-service
           type: web
-          property: host
+          property: hostport
       - key: FRONTEND_URL
         sync: false
       - key: RENDER_EXTERNAL_URL

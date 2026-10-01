@@ -14,6 +14,7 @@ test("Render blueprint targets the live Express backend and repository root", ()
   assert.match(render, /dockerfilePath:\s+\.\/Dockerfile\.ai-service/);
   assert.match(render, /dockerContext:\s+\./);
   assert.match(render, /rootDir:\s+backend/);
+  assert.match(render, /key:\s+AI_SERVICE_URL[\s\S]*?property:\s+hostport/);
   assert.doesNotMatch(render, /trustarc-core\/backend|trustarc-core\/Dockerfile/);
 });
 

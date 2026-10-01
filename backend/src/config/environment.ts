@@ -10,6 +10,19 @@ const envFile = envCandidates.find((candidate) => fs.existsSync(candidate));
 const initialNodeEnv = process.env.NODE_ENV || "development";
 dotenv.config(envFile ? { path: envFile, override: initialNodeEnv !== "production" } : undefined);
 
+/**
+ * Render's `fromService.property: hostport` provides an internal host and
+ * port, which must use plain HTTP inside the private network. Public values
+ * may still be supplied as complete URLs or bare HTTPS hostnames.
+ */
+export function normalizeServiceUrl(rawValue: string | undefined): string {
+  const raw = (rawValue || "").trim().replace(/\/+$/, "");
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.includes(":")) return `http://${raw}`;
+  return `https://${raw}`;
+}
+
 // --- Startup Validation ---
 const NODE_ENV = process.env.NODE_ENV || "development";
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -37,12 +50,8 @@ export const env = {
   JWT_SECRET: JWT_SECRET || "dev_only_secret_replace_before_production_deploy_32chars",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
   // Render fromService property:host returns a bare hostname (no protocol).
-  // We normalise it to always be a full URL so axios requests succeed.
-  AI_SERVICE_URL: (() => {
-    const raw = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
-    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-    return `https://${raw}`;
-  })(),
+  // hostport values are internal HTTP URLs; public hostnames become HTTPS.
+  AI_SERVICE_URL: normalizeServiceUrl(process.env.AI_SERVICE_URL || "http://127.0.0.1:8000"),
   AI_SERVICE_TIMEOUT_MS: parseInt(process.env.AI_SERVICE_TIMEOUT_MS || "120000", 10),
   AI_SERVICE_TOKEN:
     process.env.AI_SERVICE_TOKEN ||
