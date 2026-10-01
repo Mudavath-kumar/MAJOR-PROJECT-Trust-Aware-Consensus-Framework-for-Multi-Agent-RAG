@@ -11,19 +11,39 @@ for dotenv_path in (service_root.parent / "backend" / ".env", service_root / ".e
 for key, value in dotenv_settings.items():
     os.environ.setdefault(key, value)
 
+
+def clean_provider_secret(value: str | None) -> str:
+    """Return a provider key only when it is a real configured value.
+
+    Example values from .env templates must not make /health report a ready
+    service. The check is deliberately limited to obvious placeholder markers
+    so valid provider keys are left unchanged.
+    """
+    normalized = (value or "").strip()
+    lowered = normalized.lower()
+    placeholder_markers = (
+        "replace-with",
+        "your-key",
+        "your_",
+        "placeholder",
+        "example-key",
+    )
+    return "" if not normalized or any(marker in lowered for marker in placeholder_markers) else normalized
+
+
 class Settings:
     PORT: int = int(os.getenv("PORT", "8000"))
     HOST: str = os.getenv("HOST", "0.0.0.0")
 
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY: str = clean_provider_secret(os.getenv("GEMINI_API_KEY", ""))
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_API_KEY: str = clean_provider_secret(os.getenv("OPENROUTER_API_KEY", ""))
     OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
     OPENROUTER_SITE_URL: str = os.getenv("OPENROUTER_SITE_URL", "")
     OPENROUTER_APP_NAME: str = os.getenv("OPENROUTER_APP_NAME", "TrustRAG")
 
-    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
+    TAVILY_API_KEY: str = clean_provider_secret(os.getenv("TAVILY_API_KEY", ""))
     EXTERNAL_VERIFICATION_ENABLED: bool = os.getenv(
         "EXTERNAL_VERIFICATION_ENABLED", "true"
     ).lower() in {"1", "true", "yes", "on"}
