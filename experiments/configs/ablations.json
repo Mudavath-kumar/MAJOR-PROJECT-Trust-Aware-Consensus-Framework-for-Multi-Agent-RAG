@@ -1,0 +1,15 @@
+{
+  "dataset_version": "trustrag-v1",
+  "model": "openai/gpt-4o-mini",
+  "embedding_model": "gemini-embedding-2",
+  "temperature": 0.1,
+  "retrieval": {"top_k": 5, "chunk_size": 400, "chunk_overlap": 80},
+  "seed": 42,
+  "ablations": [
+    {"name": "without-claim-verification", "disable": ["typed_verification"]},
+    {"name": "without-critic", "disable": ["critic_safety"]},
+    {"name": "without-provenance", "disable": ["retrieval_quality"]},
+    {"name": "without-abstention-gate", "disable": ["abstention_gate"]},
+    {"name": "without-external-verification", "disable": ["external_verification"]}
+  ]
+}

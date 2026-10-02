@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrustRAG labelled evaluation record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "dataset_version",
+    "question",
+    "answer_type",
+    "gold_answer",
+    "gold_evidence_ids",
+    "documents"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "dataset_version": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1},
+    "answer_type": {
+      "type": "string",
+      "enum": ["answerable", "unanswerable", "conflicting", "prompt_injection"]
+    },
+    "gold_answer": {"type": "string"},
+    "gold_evidence_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["document_id", "snapshot_sha256"],
+        "properties": {
+          "document_id": {"type": "string", "minLength": 1},
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

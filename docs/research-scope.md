@@ -44,6 +44,13 @@ component ablations. It reports correctness, retrieval recall, citation
 precision/recall, groundedness, unsupported-claim rate, hallucination rate,
 calibration, abstention coverage/risk, latency, and cost.
 
+The reproducible metric name for hallucination risk is
+`unsafe_acceptance_rate`: the fraction of unanswerable, conflicting, or
+prompt-injection questions that were accepted instead of abstained from. This
+is an operational safety proxy, not a claim that every accepted answer is a
+hallucination. Claim-level support is reported separately as
+`unsupported_claim_rate`.
+
 Every run records the dataset version, configuration, model/provider IDs,
 prompt version, retrieval settings, random seed, Git revision, timestamp, and
 sample count. Private documents, credentials, and production database URLs are

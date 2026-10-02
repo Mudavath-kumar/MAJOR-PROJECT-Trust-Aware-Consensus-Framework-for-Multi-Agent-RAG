@@ -1,0 +1,21 @@
+{
+  "name": "trustrag",
+  "dataset_version": "trustrag-v1",
+  "system": "evidence-gated-multi-agent-rag",
+  "model": "openai/gpt-4o-mini",
+  "embedding_model": "gemini-embedding-2",
+  "prompt_version": "evidence-gated-v1",
+  "temperature": 0.1,
+  "retrieval": {
+    "top_k": 5,
+    "chunk_size": 400,
+    "chunk_overlap": 80,
+    "external_verification": true
+  },
+  "decision": {
+    "typed_verification": true,
+    "abstention_gate": true,
+    "threshold_calibration_split": "development"
+  },
+  "seed": 42
+}
