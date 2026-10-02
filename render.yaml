@@ -31,7 +31,10 @@ services:
       - key: TAVILY_API_KEY
         sync: false
       - key: AI_SERVICE_TOKEN
-        sync: false
+        fromService:
+          name: trustrag-backend-j3oe
+          type: web
+          envVarKey: AI_SERVICE_TOKEN
       - key: MONGODB_URI
         sync: false
       - key: BACKEND_URL
@@ -68,9 +71,9 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: AI_SERVICE_TOKEN
-        sync: false
+        generateValue: true
       - key: SETTINGS_ENCRYPTION_KEY
-        sync: false
+        generateValue: true
       # Render's hostport is the private-network hostname and port. The backend
       # normalises it to http://... for service-to-service traffic.
       - key: AI_SERVICE_URL
