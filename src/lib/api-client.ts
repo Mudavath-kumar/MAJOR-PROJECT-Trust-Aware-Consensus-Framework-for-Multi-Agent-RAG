@@ -1,11 +1,24 @@
 /**
  * TrustRAG Frontend API Client
- * Connects to the Express backend (http://localhost:3001/api/v1)
+ * Connects to the configured Express backend.
  * Fails explicitly when the backend is unavailable so the UI never presents
  * local-only data as successfully persisted or indexed knowledge.
  */
 
-let rawBase = (import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1")
+const DEFAULT_PRODUCTION_API_URL = "https://trustrag-backend-j3oe.onrender.com/api/v1";
+const DEFAULT_DEVELOPMENT_API_URL = "http://localhost:3001/api/v1";
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const isLocalApiUrl = (value: string) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?(?:\/|$)/i.test(value);
+
+// Vercel can occasionally build without the project variable, or with a stale
+// local value. Never ship a browser bundle that points production users at a
+// machine-local backend.
+let rawBase = (
+  import.meta.env.PROD && (!configuredApiUrl || isLocalApiUrl(configuredApiUrl))
+    ? DEFAULT_PRODUCTION_API_URL
+    : configuredApiUrl || DEFAULT_DEVELOPMENT_API_URL
+)
   .trim()
   .replace(/\/+$/, "");
 if (!rawBase.endsWith("/api/v1") && !rawBase.endsWith("/v1")) {
