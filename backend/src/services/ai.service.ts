@@ -27,6 +27,38 @@ export interface IngestDocumentRequest {
   file_buffer?: Buffer;
 }
 
+export type DecisionStatus = "answer" | "partial" | "abstain";
+
+export interface DecisionScoreComponents {
+  retrieval_quality: number;
+  claim_support: number;
+  citation_coverage: number;
+  critic_safety: number;
+}
+
+export interface AIRagConsensus {
+  status: "reached" | "partial" | "failed";
+  decision_status?: DecisionStatus;
+  decision_score?: number;
+  abstention_reason?: string | null;
+  score_components?: DecisionScoreComponents;
+  consensus_score: number;
+  agreement_ratio: number;
+  conflicts: unknown[];
+  synthesis: string;
+  evaluation_matrix?: Record<string, unknown>;
+}
+
+export interface AIRagQueryResult {
+  synthesis: string;
+  confidence_score: number;
+  decision_status?: DecisionStatus;
+  consensus: AIRagConsensus;
+  evaluation_matrix?: Record<string, unknown>;
+  agent_executions: Array<Record<string, unknown>>;
+  evidence_sources: Array<Record<string, unknown>>;
+}
+
 type HealthResponse = { status: "healthy" | "offline"; service: string };
 
 function serviceError(operation: string, error: unknown): Error {
@@ -96,21 +128,7 @@ export class AIService {
     }
   }
 
-  static async queryPipeline(payload: QueryRAGRequest): Promise<{
-    synthesis: string;
-    confidence_score: number;
-    consensus: {
-      status: "reached" | "partial" | "failed";
-      consensus_score: number;
-      agreement_ratio: number;
-      conflicts: any[];
-      synthesis: string;
-      evaluation_matrix?: Record<string, any>;
-    };
-    evaluation_matrix?: Record<string, any>;
-    agent_executions: any[];
-    evidence_sources: any[];
-  }> {
+  static async queryPipeline(payload: QueryRAGRequest): Promise<AIRagQueryResult> {
     try {
       const response = await aiClient.post("/rag/query", payload, { timeout: env.AI_SERVICE_TIMEOUT_MS });
       if (!response.data || typeof response.data.synthesis !== "string") {

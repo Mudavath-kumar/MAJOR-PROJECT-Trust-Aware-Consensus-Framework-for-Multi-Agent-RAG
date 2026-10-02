@@ -164,6 +164,15 @@ async def query_pipeline(req: QueryRequest):
                 "confidence_score": 0,
                 "consensus": {
                     "status": "failed",
+                    "decision_status": "abstain",
+                    "decision_score": 0,
+                    "abstention_reason": "No supporting evidence was retrieved.",
+                    "score_components": {
+                        "retrieval_quality": 0,
+                        "claim_support": 0,
+                        "citation_coverage": 0,
+                        "critic_safety": 0,
+                    },
                     "consensus_score": 0,
                     "agreement_ratio": 0,
                     "conflicts": [],
@@ -185,6 +194,9 @@ async def query_pipeline(req: QueryRequest):
                     "hallucination_risk": "high",
                     "composite_confidence": 0,
                 },
+                "decision_status": "abstain",
+                "decision_score": 0,
+                "abstention_reason": "No supporting evidence was retrieved.",
                 "agent_executions": [],
                 "evidence_sources": [],
             }
@@ -213,6 +225,7 @@ async def query_pipeline(req: QueryRequest):
                 model=preferred_model,
                 api_key=gemini_key,
                 tavily_key=tavily_key if external_verification_enabled else "",
+                context_chunks=retrieved_chunks,
             ),
             run_reasoner(
                 query=req.query,
@@ -257,6 +270,7 @@ async def query_pipeline(req: QueryRequest):
                     model=preferred_model,
                     api_key=gemini_key,
                     tavily_key=tavily_key,
+                    context_chunks=retrieved_chunks,
                 )
             critic_res = await run_critic(
                 query=req.query,
@@ -282,6 +296,9 @@ async def query_pipeline(req: QueryRequest):
         return {
             "synthesis": consensus.get("synthesis", ""),
             "confidence_score": consensus.get("consensus_score", 0),
+            "decision_status": consensus.get("decision_status", "abstain"),
+            "decision_score": consensus.get("decision_score", 0),
+            "abstention_reason": consensus.get("abstention_reason"),
             "consensus": consensus,
             "evaluation_matrix": eval_matrix,
             "agent_executions": [

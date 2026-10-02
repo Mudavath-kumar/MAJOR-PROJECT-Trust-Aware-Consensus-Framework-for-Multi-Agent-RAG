@@ -88,6 +88,10 @@ export const exportAuditTrail = async (req: AuthRequest, res: Response): Promise
       message_id:       messageId,
       consensus_status: consensus?.status ?? "unknown",
       consensus_score:  consensus?.consensus_score ?? 0,
+      decision_status:  consensus?.decision_status ?? null,
+      decision_score:   consensus?.decision_score ?? null,
+      abstention_reason: consensus?.abstention_reason ?? null,
+      score_components: consensus?.score_components ?? null,
     };
     const integrity_hash = "sha256-" + createHash("sha256").update(JSON.stringify(stablePayload)).digest("hex");
 
@@ -167,6 +171,14 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
         confidence_score: msg.confidence_score ?? 0,
         consensus_status: c?.status ?? "failed",
         consensus_score: c?.consensus_score ?? msg.confidence_score ?? 0,
+        decision_status:
+          c?.decision_status ??
+          (c?.status === "reached" ? "answer" : c?.status === "partial" ? "partial" : "abstain"),
+        decision_score:
+          c?.decision_score ??
+          ((c?.consensus_score ?? msg.confidence_score ?? 0) / 100),
+        abstention_reason: c?.abstention_reason ?? null,
+        score_components: c?.score_components ?? {},
         evaluation_matrix: evalMatrix,
         sources_count: msg.evidence_sources?.length || 0,
         created_at: msg.created_at,

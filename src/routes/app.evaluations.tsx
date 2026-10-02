@@ -47,6 +47,8 @@ interface EvaluationMatrix {
   consensus_alignment?: number;
 }
 
+type DecisionStatus = "answer" | "partial" | "abstain";
+
 interface AuditRecord {
   id: string;
   conversation_id: string;
@@ -55,6 +57,10 @@ interface AuditRecord {
   confidence_score: number;
   consensus_status: string;
   consensus_score: number;
+  decision_status?: DecisionStatus;
+  decision_score?: number;
+  abstention_reason?: string | null;
+  score_components?: Record<string, number>;
   evaluation_matrix: EvaluationMatrix;
   sources_count: number;
   created_at: string;
@@ -107,6 +113,18 @@ const riskBadge = (risk?: string): string => {
       return "text-red-400 bg-red-500/10 border-red-500/20";
     default:
       return "text-muted-foreground bg-muted/40";
+  }
+};
+
+const decisionBadge = (status?: DecisionStatus): string => {
+  switch (status) {
+    case "answer":
+      return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+    case "partial":
+      return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+    case "abstain":
+    default:
+      return "text-red-400 bg-red-500/10 border-red-500/20";
   }
 };
 
@@ -231,6 +249,16 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
         <td className="px-4 py-3">
           <span
             className={cn(
+              "inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider",
+              decisionBadge(record.decision_status),
+            )}
+          >
+            {record.decision_status ?? "abstain"}
+          </span>
+        </td>
+        <td className="px-4 py-3">
+          <span
+            className={cn(
               "font-mono text-xs font-bold tabular-nums",
               scoreColor(m.composite_confidence ?? record.confidence_score),
             )}
@@ -259,7 +287,7 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
 
       {expanded && (
         <tr className="border-b border-border/40 bg-muted/20">
-          <td colSpan={8} className="px-4 py-4">
+          <td colSpan={9} className="px-4 py-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Answer preview */}
               <div className="rounded-xl border border-border/60 bg-card/60 p-4">
@@ -272,6 +300,17 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
               {/* Score breakdown */}
               <div className="rounded-xl border border-border/60 bg-card/60 p-4 space-y-3">
                 <MonoLabel className="text-[9px]">Evaluation Breakdown</MonoLabel>
+                <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                  <MonoLabel className="text-[9px]">Decision</MonoLabel>
+                  <span className={cn("rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase", decisionBadge(record.decision_status))}>
+                    {record.decision_status ?? "abstain"}
+                  </span>
+                </div>
+                {record.decision_status === "abstain" && record.abstention_reason && (
+                  <p className="rounded-lg border border-red-500/20 bg-red-500/5 p-2 text-[11px] leading-relaxed text-red-200">
+                    {record.abstention_reason}
+                  </p>
+                )}
                 <ScoreBar value={m.faithfulness} label="Faithfulness" />
                 <ScoreBar value={m.context_precision} label="Context Precision" />
                 <ScoreBar value={m.answer_relevance} label="Answer Relevance" />
@@ -367,6 +406,7 @@ function EvaluationsPage() {
       "Context Precision(%)",
       "Answer Relevance(%)",
       "Hallucination Risk",
+      "Decision",
       "Composite Confidence(%)",
       "Sources Count",
       "Consensus Status",
@@ -380,6 +420,7 @@ function EvaluationsPage() {
         r.evaluation_matrix?.context_precision ?? "",
         r.evaluation_matrix?.answer_relevance ?? "",
         r.evaluation_matrix?.hallucination_risk ?? "",
+        r.decision_status ?? "abstain",
         r.evaluation_matrix?.composite_confidence ?? r.confidence_score ?? "",
         r.sources_count,
         r.consensus_status,
@@ -582,6 +623,7 @@ function EvaluationsPage() {
                     "Ctx Precision",
                     "Relevance",
                     "Halluc. Risk",
+                    "Decision",
                     "Confidence",
                     "Sources",
                     "",

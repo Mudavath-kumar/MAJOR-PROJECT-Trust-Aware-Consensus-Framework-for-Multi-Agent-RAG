@@ -227,7 +227,9 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     // Normalize consensus
     const consensusStatusRaw = String(aiResult.consensus?.status || "failed").toLowerCase();
     const consensusStatus =
-      consensusStatusRaw === "failed"
+      consensusStatusRaw === "reached"
+        ? "reached"
+        : consensusStatusRaw === "failed"
         ? "failed"
         : consensusStatusRaw === "partial"
           ? "partial"
@@ -237,6 +239,13 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       typeof aiResult.consensus?.consensus_score === "number"
         ? aiResult.consensus.consensus_score
         : 0;
+
+    const decisionStatus = aiResult.consensus?.decision_status ||
+      (consensusStatus === "reached" ? "answer" : consensusStatus === "partial" ? "partial" : "abstain");
+    const decisionScore =
+      typeof aiResult.consensus?.decision_score === "number"
+        ? aiResult.consensus.decision_score
+        : consensusScore / 100;
 
     const agreementRatio =
       typeof aiResult.consensus?.agreement_ratio === "number"
@@ -252,6 +261,10 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       conflicts: Array.isArray(aiResult.consensus?.conflicts) ? aiResult.consensus.conflicts : [],
       synthesis: aiResult.consensus?.synthesis || aiResult.synthesis || "",
       evaluation_matrix: evalMatrix,
+      decision_status: decisionStatus,
+      decision_score: decisionScore,
+      abstention_reason: aiResult.consensus?.abstention_reason || null,
+      score_components: aiResult.consensus?.score_components || {},
     });
 
     // Normalize and save agent executions

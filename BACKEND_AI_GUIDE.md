@@ -127,6 +127,24 @@ local demo data.
 
 ## Production deployment
 
+## Research decision semantics
+
+The current AI service uses word-window chunking (400 words with 80 words of
+overlap), MongoDB Atlas Vector Search with a tenant-scoped keyword fallback,
+and a deterministic provenance heuristic derived from retrieval signals. The
+heuristic is not proof of factual truth and must not be described as an
+independent fact-checking agent.
+
+The research decision vocabulary is:
+
+- `answer`: evidence and verification satisfy the calibrated rule.
+- `partial`: only part of the requested answer is supported.
+- `abstain`: evidence is absent, contradictory, malformed, or below threshold.
+
+An abstention is fail-closed: it must not include an unsupported synthesized
+answer. External Tavily material remains separate from selected-document
+evidence.
+
 `render.yaml` provisions the backend and AI services. Deploy the frontend on
 Vercel using `vercel.json`. Set these values in the platform secret manager:
 

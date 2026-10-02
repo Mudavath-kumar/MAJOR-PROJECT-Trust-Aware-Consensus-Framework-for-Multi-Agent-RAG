@@ -2,15 +2,19 @@ import time
 import logging
 from typing import List, Dict, Any
 from ..core.llm_router import call_llm
+from .schemas import Claim, parse_claims
 
 logger = logging.getLogger("trustrag.agent.researcher")
 
 SYSTEM_PROMPT = """You are Agent A (Primary Evidence Retriever & Synthesizer) in TrustRAG.
 Your job:
 1. Formulate answers strictly grounded in the provided document context.
-2. List 2 to 4 discrete factual claim propositions you assert.
+2. List 1 to 4 discrete factual claim propositions you assert.
 3. Be precise, avoid assumptions not supported by the text.
-Return a structured answer.
+4. For every claim, include the exact retrieved chunk IDs that support it.
+
+Return JSON only in this exact shape:
+{"claims":[{"claim_id":"claim-1","text":"...","evidence_ids":["chunk-id"]}]}
 """
 
 async def run_researcher(
@@ -44,12 +48,14 @@ Provide your grounded synthesis and list your key factual propositions."""
 
     latency_ms = int((time.time() - start_time) * 1000)
 
-    # Extract bullet-point propositions from the LLM output
-    claims: List[str] = [
-        line.lstrip("-•* ").strip()
-        for line in llm_output.splitlines()
-        if line.strip().startswith(("-", "•", "*")) and len(line.strip()) > 10
-    ][:4]  # cap at 4 propositions
+    structured_claims: list[Claim] = []
+    parse_error = ""
+    try:
+        structured_claims = parse_claims(llm_output)[:4]
+    except ValueError as exc:
+        parse_error = str(exc)
+
+    claims = [claim.text for claim in structured_claims]
 
     retrieval_confidence = (
         sum(float(c.get("similarity_score", 0.0)) for c in context_chunks) / len(context_chunks)
@@ -62,8 +68,10 @@ Provide your grounded synthesis and list your key factual propositions."""
         "agent_role": "Primary Evidence & Context Extractor",
         "model_used": model,
         "claim_propositions": claims,
+        "claims": [claim.model_dump() for claim in structured_claims],
         "raw_output": llm_output,
-        "confidence": max(0.0, min(1.0, retrieval_confidence)),
+        "confidence": max(0.0, min(1.0, retrieval_confidence)) if structured_claims else 0.0,
+        "parse_error": parse_error or None,
         "latency_ms": latency_ms,
         "sources_cited": [
             {

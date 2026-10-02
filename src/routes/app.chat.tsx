@@ -33,7 +33,11 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_STEPS } from "@/lib/trustrag-data";
 import { ingestFile, useKnowledgeStore } from "@/lib/doc-store";
-import { ApiClient } from "@/lib/api-client";
+import {
+  ApiClient,
+  type DecisionScoreComponents,
+  type DecisionStatus,
+} from "@/lib/api-client";
 import { Meter, MonoLabel, PageHeader, Panel, ScorePill } from "@/components/app/Primitives";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,7 +93,7 @@ type Retrieved = {
   page: number;
   text: string;
   similarity: number;
-  trust: "high" | "medium" | "low";
+  provenance: "high" | "medium" | "low";
 };
 
 type Turn = {
@@ -97,7 +101,10 @@ type Turn = {
   question: string;
   answer: string;
   hits: Retrieved[];
-  scores: { confidence: number; trust: number; consensus: number };
+  scores: { confidence: number; provenance: number; consensus: number };
+  decisionStatus: DecisionStatus;
+  abstentionReason?: string | null;
+  scoreComponents?: DecisionScoreComponents;
   evaluationMatrix?: EvaluationMatrixData;
   agents: AgentDetail[];
   consensusSummary: string;
@@ -267,7 +274,7 @@ function EvidenceCard({
   doc,
   page,
   similarity,
-  trust,
+  provenance,
   text,
   highlight,
   isSelected,
@@ -277,16 +284,16 @@ function EvidenceCard({
   doc: string;
   page: number;
   similarity: number;
-  trust: "high" | "medium" | "low";
+  provenance: "high" | "medium" | "low";
   text: string;
   highlight?: string;
   isSelected?: boolean;
   onClick?: () => void;
 }) {
   const tone =
-    trust === "high"
+    provenance === "high"
       ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
-      : trust === "medium"
+      : provenance === "medium"
         ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
         : "text-muted-foreground border-border bg-muted/30";
 
@@ -311,7 +318,7 @@ function EvidenceCard({
         <span
           className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] font-semibold ${tone}`}
         >
-          {trust} trust
+          {provenance} provenance
         </span>
       </div>
 
@@ -369,6 +376,13 @@ function ChatPage() {
       if (msgs[i].sender === "user") {
         const asst = msgs[i + 1]?.sender === "assistant" ? msgs[i + 1] : null;
         if (asst) {
+          const loadedDecisionStatus: DecisionStatus =
+            asst.consensus?.decision_status ||
+            (asst.consensus?.status === "reached"
+              ? "answer"
+              : asst.consensus?.status === "partial"
+                ? "partial"
+                : "abstain");
           loadedTurns.push({
             id: new Date(asst.created_at || Date.now()).getTime() + i,
             question: msgs[i].content,
@@ -381,7 +395,7 @@ function ChatPage() {
               page: source.page_number || 0,
               text: source.text || "",
               similarity: typeof source.similarity_score === "number" ? source.similarity_score : 0,
-              trust:
+              provenance:
                 source.similarity_score >= 0.8
                   ? "high"
                   : source.similarity_score >= 0.6
@@ -390,7 +404,7 @@ function ChatPage() {
             })),
             scores: {
               confidence: typeof asst.confidence_score === "number" ? asst.confidence_score : 0,
-              trust:
+              provenance:
                 typeof asst.consensus?.agreement_ratio === "number"
                   ? Math.round(asst.consensus.agreement_ratio * 100)
                   : 0,
@@ -399,8 +413,12 @@ function ChatPage() {
                   ? asst.consensus.consensus_score
                   : 0,
             },
+            decisionStatus: loadedDecisionStatus,
+            abstentionReason: asst.consensus?.abstention_reason || null,
+            scoreComponents: asst.consensus?.score_components,
             agents: [],
-            consensusSummary: "Verified consensus achieved from indexed documents.",
+            consensusSummary:
+              asst.consensus?.synthesis || "Decision loaded from the authenticated backend.",
             scopeDocs: ["All Indexed Sources"],
             timestamp: new Date(asst.created_at || Date.now()).toLocaleTimeString([], {
               hour: "2-digit",
@@ -505,7 +523,7 @@ function ChatPage() {
 
   async function ask(q: string) {
     const hits: Retrieved[] = [];
-    const scores = { confidence: 0, trust: 0, consensus: 0 };
+    const scores = { confidence: 0, provenance: 0, consensus: 0 };
     setQueryError(null);
 
     const turn: Turn = {
@@ -514,6 +532,8 @@ function ChatPage() {
       answer: "Retrieving verified evidence from the indexed documents…",
       hits,
       scores,
+      decisionStatus: "abstain",
+      abstentionReason: null,
       agents: [],
       consensusSummary: "Waiting for the authenticated backend consensus response.",
       scopeDocs: activeDocNames,
@@ -552,7 +572,7 @@ function ChatPage() {
               page: source.page_number || 0,
               text: source.text || "",
               similarity: source.similarity_score || 0,
-              trust:
+              provenance:
                 source.similarity_score >= 0.8
                   ? "high"
                   : source.similarity_score >= 0.6
@@ -569,7 +589,7 @@ function ChatPage() {
                   : ag.agent_name === "critic"
                     ? "Hallucination Auditor"
                     : ag.agent_name === "trust_assessor"
-                      ? "Trust Assessor"
+                      ? "Provenance Heuristic"
                       : "Grounded Reasoner",
             role: ag.agent_role || "Consensus Agent",
             model: ag.model_used || "Unknown model",
@@ -586,7 +606,7 @@ function ChatPage() {
             scores: {
               confidence:
                 typeof asst.confidence_score === "number" ? Math.round(asst.confidence_score) : 0,
-              trust: Math.round(
+              provenance: Math.round(
                 typeof asst.consensus?.agreement_ratio === "number"
                   ? asst.consensus.agreement_ratio * 100
                   : 0,
@@ -596,6 +616,15 @@ function ChatPage() {
                   ? Math.round(asst.consensus.consensus_score)
                   : 0,
             },
+            decisionStatus:
+              asst.consensus?.decision_status ||
+              (asst.consensus?.status === "reached"
+                ? "answer"
+                : asst.consensus?.status === "partial"
+                  ? "partial"
+                  : "abstain"),
+            abstentionReason: asst.consensus?.abstention_reason || null,
+            scoreComponents: asst.consensus?.score_components,
             agents: liveAgents,
             consensusSummary: asst.consensus?.synthesis || turn.consensusSummary,
           };
@@ -670,7 +699,7 @@ function ChatPage() {
         "Waiting for the authenticated retrieval service",
         "Waiting for the reasoning service",
         "Waiting for evidence verification",
-        "Waiting for source trust assessment",
+        "Waiting for retrieval provenance signals",
         "Waiting for consensus analysis",
         "Waiting for the consensus result",
         "The answer will appear only after verification",
@@ -694,7 +723,7 @@ function ChatPage() {
           `[TRUST-RAG AUDIT LOG - ${t.timestamp}]\n` +
           `QUERY: ${t.question}\n\n` +
           `ANSWER:\n${t.answer}\n\n` +
-          `CONSENSUS SCORE: ${t.scores.consensus}% | CONFIDENCE: ${t.scores.confidence}% | TRUST: ${t.scores.trust}%\n` +
+          `CONSENSUS SCORE: ${t.scores.consensus}% | DECISION CONFIDENCE: ${t.scores.confidence}% | RETRIEVAL PROVENANCE: ${t.scores.provenance}%\n` +
           `ACTIVE SCOPE: ${t.scopeDocs.join(", ")}\n` +
           `EVIDENCE CITATIONS:\n` +
           t.hits
@@ -1051,8 +1080,20 @@ function ChatPage() {
                               <MonoLabel>Synthesized &amp; Verified Answer</MonoLabel>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400">
-                                {t.scores.consensus}% Consensus Score
+                              <span
+                                className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold ${
+                                  t.decisionStatus === "answer"
+                                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                    : t.decisionStatus === "partial"
+                                      ? "border-amber-500/20 bg-amber-500/10 text-amber-400"
+                                      : "border-red-500/20 bg-red-500/10 text-red-400"
+                                }`}
+                              >
+                                {t.decisionStatus === "answer"
+                                  ? "Answer"
+                                  : t.decisionStatus === "partial"
+                                    ? "Partial evidence"
+                                    : "Abstained"} · {t.scores.consensus}%
                               </span>
                               <span className="font-mono text-[10px] text-muted-foreground">
                                 {t.timestamp}
@@ -1071,6 +1112,11 @@ function ChatPage() {
 
                           {/* Answer Content */}
                           <div className="mt-4">
+                            {t.decisionStatus === "abstain" && (
+                              <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-300">
+                                {t.abstentionReason || "The selected documents did not provide enough verified evidence."}
+                              </div>
+                            )}
                             <Markdown
                               text={t.answer}
                               onCitationClick={(citIdx) => setSelectedCitation(citIdx)}
@@ -1085,9 +1131,9 @@ function ChatPage() {
                               tone={t.scores.confidence >= 75 ? "good" : "warn"}
                             />
                             <ScorePill
-                              label="Trust score"
-                              value={t.scores.trust}
-                              tone={t.scores.trust >= 75 ? "good" : "warn"}
+                              label="Retrieval provenance"
+                              value={t.scores.provenance}
+                              tone={t.scores.provenance >= 75 ? "good" : "warn"}
                             />
                             <ScorePill
                               label="Consensus"
@@ -1376,7 +1422,7 @@ function ChatPage() {
                       doc={c.docName}
                       page={c.page}
                       similarity={c.similarity}
-                      trust={c.trust}
+                                      provenance={c.provenance}
                       text={c.text}
                       isSelected={selectedCitation === i + 1}
                       onClick={() => setSelectedCitation(i + 1)}

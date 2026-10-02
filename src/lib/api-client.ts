@@ -28,6 +28,26 @@ const API_BASE_URL = rawBase;
 
 type AuthTokenProvider = () => Promise<string | null>;
 
+export type DecisionStatus = "answer" | "partial" | "abstain";
+
+export type DecisionScoreComponents = {
+  retrieval_quality?: number;
+  claim_support?: number;
+  citation_coverage?: number;
+  critic_safety?: number;
+};
+
+export type AssistantDecision = {
+  status?: "reached" | "partial" | "failed";
+  decision_status?: DecisionStatus;
+  decision_score?: number;
+  abstention_reason?: string | null;
+  score_components?: DecisionScoreComponents;
+  consensus_score?: number;
+  agreement_ratio?: number;
+  synthesis?: string;
+};
+
 export class ApiClient {
   private static tokenProvider: AuthTokenProvider | null = null;
 
@@ -249,7 +269,16 @@ export class ApiClient {
   }
 
   static async sendMessage(conversationId: string, content: string, documentIds?: string[]) {
-    return this.request<{ user_message: any; assistant_message: any }>(
+    return this.request<{
+      user_message: any;
+      assistant_message: {
+        content: string;
+        confidence_score?: number;
+        evidence_sources?: any[];
+        consensus?: AssistantDecision;
+        agent_executions?: any[];
+      };
+    }>(
       `/chat/conversations/${conversationId}/messages`,
       {
         method: "POST",

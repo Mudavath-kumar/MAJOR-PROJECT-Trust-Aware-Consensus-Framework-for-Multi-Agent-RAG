@@ -3,13 +3,20 @@ import logging
 from typing import List, Dict, Any
 import httpx
 from ..core.llm_router import call_llm
+from .schemas import Claim, ClaimVerification, parse_verifications, validate_verification_ids
 
 logger = logging.getLogger("trustrag.agent.fact_checker")
 
 SYSTEM_PROMPT = """You are Agent B (Independent Fact-Checker & Verifier) in TrustRAG.
 Your job:
-1. Examine the claims provided by Agent A and determine whether they align with recognized standards, external domain knowledge, and factual consistency.
-2. Flag any discrepancies, overgeneralizations, or unverified claims.
+1. Examine each claim provided by Agent A against the supplied document evidence.
+2. Label every claim as supported, contradicted, or insufficient.
+3. Cite only the chunk IDs that actually support or contradict the claim.
+4. Do not use general model knowledge as evidence. External search results are a
+   separately labelled cross-check and never replace selected-document evidence.
+
+Return JSON only in this exact shape:
+{"verifications":[{"claim_id":"claim-1","label":"supported","evidence_ids":["chunk-id"],"confidence":0.9}]}
 """
 
 async def _verify_externally(query: str, tavily_key: str) -> List[Dict[str, str]]:
@@ -47,7 +54,8 @@ async def run_fact_checker(
     researcher_output: Dict[str, Any],
     model: str = "llama-3.1-8b-instant",
     api_key: str = "",
-    tavily_key: str = ""
+    tavily_key: str = "",
+    context_chunks: List[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     start_time = time.time()
 
@@ -58,13 +66,20 @@ async def run_fact_checker(
         f"- {source['title']} ({source['url']}): {source['content']}"
         for source in external_sources
     ) or "No external sources were requested."
+    document_context = "\n\n".join(
+        f"[{chunk.get('chunk_id', 'unknown')}]: {chunk.get('text', '')}"
+        for chunk in (context_chunks or [])
+    ) or "No selected-document evidence was retrieved."
 
     user_prompt = f"""Query: {query}
 Researcher Claims: {claims}
 Researcher Synthesis:
 {raw_text}
 
-Verify each claim. Conclude if they are factually accurate, consistent, and free of contradictions."""
+Selected-document evidence:
+{document_context}
+
+Verify every claim using its claim ID and the retrieved evidence references provided by Agent A."""
     user_prompt += f"\n\nExternal verification context (use only as a cross-check; do not treat it as user-document evidence):\n{external_context}"
 
     llm_output = await call_llm(
@@ -77,13 +92,30 @@ Verify each claim. Conclude if they are factually accurate, consistent, and free
 
     latency_ms = int((time.time() - start_time) * 1000)
 
+    verifications: List[ClaimVerification] = []
+    parse_error = ""
+    try:
+        verifications = parse_verifications(llm_output)
+        known_claims = [Claim.model_validate(claim) for claim in researcher_output.get("claims", [])]
+        validate_verification_ids(known_claims, verifications)
+    except (TypeError, ValueError) as exc:
+        parse_error = str(exc)
+
+    verification_confidence = (
+        sum(item.confidence for item in verifications) / len(verifications)
+        if verifications
+        else 0.0
+    )
+
     return {
         "agent_name": "fact_checker",
         "agent_role": "External Knowledge & Ground Truth Verifier",
         "model_used": model,
         "claim_propositions": [],
+        "verifications": [item.model_dump() for item in verifications],
         "raw_output": llm_output,
-        "confidence": 0.0,
+        "confidence": verification_confidence,
+        "parse_error": parse_error or None,
         "latency_ms": latency_ms,
         "sources_cited": researcher_output.get("sources_cited", []) + [
             {"source_type": "tavily", **source} for source in external_sources

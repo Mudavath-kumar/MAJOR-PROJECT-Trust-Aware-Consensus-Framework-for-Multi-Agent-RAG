@@ -57,10 +57,23 @@ export interface IConflictResolution {
   confidence_penalty: number;
 }
 
+export type DecisionStatus = "answer" | "partial" | "abstain";
+
+export interface IDecisionScoreComponents {
+  retrieval_quality?: number;
+  claim_support?: number;
+  citation_coverage?: number;
+  critic_safety?: number;
+}
+
 export interface IConsensusResult {
   _id?: string;
   message_id: string;
   status: "reached" | "partial" | "failed";
+  decision_status?: DecisionStatus;
+  decision_score?: number;
+  abstention_reason?: string | null;
+  score_components?: IDecisionScoreComponents;
   consensus_score: number; // 0 - 100
   agreement_ratio: number; // 0.0 - 1.0
   conflicts: IConflictResolution[];
