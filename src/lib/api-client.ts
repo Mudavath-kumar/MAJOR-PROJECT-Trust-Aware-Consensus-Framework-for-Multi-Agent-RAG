@@ -26,10 +26,29 @@ if (!rawBase.endsWith("/api/v1") && !rawBase.endsWith("/v1")) {
 }
 const API_BASE_URL = rawBase;
 
+type AuthTokenProvider = () => Promise<string | null>;
+
 export class ApiClient {
-  private static getToken(): string | null {
+  private static tokenProvider: AuthTokenProvider | null = null;
+
+  static setTokenProvider(provider: AuthTokenProvider | null) {
+    this.tokenProvider = provider;
+  }
+
+  private static readStoredToken(): string | null {
     if (typeof window === "undefined") return null;
     return localStorage.getItem("trustrag_token");
+  }
+
+  private static async getToken(): Promise<string | null> {
+    if (this.tokenProvider) {
+      const token = await this.tokenProvider();
+      if (token) {
+        this.setToken(token);
+        return token;
+      }
+    }
+    return this.readStoredToken();
   }
 
   static setToken(token: string) {
@@ -67,7 +86,7 @@ export class ApiClient {
   }
 
   private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = this.getToken();
+    const token = await this.getToken();
     const userEmail = this.getUserEmail();
     const userName = this.getUserName();
 
@@ -118,7 +137,7 @@ export class ApiClient {
   }
 
   static async uploadDocument(formData: FormData) {
-    const token = this.getToken();
+    const token = await this.getToken();
     const userEmail = this.getUserEmail();
     const userName = this.getUserName();
 
@@ -146,7 +165,7 @@ export class ApiClient {
   }
 
   static async uploadMultipleDocuments(formData: FormData) {
-    const token = this.getToken();
+    const token = await this.getToken();
     const userEmail = this.getUserEmail();
     const userName = this.getUserName();
 

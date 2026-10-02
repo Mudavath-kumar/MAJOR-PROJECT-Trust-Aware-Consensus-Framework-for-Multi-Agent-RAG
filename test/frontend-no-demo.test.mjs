@@ -48,3 +48,14 @@ test("production API requests never fall back to localhost", () => {
   assert.match(apiClient, /import\.meta\.env\.PROD/);
   assert.doesNotMatch(apiClient, /VITE_API_URL\s*\|\|\s*["']http:\/\/localhost:3001\/api\/v1/);
 });
+
+test("protected requests wait for the Clerk session instead of racing local storage", () => {
+  const apiClient = read("src/lib/api-client.ts");
+  const appShell = read("src/routes/app.tsx");
+  assert.match(apiClient, /static setTokenProvider\(/);
+  assert.match(apiClient, /await this\.getToken\(\)/);
+  assert.match(appShell, /ApiClient\.setTokenProvider\(getToken\)/);
+  assert.match(appShell, /backendAuthReady/);
+  assert.match(appShell, /backendAuthUserId/);
+  assert.match(appShell, /!backendAuthReady/);
+});

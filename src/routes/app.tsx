@@ -74,6 +74,9 @@ function AppShell() {
   const { signOut } = useClerk();
   const { user } = useUser();
   const { getToken, isLoaded, isSignedIn } = useAuth();
+  const [backendAuthReady, setBackendAuthReady] = useState(false);
+  const [backendAuthUserId, setBackendAuthUserId] = useState<string | null>(null);
+  const [backendAuthError, setBackendAuthError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -81,15 +84,43 @@ function AppShell() {
 
   // Sync Clerk user & auth token with the backend ApiClient
   useEffect(() => {
+    let active = true;
+    ApiClient.setTokenProvider(getToken);
+
     if (user) {
+      setBackendAuthReady(false);
+      setBackendAuthError(null);
       const email = user.primaryEmailAddress?.emailAddress || "";
       const name = user.fullName || user.firstName || "User";
       ApiClient.setUserEmail(email);
       ApiClient.setUserName(name);
-      void getToken().then((token) => {
-        if (token) ApiClient.setToken(token);
-      });
+      void getToken()
+        .then((token) => {
+          if (!active) return;
+          if (!token) {
+            setBackendAuthError("Your secure session is unavailable. Please sign in again.");
+            return;
+          }
+          ApiClient.setToken(token);
+          setBackendAuthUserId(user.id);
+          setBackendAuthReady(true);
+        })
+        .catch(() => {
+          if (active) {
+            setBackendAuthError("Your secure session is unavailable. Please sign in again.");
+          }
+        });
+    } else {
+      ApiClient.clearToken();
+      setBackendAuthError(null);
+      setBackendAuthUserId(null);
+      setBackendAuthReady(true);
     }
+
+    return () => {
+      active = false;
+      ApiClient.setTokenProvider(null);
+    };
   }, [user, getToken]);
 
   // Close popovers on click outside
@@ -117,6 +148,28 @@ function AppShell() {
         <div className="flex flex-col items-center gap-3">
           <Hexagon size={28} className="animate-spin text-accent" />
           <p className="text-sm text-muted-foreground">Loading workspace…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (backendAuthError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md rounded-2xl border border-destructive/30 bg-card p-6 text-center">
+          <h1 className="text-lg font-semibold">Secure session unavailable</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{backendAuthError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!backendAuthReady || backendAuthUserId !== (user?.id ?? null)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Hexagon size={28} className="animate-spin text-accent" />
+          <p className="text-sm text-muted-foreground">Securing workspace…</p>
         </div>
       </div>
     );
