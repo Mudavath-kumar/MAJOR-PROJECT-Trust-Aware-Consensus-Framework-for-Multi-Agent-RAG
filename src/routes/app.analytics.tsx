@@ -68,16 +68,22 @@ function Analytics() {
   const [range, setRange] = useState<"7d" | "30d" | "all">("7d");
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    void ApiClient.getAnalytics()
+    setLoading(true);
+    setError(null);
+    void ApiClient.getAnalytics(range)
       .then((response) => {
         if (!cancelled) setData(response);
       })
       .catch((reason) => {
         if (!cancelled)
           setError(reason instanceof Error ? reason.message : "Unable to load analytics");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -127,34 +133,38 @@ function Analytics() {
         </p>
       )}
 
+      {loading && !data && (
+        <Panel className="mb-6 p-5 text-sm text-muted-foreground">Loading analytics…</Panel>
+      )}
+
       {/* KPI Ribbon */}
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "Indexed documents",
-            val: String(metrics.total_documents_indexed),
-            change: `${metrics.total_chunks} chunks`,
+            val: data ? String(metrics.total_documents_indexed) : "—",
+            change: data ? `${metrics.total_chunks} chunks` : "Loading",
             good: true,
             desc: "Documents ready for retrieval",
           },
           {
             label: "Questions answered",
-            val: String(metrics.total_queries),
+            val: data ? String(metrics.total_queries) : "—",
             change: "stored",
             good: true,
             desc: "Completed assistant responses",
           },
           {
             label: "Avg confidence",
-            val: `${Number(metrics.avg_confidence_score).toFixed(1)}%`,
+            val: data ? `${Number(metrics.avg_confidence_score).toFixed(1)}%` : "—",
             change: "measured",
             good: true,
             desc: "Across stored answers",
           },
           {
             label: "Consensus rate",
-            val: `${Number(metrics.consensus_rate).toFixed(1)}%`,
-            change: `${metrics.avg_latency_ms}ms avg`,
+            val: data ? `${Number(metrics.consensus_rate).toFixed(1)}%` : "—",
+            change: data ? `${metrics.avg_latency_ms}ms avg` : "Loading",
             good: true,
             desc: "Answers reaching the configured threshold",
           },

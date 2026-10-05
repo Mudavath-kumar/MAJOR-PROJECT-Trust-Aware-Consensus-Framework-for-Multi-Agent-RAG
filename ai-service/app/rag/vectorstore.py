@@ -1,7 +1,7 @@
 import logging
-import re
 from typing import List, Dict, Any, Optional
 from ..core.config import settings
+from .relevance import rank_rows
 
 logger = logging.getLogger("trustrag.vectorstore")
 
@@ -161,27 +161,10 @@ def query_vector_store(
     # Fallback must use the exact same tenant and document scope.
     filt = scope_filter
 
-    rows = list(col.find(filt, {"embedding": 0}))
-    query_terms = {
-        term for term in re.findall(r"[a-z0-9]{3,}", query_text.lower())
-        if term not in {"the", "and", "for", "with", "from", "that", "this"}
-    }
-
-    scored_rows = []
-    for row in rows:
-        text_terms = set(re.findall(r"[a-z0-9]{3,}", str(row.get("text", "")).lower()))
-        score = len(query_terms & text_terms) / len(query_terms) if query_terms else 0.0
-        if score > 0:
-            scored_rows.append((score, row))
-
-    scored_rows.sort(key=lambda item: item[0], reverse=True)
-    logger.info("Keyword search returned %d chunks (filter=%s)", len(scored_rows), filt)
-    return [
-        {
-            "chunk_id": str(row["_id"]),
-            "text": row["text"],
-            "metadata": row.get("metadata", {}),
-            "similarity_score": round(float(score), 4),
-        }
-        for score, row in scored_rows[:top_k]
-    ]
+    # Keep embeddings in this bounded fallback projection. It allows the
+    # service to remain semantically useful during an Atlas index outage while
+    # retaining the exact tenant/document filter above.
+    rows = list(col.find(filt, {"text": 1, "embedding": 1, "metadata": 1}))
+    results = rank_rows(rows, query_embedding, query_text, top_k)
+    logger.info("Hybrid fallback search returned %d chunks (filter=%s)", len(results), filt)
+    return results

@@ -24,13 +24,13 @@ async def _verify_externally(query: str, tavily_key: str) -> List[Dict[str, str]
         return []
 
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=6.0) as client:
             response = await client.post(
                 "https://api.tavily.com/search",
                 json={
                     "api_key": tavily_key,
                     "query": query,
-                    "max_results": 5,
+                    "max_results": 3,
                     "include_answer": False,
                 },
             )
@@ -87,7 +87,8 @@ Verify every claim using its claim ID and the retrieved evidence references prov
         system_prompt=SYSTEM_PROMPT,
         model=model,
         api_key_override=api_key,
-        temperature=0.1
+        temperature=0.1,
+        max_output_tokens=768,
     )
 
     latency_ms = int((time.time() - start_time) * 1000)

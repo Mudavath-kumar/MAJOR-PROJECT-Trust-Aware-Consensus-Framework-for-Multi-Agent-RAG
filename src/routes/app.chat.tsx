@@ -30,14 +30,11 @@ import {
   UploadCloud,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_STEPS } from "@/lib/trustrag-data";
+import { parseAnswerBlocks } from "@/lib/answer-format";
 import { ingestFile, useKnowledgeStore } from "@/lib/doc-store";
-import {
-  ApiClient,
-  type DecisionScoreComponents,
-  type DecisionStatus,
-} from "@/lib/api-client";
+import { ApiClient, type DecisionScoreComponents, type DecisionStatus } from "@/lib/api-client";
 import { Meter, MonoLabel, PageHeader, Panel, ScorePill } from "@/components/app/Primitives";
 import { Button } from "@/components/ui/button";
 import {
@@ -134,7 +131,52 @@ function getFileTypeColor(type: string) {
   }
 }
 
-/** Markdown renderer with interactive citation triggers */
+function renderInline(text: string, onCitationClick?: (index: number) => void): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[\d+\])/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-semibold text-foreground">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+      return (
+        <em key={index} className="text-muted-foreground">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code
+          key={index}
+          className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const citation = part.match(/^\[(\d+)\]$/);
+    if (citation) {
+      const citationIndex = Number(citation[1]);
+      return (
+        <button
+          key={index}
+          type="button"
+          onClick={() => onCitationClick?.(citationIndex)}
+          className="mx-0.5 inline-flex items-center justify-center rounded-md border border-accent/40 bg-accent/15 px-1.5 py-0.5 font-mono text-[11px] font-bold text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
+          title={`Jump to citation ${citationIndex}`}
+        >
+          [{citationIndex}]
+        </button>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+/** Render the answer-agent Markdown subset without exposing raw # or - tokens. */
 function Markdown({
   text,
   onCitationClick,
@@ -142,42 +184,35 @@ function Markdown({
   text: string;
   onCitationClick?: (index: number) => void;
 }) {
+  const blocks = parseAnswerBlocks(text);
+
   return (
     <div className="space-y-3 text-sm leading-relaxed">
-      {text.split("\n\n").map((para, i) => (
-        <p key={i}>
-          {para.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[\d+\])/g).map((part, j) => {
-            if (part.startsWith("**"))
-              return (
-                <strong key={j} className="font-semibold text-foreground">
-                  {part.slice(2, -2)}
-                </strong>
-              );
-            if (part.startsWith("*") && part.length > 2)
-              return (
-                <em key={j} className="text-muted-foreground">
-                  {part.slice(1, -1)}
-                </em>
-              );
-            const citMatch = part.match(/^\[(\d+)\]$/);
-            if (citMatch) {
-              const citIndex = parseInt(citMatch[1], 10);
-              return (
-                <button
-                  key={j}
-                  type="button"
-                  onClick={() => onCitationClick?.(citIndex)}
-                  className="mx-0.5 inline-flex items-center justify-center rounded-md border border-accent/40 bg-accent/15 px-1.5 py-0.5 font-mono text-[11px] font-bold text-accent transition-all hover:bg-accent hover:text-accent-foreground hover:scale-110 active:scale-95"
-                  title={`Jump to Citation [${citIndex}]`}
-                >
-                  [{citIndex}]
-                </button>
-              );
-            }
-            return <span key={j}>{part}</span>;
-          })}
-        </p>
-      ))}
+      {blocks.map((block, index) => {
+        if (block.type === "heading") {
+          return (
+            <h3
+              key={index}
+              className={`${block.level === 1 ? "text-base" : "text-sm"} font-semibold tracking-tight text-foreground`}
+            >
+              {renderInline(block.text, onCitationClick)}
+            </h3>
+          );
+        }
+        if (block.type === "list") {
+          const List = block.ordered ? "ol" : "ul";
+          return (
+            <List key={index} className="space-y-1.5 pl-5 text-muted-foreground marker:text-accent">
+              {block.items.map((item, itemIndex) => (
+                <li key={itemIndex} className="pl-1">
+                  {renderInline(item, onCitationClick)}
+                </li>
+              ))}
+            </List>
+          );
+        }
+        return <p key={index}>{renderInline(block.text, onCitationClick)}</p>;
+      })}
     </div>
   );
 }
@@ -688,8 +723,9 @@ function ChatPage() {
   }, [pending, readyTurn, step]);
 
   const latest = turns[turns.length - 1];
-  const evidence = draft.current?.hits ?? latest?.hits ?? [];
-  const activeHitsCount = draft.current?.hits.length ?? evidence.length;
+  const draftHits = draft.current?.hits;
+  const evidence = useMemo(() => draftHits ?? latest?.hits ?? [], [draftHits, latest]);
+  const activeHitsCount = draftHits?.length ?? evidence.length;
 
   const stepDetails = useMemo(() => {
     const n = activeHitsCount;
@@ -1093,7 +1129,8 @@ function ChatPage() {
                                   ? "Answer"
                                   : t.decisionStatus === "partial"
                                     ? "Partial evidence"
-                                    : "Abstained"} · {t.scores.consensus}%
+                                    : "Abstained"}{" "}
+                                · {t.scores.consensus}%
                               </span>
                               <span className="font-mono text-[10px] text-muted-foreground">
                                 {t.timestamp}
@@ -1114,7 +1151,8 @@ function ChatPage() {
                           <div className="mt-4">
                             {t.decisionStatus === "abstain" && (
                               <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-300">
-                                {t.abstentionReason || "The selected documents did not provide enough verified evidence."}
+                                {t.abstentionReason ||
+                                  "The selected documents did not provide enough verified evidence."}
                               </div>
                             )}
                             <Markdown
@@ -1156,7 +1194,7 @@ function ChatPage() {
                             >
                               <span className="flex items-center gap-2">
                                 <BrainCircuit size={14} className="text-accent" />
-                                Multi-Agent Deliberation Telemetry (3 Agents)
+                                Multi-Agent Deliberation Telemetry ({t.agents.length} Agents)
                               </span>
                               <ChevronDown
                                 size={14}
@@ -1422,7 +1460,7 @@ function ChatPage() {
                       doc={c.docName}
                       page={c.page}
                       similarity={c.similarity}
-                                      provenance={c.provenance}
+                      provenance={c.provenance}
                       text={c.text}
                       isSelected={selectedCitation === i + 1}
                       onClick={() => setSelectedCitation(i + 1)}

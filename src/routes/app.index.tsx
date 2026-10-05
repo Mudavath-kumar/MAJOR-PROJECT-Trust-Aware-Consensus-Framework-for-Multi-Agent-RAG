@@ -9,7 +9,7 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/lib/api-client";
 import { useKnowledgeStore } from "@/lib/doc-store";
 import { Meter, MonoLabel, PageHeader, Panel } from "@/components/app/Primitives";
@@ -29,9 +29,13 @@ export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
 
-function useCounter(target: number, decimals = 0) {
+function useCounter(target: number | null, decimals = 0) {
   const [v, setV] = useState(0);
   useEffect(() => {
+    if (target === null) {
+      setV(0);
+      return;
+    }
     const start = performance.now();
     const dur = 900;
     let raf = 0;
@@ -43,7 +47,7 @@ function useCounter(target: number, decimals = 0) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [target]);
-  return v.toFixed(decimals);
+  return target === null ? "—" : v.toFixed(decimals);
 }
 
 function Stat({
@@ -57,7 +61,7 @@ function Stat({
   delay,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   suffix?: string;
   hint: string;
   icon: typeof FileText;
@@ -79,7 +83,7 @@ function Stat({
         </div>
         <div className="mt-4 text-3xl font-semibold tracking-tight tabular-nums">
           {shown}
-          {suffix}
+          {shown === "—" ? null : suffix}
         </div>
         {meter !== undefined && <Meter value={meter} className="mt-3" />}
         <p className="mt-3 text-xs text-muted-foreground">{hint}</p>
@@ -89,24 +93,42 @@ function Stat({
 }
 
 function Dashboard() {
-  const { docs } = useKnowledgeStore();
+  const { docs, loading: documentsLoading } = useKnowledgeStore();
   const [analytics, setAnalytics] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void Promise.all([ApiClient.getAnalytics(), ApiClient.checkHealth()])
-      .then(([analyticsResponse, healthResponse]) => {
-        setAnalytics(analyticsResponse);
-        setHealth(healthResponse);
-      })
-      .catch((error) => console.error("Unable to load dashboard data", error));
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const [analyticsResult, healthResult] = await Promise.allSettled([
+      ApiClient.getAnalytics("all"),
+      ApiClient.checkHealth(),
+    ]);
+    if (analyticsResult.status === "fulfilled") setAnalytics(analyticsResult.value);
+    if (healthResult.status === "fulfilled") setHealth(healthResult.value);
+    const failures = [analyticsResult, healthResult].filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failures.length) {
+      const firstFailure = failures[0].reason;
+      setError(
+        firstFailure instanceof Error ? firstFailure.message : "Unable to load dashboard data",
+      );
+    }
+    setLoading(false);
   }, []);
 
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
   const metrics = analytics?.metrics ?? {
-    total_documents_indexed: docs.filter((doc) => doc.status === "ready").length,
-    total_queries: 0,
-    avg_confidence_score: 0,
-    avg_consensus_score: 0,
+    total_documents_indexed: null,
+    total_queries: null,
+    avg_confidence_score: null,
+    avg_consensus_score: null,
   };
   const recentDocs = docs.slice(0, 6);
   const serviceHealthy = health?.ready === true;
@@ -127,37 +149,64 @@ function Dashboard() {
         }
       />
 
+      {error && (
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          <span>{error}</span>
+          <button
+            type="button"
+            className="font-medium underline"
+            onClick={() => void loadDashboard()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="Total documents"
-          value={Number(metrics.total_documents_indexed ?? 0)}
-          hint={`${docs.length} total documents in your workspace`}
+          value={
+            metrics.total_documents_indexed === null
+              ? null
+              : Number(metrics.total_documents_indexed)
+          }
+          hint={
+            documentsLoading
+              ? "Loading workspace documents"
+              : `${docs.length} total documents in your workspace`
+          }
           icon={FileText}
           delay={0}
         />
         <Stat
           label="Total queries"
-          value={Number(metrics.total_queries ?? 0)}
+          value={metrics.total_queries === null ? null : Number(metrics.total_queries)}
           hint="Completed assistant responses"
           icon={MessageSquare}
           delay={60}
         />
         <Stat
           label="Avg confidence"
-          value={Number(metrics.avg_confidence_score ?? 0)}
+          value={
+            metrics.avg_confidence_score === null ? null : Number(metrics.avg_confidence_score)
+          }
           suffix="%"
           decimals={1}
-          meter={Number(metrics.avg_confidence_score ?? 0)}
+          meter={
+            metrics.avg_confidence_score === null ? undefined : Number(metrics.avg_confidence_score)
+          }
           hint="Across your stored answers"
           icon={Gauge}
           delay={120}
         />
         <Stat
           label="Avg trust score"
-          value={Number(metrics.avg_consensus_score ?? 0)}
+          value={metrics.avg_consensus_score === null ? null : Number(metrics.avg_consensus_score)}
           suffix="%"
           decimals={1}
-          meter={Number(metrics.avg_consensus_score ?? 0)}
+          meter={
+            metrics.avg_consensus_score === null ? undefined : Number(metrics.avg_consensus_score)
+          }
           hint="Average consensus score"
           icon={ShieldCheck}
           delay={180}
@@ -171,7 +220,10 @@ function Dashboard() {
             <Activity size={16} className="text-muted-foreground" />
           </div>
           <ul className="mt-4 divide-y divide-border">
-            {recentDocs.length === 0 && (
+            {documentsLoading && (
+              <li className="py-3 text-sm text-muted-foreground">Loading document activity…</li>
+            )}
+            {!documentsLoading && recentDocs.length === 0 && (
               <li className="py-3 text-sm text-muted-foreground">No document activity yet.</li>
             )}
             {recentDocs.map((doc, i) => (
@@ -229,13 +281,34 @@ function Dashboard() {
             <MonoLabel>System status</MonoLabel>
             <ul className="mt-4 space-y-3 text-sm">
               {[
-                ["Backend API", health?.backend === "online" ? "Operational" : "Unavailable"],
-                ["Database", health?.database === "connected" ? "Operational" : "Unavailable"],
+                [
+                  "Backend API",
+                  loading
+                    ? "Checking"
+                    : health?.backend === "online"
+                      ? "Operational"
+                      : "Unavailable",
+                ],
+                [
+                  "Database",
+                  loading
+                    ? "Checking"
+                    : health?.database === "connected"
+                      ? "Operational"
+                      : "Unavailable",
+                ],
                 [
                   "AI service",
-                  health?.ai_service?.status === "healthy" ? "Operational" : "Unavailable",
+                  loading
+                    ? "Checking"
+                    : health?.ai_service?.status === "healthy"
+                      ? "Operational"
+                      : "Unavailable",
                 ],
-                ["Workspace", serviceHealthy ? "Operational" : "Checking"],
+                [
+                  "Workspace",
+                  loading ? "Checking" : serviceHealthy ? "Operational" : "Unavailable",
+                ],
               ].map(([name, state]) => (
                 <li key={name} className="flex items-center justify-between">
                   <span className="text-muted-foreground">{name}</span>

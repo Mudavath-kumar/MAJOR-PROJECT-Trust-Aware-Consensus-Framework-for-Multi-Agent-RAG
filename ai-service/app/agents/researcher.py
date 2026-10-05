@@ -43,7 +43,8 @@ Provide your grounded synthesis and list your key factual propositions."""
         system_prompt=SYSTEM_PROMPT,
         model=model,
         api_key_override=api_key,
-        temperature=0.1
+        temperature=0.1,
+        max_output_tokens=512,
     )
 
     latency_ms = int((time.time() - start_time) * 1000)

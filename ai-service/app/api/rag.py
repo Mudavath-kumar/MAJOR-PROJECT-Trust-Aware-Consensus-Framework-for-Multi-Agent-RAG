@@ -208,16 +208,28 @@ async def query_pipeline(req: QueryRequest):
             and retrieval_quality < 0.75
         )
 
-        # 3. Agent 1: Researcher
-        researcher_res = await run_researcher(
-            query=req.query,
-            context_chunks=retrieved_chunks,
-            model=preferred_model,
-            api_key=gemini_key
+        # Researcher and reasoner only read the retrieved context, so start them
+        # together. Fact-checking still depends on the researcher's claims and
+        # starts as soon as those claims are available.
+        reasoner_task = asyncio.create_task(
+            run_reasoner(
+                query=req.query,
+                context_chunks=retrieved_chunks,
+                model=preferred_model,
+                api_key=gemini_key,
+            )
         )
-
-        # Fact-checking and grounded reasoning use the same retrieved context
-        # and can run concurrently; this keeps the query within gateway timeouts.
+        try:
+            researcher_res = await run_researcher(
+                query=req.query,
+                context_chunks=retrieved_chunks,
+                model=preferred_model,
+                api_key=gemini_key
+            )
+        except Exception:
+            reasoner_task.cancel()
+            await asyncio.gather(reasoner_task, return_exceptions=True)
+            raise
         fact_checker_res, reasoner_res = await asyncio.gather(
             run_fact_checker(
                 query=req.query,
@@ -227,12 +239,7 @@ async def query_pipeline(req: QueryRequest):
                 tavily_key=tavily_key if external_verification_enabled else "",
                 context_chunks=retrieved_chunks,
             ),
-            run_reasoner(
-                query=req.query,
-                context_chunks=retrieved_chunks,
-                model=preferred_model,
-                api_key=gemini_key,
-            ),
+            reasoner_task,
         )
 
         # 5. Agent 3: Critic

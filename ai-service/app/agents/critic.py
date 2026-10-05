@@ -38,7 +38,8 @@ Audit for unsupported leaps and give your critique verdict."""
         system_prompt=SYSTEM_PROMPT,
         model=model,
         api_key_override=api_key,
-        temperature=0.0
+        temperature=0.0,
+        max_output_tokens=256,
     )
 
     latency_ms = int((time.time() - start_time) * 1000)

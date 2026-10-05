@@ -47,6 +47,7 @@ async def call_llm(
     model: Optional[str] = None,
     temperature: float = 0.2,
     api_key_override: Optional[str] = None,
+    max_output_tokens: int = 1024,
 ) -> str:
     key = api_key_override or settings.GEMINI_API_KEY
     chosen_model = model or settings.GEMINI_MODEL
@@ -71,7 +72,7 @@ async def call_llm(
                 config=genai_types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=temperature,
-                    max_output_tokens=2048,
+                    max_output_tokens=max_output_tokens,
                 ),
             )
             if response and response.text:
@@ -103,7 +104,7 @@ async def call_llm(
                             {"role": "user", "content": prompt},
                         ],
                         "temperature": temperature,
-                        "max_tokens": 2048,
+                        "max_tokens": max_output_tokens,
                     },
                 )
                 resp.raise_for_status()

@@ -4,6 +4,7 @@
  * Fails explicitly when the backend is unavailable so the UI never presents
  * local-only data as successfully persisted or indexed knowledge.
  */
+import { fetchWithRetry } from "./retry";
 
 const DEFAULT_PRODUCTION_API_URL = "https://trustrag-backend-j3oe.onrender.com/api/v1";
 const DEFAULT_DEVELOPMENT_API_URL = "http://localhost:3001/api/v1";
@@ -119,7 +120,7 @@ export class ApiClient {
     };
 
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       ...options,
       headers,
     });
@@ -167,7 +168,7 @@ export class ApiClient {
       ...(userName ? { "x-user-name": userName } : {}),
     };
 
-    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/documents/upload`, {
       method: "POST",
       headers,
       body: formData,
@@ -195,7 +196,7 @@ export class ApiClient {
       ...(userName ? { "x-user-name": userName } : {}),
     };
 
-    const response = await fetch(`${API_BASE_URL}/documents/upload-batch`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/documents/upload-batch`, {
       method: "POST",
       headers,
       body: formData,
@@ -278,13 +279,10 @@ export class ApiClient {
         consensus?: AssistantDecision;
         agent_executions?: any[];
       };
-    }>(
-      `/chat/conversations/${conversationId}/messages`,
-      {
-        method: "POST",
-        body: JSON.stringify({ content, document_ids: documentIds }),
-      },
-    );
+    }>(`/chat/conversations/${conversationId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ content, document_ids: documentIds }),
+    });
   }
 
   // Evidence endpoints
@@ -293,8 +291,8 @@ export class ApiClient {
   }
 
   // Analytics endpoints
-  static async getAnalytics() {
-    return this.request<any>("/analytics/summary");
+  static async getAnalytics(range: "7d" | "30d" | "all" = "7d") {
+    return this.request<any>(`/analytics/summary?range=${range}`);
   }
 
   // Settings endpoints
@@ -312,7 +310,7 @@ export class ApiClient {
   // Health check — hits /health directly, not under /api/v1
   static async checkHealth() {
     const baseWithoutV1 = API_BASE_URL.replace(/\/api\/v1$/, "").replace(/\/v1$/, "");
-    const response = await fetch(`${baseWithoutV1}/health`);
+    const response = await fetchWithRetry(`${baseWithoutV1}/health`);
     if (!response.ok) throw new Error(`Health check failed (${response.status})`);
     return response.json() as Promise<{ status: string; backend: string; ai_service?: any }>;
   }
