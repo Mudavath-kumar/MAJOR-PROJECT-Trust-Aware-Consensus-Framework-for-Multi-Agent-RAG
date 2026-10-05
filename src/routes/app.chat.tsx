@@ -1194,7 +1194,7 @@ function ChatPage() {
                             >
                               <span className="flex items-center gap-2">
                                 <BrainCircuit size={14} className="text-accent" />
-                                Multi-Agent Deliberation Telemetry ({t.agents.length} Agents)
+                                Multi-Agent Deliberation Telemetry
                               </span>
                               <ChevronDown
                                 size={14}
