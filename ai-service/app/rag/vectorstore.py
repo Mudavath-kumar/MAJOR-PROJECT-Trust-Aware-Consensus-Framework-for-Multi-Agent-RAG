@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any, Optional
 from ..core.config import settings
-from .relevance import rank_rows
+from .relevance import filter_vector_results, rank_rows
 
 logger = logging.getLogger("trustrag.vectorstore")
 
@@ -145,7 +145,7 @@ def query_vector_store(
         ]))
         if results:
             logger.info("Atlas vectorSearch returned %d chunks", len(results))
-            return [
+            vector_results = [
                 {
                     "chunk_id": str(r["_id"]),
                     "text": r["text"],
@@ -154,6 +154,13 @@ def query_vector_store(
                 }
                 for r in results
             ]
+            filtered_results = filter_vector_results(vector_results, query_text, top_k)
+            logger.info(
+                "Atlas relevance gate kept %d/%d chunks for query",
+                len(filtered_results),
+                len(vector_results),
+            )
+            return filtered_results
         logger.warning("Atlas vectorSearch returned 0 results — falling back")
     except Exception as e:
         logger.warning("Atlas $vectorSearch failed: %s — falling back to keyword search", e)

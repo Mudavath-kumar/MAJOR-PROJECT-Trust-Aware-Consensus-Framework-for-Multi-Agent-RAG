@@ -34,6 +34,21 @@ STOP_WORDS = {
     "with",
 }
 
+BROAD_QUERY_TERMS = {
+    "all",
+    "document",
+    "documents",
+    "everything",
+    "findings",
+    "important",
+    "key",
+    "main",
+    "overview",
+    "summarise",
+    "summarize",
+    "summary",
+}
+
 
 def _tokens(value: str) -> set[str]:
     return {
@@ -66,6 +81,33 @@ def cosine_similarity(left: Iterable[float], right: Iterable[float]) -> float:
     if not left_norm or not right_norm:
         return 0.0
     return max(0.0, min(1.0, dot / (left_norm * right_norm)))
+
+
+def filter_vector_results(
+    results: List[Dict[str, Any]], query_text: str, top_k: int
+) -> List[Dict[str, Any]]:
+    """Reject high-baseline vector matches that have no query evidence.
+
+    Atlas can return a top-K result even when every candidate is irrelevant.
+    Broad summary prompts intentionally keep those candidates; specific
+    questions require either lexical support or a genuinely strong vector hit.
+    """
+    query_terms = _tokens(query_text)
+    if not query_terms or not (query_terms - BROAD_QUERY_TERMS):
+        return results[:top_k]
+
+    filtered: list[tuple[float, Dict[str, Any]]] = []
+    for result in results:
+        metadata = result.get("metadata") or {}
+        searchable = f"{result.get('text', '')} {metadata.get('document_name', '')}"
+        lexical = lexical_relevance(query_text, searchable)
+        semantic = float(result.get("similarity_score", 0.0))
+        if lexical <= 0.0 and semantic < 0.88:
+            continue
+        filtered.append((semantic + min(0.1, lexical * 0.1), result))
+
+    filtered.sort(key=lambda item: item[0], reverse=True)
+    return [result for _, result in filtered[:top_k]]
 
 
 def rank_rows(
