@@ -33,9 +33,21 @@ import {
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_STEPS } from "@/lib/trustrag-data";
 import { parseAnswerBlocks } from "@/lib/answer-format";
+import {
+  formatSourcePage,
+  mapAgentExecutions,
+  mapChatScores,
+  type AgentExecutionView,
+  type ChatScoreSignals,
+} from "@/lib/chat-presentation";
 import { ingestFile, useKnowledgeStore } from "@/lib/doc-store";
-import { ApiClient, type DecisionScoreComponents, type DecisionStatus } from "@/lib/api-client";
-import { Meter, MonoLabel, PageHeader, Panel, ScorePill } from "@/components/app/Primitives";
+import {
+  ApiClient,
+  type ChatBackendMessage,
+  type DecisionScoreComponents,
+  type DecisionStatus,
+} from "@/lib/api-client";
+import { Meter, MonoLabel, PageHeader, Panel } from "@/components/app/Primitives";
 import { Button } from "@/components/ui/button";
 import {
   Conversation,
@@ -71,26 +83,15 @@ export const Route = createFileRoute("/app/chat")({
   component: ChatPage,
 });
 
-type AgentDetail = {
-  name: string;
-  role: string;
-  model: string;
-  confidence: number;
-  latencyMs: number;
-  propositions: string[];
-  raw_output?: string;
-  status: "verified" | "flagged" | "neutral";
-};
-
 type Retrieved = {
   id: string;
   docId: string;
   docName: string;
   index: number;
-  page: number;
+  page: number | null;
   text: string;
   similarity: number;
-  provenance: "high" | "medium" | "low";
+  matchQuality: "high" | "medium" | "low";
 };
 
 type Turn = {
@@ -98,12 +99,12 @@ type Turn = {
   question: string;
   answer: string;
   hits: Retrieved[];
-  scores: { confidence: number; provenance: number; consensus: number };
+  scores: ChatScoreSignals;
   decisionStatus: DecisionStatus;
   abstentionReason?: string | null;
   scoreComponents?: DecisionScoreComponents;
   evaluationMatrix?: EvaluationMatrixData;
-  agents: AgentDetail[];
+  agents: AgentExecutionView[];
   consensusSummary: string;
   scopeDocs: string[];
   timestamp: string;
@@ -115,6 +116,10 @@ const SUGGESTIONS = [
   "List every numeric claim with citations",
   "Compare retention policies across sources",
 ];
+
+function formatMetric(value: number | null): string {
+  return value === null ? "Not measured" : `${value.toFixed(1)}%`;
+}
 
 function getFileTypeColor(type: string) {
   switch (type.toUpperCase()) {
@@ -309,7 +314,7 @@ function EvidenceCard({
   doc,
   page,
   similarity,
-  provenance,
+  matchQuality,
   text,
   highlight,
   isSelected,
@@ -317,18 +322,18 @@ function EvidenceCard({
 }: {
   rank: number;
   doc: string;
-  page: number;
+  page: number | null;
   similarity: number;
-  provenance: "high" | "medium" | "low";
+  matchQuality: "high" | "medium" | "low";
   text: string;
   highlight?: string;
   isSelected?: boolean;
   onClick?: () => void;
 }) {
   const tone =
-    provenance === "high"
+    matchQuality === "high"
       ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
-      : provenance === "medium"
+      : matchQuality === "medium"
         ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
         : "text-muted-foreground border-border bg-muted/30";
 
@@ -347,13 +352,13 @@ function EvidenceCard({
             [{rank}]
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            p.{page}
+            {formatSourcePage(page)}
           </span>
         </div>
         <span
           className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] font-semibold ${tone}`}
         >
-          {provenance} provenance
+          {matchQuality} similarity
         </span>
       </div>
 
@@ -364,7 +369,7 @@ function EvidenceCard({
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-4">{text}</p>
 
       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
-        <span className="text-[10px] text-muted-foreground font-medium">Relevance Score</span>
+        <span className="text-[10px] text-muted-foreground font-medium">Retrieval similarity</span>
         <div className="flex items-center gap-2">
           <div className="w-16">
             <Meter value={similarity * 100} />
@@ -405,7 +410,7 @@ function ChatPage() {
   const [queryError, setQueryError] = useState<string | null>(null);
 
   // Helper to parse backend messages into UI turns
-  const parseMessagesToTurns = (msgs: any[]): Turn[] => {
+  const parseMessagesToTurns = (msgs: ChatBackendMessage[]): Turn[] => {
     const loadedTurns: Turn[] = [];
     for (let i = 0; i < msgs.length; i++) {
       if (msgs[i].sender === "user") {
@@ -418,40 +423,33 @@ function ChatPage() {
               : asst.consensus?.status === "partial"
                 ? "partial"
                 : "abstain");
-          loadedTurns.push({
-            id: new Date(asst.created_at || Date.now()).getTime() + i,
-            question: msgs[i].content,
-            answer: asst.content,
-            hits: (asst.evidence_sources || []).map((source: any, idx: number) => ({
+          const historyHits: Retrieved[] = (asst.evidence_sources || []).map((source, idx) => {
+            const similarity = source.similarity_score ?? 0;
+            return {
               id: source.chunk_id || `hist-${idx}`,
               docId: source.document_id || "",
               docName: source.document_name || "Source document",
               index: idx,
-              page: source.page_number || 0,
+              page: typeof source.page_number === "number" ? source.page_number : null,
               text: source.text || "",
-              similarity: typeof source.similarity_score === "number" ? source.similarity_score : 0,
-              provenance:
-                source.similarity_score >= 0.8
-                  ? "high"
-                  : source.similarity_score >= 0.6
-                    ? "medium"
-                    : "low",
-            })),
-            scores: {
-              confidence: typeof asst.confidence_score === "number" ? asst.confidence_score : 0,
-              provenance:
-                typeof asst.consensus?.agreement_ratio === "number"
-                  ? Math.round(asst.consensus.agreement_ratio * 100)
-                  : 0,
-              consensus:
-                typeof asst.consensus?.consensus_score === "number"
-                  ? asst.consensus.consensus_score
-                  : 0,
-            },
+              similarity,
+              matchQuality: similarity >= 0.8 ? "high" : similarity >= 0.6 ? "medium" : "low",
+            };
+          });
+          loadedTurns.push({
+            id: new Date(asst.created_at || Date.now()).getTime() + i,
+            question: msgs[i].content,
+            answer: asst.content,
+            hits: historyHits,
+            scores: mapChatScores({
+              confidenceScore: asst.confidence_score,
+              consensus: asst.consensus,
+              evaluationMatrix: asst.evaluation_matrix,
+            }),
             decisionStatus: loadedDecisionStatus,
             abstentionReason: asst.consensus?.abstention_reason || null,
             scoreComponents: asst.consensus?.score_components,
-            agents: [],
+            agents: mapAgentExecutions(asst.agent_executions),
             consensusSummary:
               asst.consensus?.synthesis || "Decision loaded from the authenticated backend.",
             scopeDocs: ["All Indexed Sources"],
@@ -558,7 +556,11 @@ function ChatPage() {
 
   async function ask(q: string) {
     const hits: Retrieved[] = [];
-    const scores = { confidence: 0, provenance: 0, consensus: 0 };
+    const scores: ChatScoreSignals = {
+      decision: null,
+      agentAgreement: null,
+      retrievalSimilarity: null,
+    };
     setQueryError(null);
 
     const turn: Turn = {
@@ -598,59 +600,30 @@ function ChatPage() {
         const liveRes = await ApiClient.sendMessage(cId, q, activeDocIds || undefined);
         if (liveRes?.assistant_message?.content) {
           const asst = liveRes.assistant_message;
-          const liveHits: Retrieved[] = (asst.evidence_sources || []).map(
-            (source: any, index: number) => ({
+          const liveHits: Retrieved[] = (asst.evidence_sources || []).map((source, index) => {
+            const similarity = source.similarity_score ?? 0;
+            return {
               id: source.chunk_id || `evidence-${index}`,
               docId: source.document_id || "",
               docName: source.document_name || "Unknown source",
               index,
-              page: source.page_number || 0,
+              page: typeof source.page_number === "number" ? source.page_number : null,
               text: source.text || "",
-              similarity: source.similarity_score || 0,
-              provenance:
-                source.similarity_score >= 0.8
-                  ? "high"
-                  : source.similarity_score >= 0.6
-                    ? "medium"
-                    : "low",
-            }),
-          );
-          const liveAgents: AgentDetail[] = (asst.agent_executions || []).map((ag: any) => ({
-            name:
-              ag.agent_name === "retriever"
-                ? "Retriever & Synthesizer"
-                : ag.agent_name === "fact_checker"
-                  ? "Fact-Checker Verifier"
-                  : ag.agent_name === "critic"
-                    ? "Hallucination Auditor"
-                    : ag.agent_name === "trust_assessor"
-                      ? "Provenance Heuristic"
-                      : "Grounded Reasoner",
-            role: ag.agent_role || "Consensus Agent",
-            model: ag.model_used || "Unknown model",
-            confidence: typeof ag.confidence === "number" ? Math.round(ag.confidence * 100) : 0,
-            latencyMs: typeof ag.latency_ms === "number" ? ag.latency_ms : 0,
-            propositions: ag.claim_propositions || [],
-            status: "verified" as const,
-          }));
+              similarity,
+              matchQuality: similarity >= 0.8 ? "high" : similarity >= 0.6 ? "medium" : "low",
+            };
+          });
+          const liveAgents = mapAgentExecutions(asst.agent_executions);
 
           const updatedTurn: Turn = {
             ...turn,
             answer: asst.content,
             hits: liveHits,
-            scores: {
-              confidence:
-                typeof asst.confidence_score === "number" ? Math.round(asst.confidence_score) : 0,
-              provenance: Math.round(
-                typeof asst.consensus?.agreement_ratio === "number"
-                  ? asst.consensus.agreement_ratio * 100
-                  : 0,
-              ),
-              consensus:
-                typeof asst.consensus?.consensus_score === "number"
-                  ? Math.round(asst.consensus.consensus_score)
-                  : 0,
-            },
+            scores: mapChatScores({
+              confidenceScore: asst.confidence_score,
+              consensus: asst.consensus,
+              evaluationMatrix: asst.evaluation_matrix,
+            }),
             decisionStatus:
               asst.consensus?.decision_status ||
               (asst.consensus?.status === "reached"
@@ -742,13 +715,13 @@ function ChatPage() {
       ];
     }
     return [
-      `Scanned ${n} verified candidate chunk${n === 1 ? "" : "s"} across ${sourcesCount} active document${sourcesCount === 1 ? "" : "s"}`,
+      `Retrieved ${n} candidate chunk${n === 1 ? "" : "s"} across ${sourcesCount} active document${sourcesCount === 1 ? "" : "s"}`,
       "Synthesizing structured grounded proposition outline",
       `${readyTurn.hits.length} evidence passage${readyTurn.hits.length === 1 ? "" : "s"} returned by the backend`,
-      "Cross-referencing domain truth & statistical confidence calibration",
+      "Cross-checking proposed claims against retrieved evidence",
       "Auditing hallucination risk and resolving overlapping claims",
       `${readyTurn.agents.length} agent execution${readyTurn.agents.length === 1 ? "" : "s"} recorded by the backend`,
-      "Verified answer assembled with returned citations",
+      "Answer assembled with the backend's decision and returned citations",
     ];
   }, [activeHitsCount, evidence, readyTurn]);
 
@@ -759,20 +732,20 @@ function ChatPage() {
           `[TRUST-RAG AUDIT LOG - ${t.timestamp}]\n` +
           `QUERY: ${t.question}\n\n` +
           `ANSWER:\n${t.answer}\n\n` +
-          `CONSENSUS SCORE: ${t.scores.consensus}% | DECISION CONFIDENCE: ${t.scores.confidence}% | RETRIEVAL PROVENANCE: ${t.scores.provenance}%\n` +
+          `DECISION SCORE: ${formatMetric(t.scores.decision)} | AGENT AGREEMENT: ${formatMetric(t.scores.agentAgreement)} | MEAN RETRIEVAL SIMILARITY: ${formatMetric(t.scores.retrievalSimilarity)}\n` +
           `ACTIVE SCOPE: ${t.scopeDocs.join(", ")}\n` +
           `EVIDENCE CITATIONS:\n` +
           t.hits
             .map(
               (h, i) =>
-                `[${i + 1}] ${h.docName} (Page ${h.page}, Similarity: ${Math.round(h.similarity * 100)}%)\n"${h.text}"\n`,
+                `[${i + 1}] ${h.docName} (${formatSourcePage(h.page)}, Similarity: ${Math.round(h.similarity * 100)}%)\n"${h.text}"\n`,
             )
             .join("\n") +
           `AGENT AUDIT TRAIL:\n` +
           t.agents
             .map(
               (a) =>
-                `• ${a.name} (${a.model}) - Latency: ${a.latencyMs}ms, Conf: ${a.confidence}%\n  Claims: ${a.propositions.join(" | ")}`,
+                `• ${a.name} (${a.model ?? "model not recorded"}) - Latency: ${a.latencyMs === null ? "not recorded" : `${a.latencyMs}ms`}\n  Claims: ${a.propositions.join(" | ")}`,
             )
             .join("\n") +
           `\n======================================================\n`,
@@ -1129,8 +1102,7 @@ function ChatPage() {
                                   ? "Answer"
                                   : t.decisionStatus === "partial"
                                     ? "Partial evidence"
-                                    : "Abstained"}{" "}
-                                · {t.scores.consensus}%
+                                    : "Abstained"}
                               </span>
                               <span className="font-mono text-[10px] text-muted-foreground">
                                 {t.timestamp}
@@ -1161,29 +1133,45 @@ function ChatPage() {
                             />
                           </div>
 
-                          {/* Scores Pills */}
-                          <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                            <ScorePill
-                              label="Confidence"
-                              value={t.scores.confidence}
-                              tone={t.scores.confidence >= 75 ? "good" : "warn"}
-                            />
-                            <ScorePill
-                              label="Retrieval provenance"
-                              value={t.scores.provenance}
-                              tone={t.scores.provenance >= 75 ? "good" : "warn"}
-                            />
-                            <ScorePill
-                              label="Consensus"
-                              value={t.scores.consensus}
-                              tone={t.scores.consensus >= 80 ? "good" : "warn"}
-                            />
-                          </div>
+                          <dl
+                            aria-label="Operational score signals"
+                            className="mt-5 grid grid-cols-3 divide-x divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-muted/20"
+                          >
+                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
+                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                Decision score
+                              </dt>
+                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                {formatMetric(t.scores.decision)}
+                              </dd>
+                            </div>
+                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
+                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                Agent agreement
+                              </dt>
+                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                {formatMetric(t.scores.agentAgreement)}
+                              </dd>
+                            </div>
+                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
+                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                Mean similarity
+                              </dt>
+                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                {formatMetric(t.scores.retrievalSimilarity)}
+                              </dd>
+                            </div>
+                          </dl>
+                          <p className="mt-1.5 text-[10px] text-muted-foreground">
+                            Operational heuristics only; these are not calibrated accuracy scores.
+                          </p>
 
                           {/* 🤖 Expandable Multi-Agent Deliberation Breakdown */}
                           <div className="mt-4 border-t border-border/70 pt-3">
                             <button
                               type="button"
+                              aria-expanded={Boolean(expandedDeliberation[t.id])}
+                              aria-controls={`agent-activity-${t.id}`}
                               onClick={() =>
                                 setExpandedDeliberation((prev) => ({
                                   ...prev,
@@ -1194,7 +1182,7 @@ function ChatPage() {
                             >
                               <span className="flex items-center gap-2">
                                 <BrainCircuit size={14} className="text-accent" />
-                                Multi-Agent Deliberation Telemetry
+                                Agent activity
                               </span>
                               <ChevronDown
                                 size={14}
@@ -1205,38 +1193,57 @@ function ChatPage() {
                             </button>
 
                             {expandedDeliberation[t.id] && (
-                              <div className="mt-3 space-y-2.5 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in">
-                                {t.agents.map((agent, aIdx) => (
-                                  <div
-                                    key={aIdx}
-                                    className="rounded-lg border border-border/60 bg-card p-3 text-xs"
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-semibold text-foreground">
-                                        {agent.name}
-                                      </span>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-mono text-[10px] text-muted-foreground">
-                                          {agent.latencyMs}ms
-                                        </span>
-                                        <span className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-accent">
-                                          {agent.model}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-                                      {agent.propositions.map((prop, pIdx) => (
-                                        <li key={pIdx} className="flex items-start gap-1.5">
-                                          <Check
-                                            size={12}
-                                            className="mt-0.5 text-emerald-400 shrink-0"
-                                          />
-                                          <span>{prop}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))}
+                              <div
+                                id={`agent-activity-${t.id}`}
+                                role="region"
+                                aria-label="Recorded agent activity"
+                                className="mt-3 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in"
+                              >
+                                <p className="mb-3 text-[10px] text-muted-foreground">
+                                  Execution records show what ran; they do not independently prove a
+                                  claim is correct.
+                                </p>
+                                {t.agents.length === 0 ? (
+                                  <p className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
+                                    Per-agent details were not recorded for this answer.
+                                  </p>
+                                ) : (
+                                  <ol className="space-y-3">
+                                    {t.agents.map((agent, aIdx) => (
+                                      <li
+                                        key={`${agent.name}-${aIdx}`}
+                                        className="relative flex gap-3 border-l border-border/80 pb-3 pl-4 last:border-l-transparent last:pb-0"
+                                      >
+                                        <span className="absolute -left-[5px] top-0.5 h-2.5 w-2.5 rounded-full border-2 border-accent bg-background" />
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                            <div className="min-w-0">
+                                              <p className="text-xs font-semibold text-foreground">
+                                                {agent.name}
+                                              </p>
+                                              <p className="text-[10px] text-muted-foreground">
+                                                {agent.role}
+                                              </p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                                              {agent.model && <span>{agent.model}</span>}
+                                              {agent.latencyMs !== null && (
+                                                <span>{agent.latencyMs} ms</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {agent.propositions.length > 0 && (
+                                            <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-muted-foreground marker:text-accent">
+                                              {agent.propositions.map((proposition, pIdx) => (
+                                                <li key={pIdx}>{proposition}</li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ol>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1244,7 +1251,7 @@ function ChatPage() {
                           {/* Supporting Source Citations Bar */}
                           {t.hits.length > 0 && (
                             <div className="mt-4 border-t border-border/70 pt-3">
-                              <MonoLabel>Supporting verified passages</MonoLabel>
+                              <MonoLabel>Retrieved supporting passages</MonoLabel>
                               <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
                                 {t.hits.map((c, i) => (
                                   <button
@@ -1265,7 +1272,8 @@ function ChatPage() {
                                         {c.docName}
                                       </p>
                                       <p className="font-mono text-[10px] text-muted-foreground">
-                                        Page {c.page} · {Math.round(c.similarity * 100)}% match
+                                        {formatSourcePage(c.page)} ·{" "}
+                                        {Math.round(c.similarity * 100)}% match
                                       </p>
                                     </div>
                                   </button>
@@ -1460,7 +1468,7 @@ function ChatPage() {
                       doc={c.docName}
                       page={c.page}
                       similarity={c.similarity}
-                      provenance={c.provenance}
+                      matchQuality={c.matchQuality}
                       text={c.text}
                       isSelected={selectedCitation === i + 1}
                       onClick={() => setSelectedCitation(i + 1)}

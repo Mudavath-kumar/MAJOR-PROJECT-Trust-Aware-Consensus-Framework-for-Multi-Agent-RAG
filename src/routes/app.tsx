@@ -55,18 +55,19 @@ type NavItem = {
     | "/app/evaluations"
     | "/app/settings";
   label: string;
+  shortLabel: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
 };
 
 const NAV: NavItem[] = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/app/chat", label: "AI Chat", icon: Bot },
-  { to: "/app/upload", label: "Upload Documents", icon: Upload },
-  { to: "/app/knowledge", label: "Knowledge Base", icon: Database },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/app/evaluations", label: "Evaluations", icon: ClipboardList },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+  { to: "/app", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, exact: true },
+  { to: "/app/chat", label: "AI Chat", shortLabel: "Chat", icon: Bot },
+  { to: "/app/upload", label: "Upload Documents", shortLabel: "Upload", icon: Upload },
+  { to: "/app/knowledge", label: "Knowledge Base", shortLabel: "Files", icon: Database },
+  { to: "/app/analytics", label: "Analytics", shortLabel: "Analytics", icon: BarChart3 },
+  { to: "/app/evaluations", label: "Evaluations", shortLabel: "Eval", icon: ClipboardList },
+  { to: "/app/settings", label: "Settings", shortLabel: "Settings", icon: Settings },
 ];
 
 function AppShell() {
@@ -306,22 +307,26 @@ function AppShell() {
             </div>
 
             <nav className="mx-auto w-full max-w-[1400px] px-4 pb-3 sm:px-6 lg:px-8">
-              <div className="flex gap-1 overflow-x-auto rounded-full border border-border bg-secondary/40 p-1 shadow-sm backdrop-blur-md">
-                {NAV.map(({ to, label, icon: Icon, exact }) => {
+              <div className="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-secondary/40 p-1 shadow-sm backdrop-blur-md xl:flex xl:flex-wrap xl:rounded-full">
+                {NAV.map(({ to, label, shortLabel, icon: Icon, exact }) => {
                   const active = exact ? path === to : path.startsWith(to);
                   return (
                     <Link
                       key={to}
                       to={to}
+                      aria-label={label}
+                      aria-current={active ? "page" : undefined}
+                      title={label}
                       className={cn(
-                        "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm transition-[color,background-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                        "flex min-w-0 items-center justify-center gap-2 rounded-full px-2 py-2 text-xs transition-[color,background-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 xl:shrink-0 xl:justify-start xl:px-4 xl:text-sm",
                         active
                           ? "bg-foreground text-background shadow-sm"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                       )}
                     >
                       <Icon size={15} className="shrink-0" />
-                      <span className="truncate">{label}</span>
+                      <span className="truncate xl:hidden">{shortLabel}</span>
+                      <span className="hidden truncate xl:inline">{label}</span>
                     </Link>
                   );
                 })}

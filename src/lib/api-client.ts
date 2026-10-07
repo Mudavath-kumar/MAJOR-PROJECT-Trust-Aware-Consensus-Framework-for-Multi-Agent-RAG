@@ -49,6 +49,26 @@ export type AssistantDecision = {
   synthesis?: string;
 };
 
+export type ChatEvidenceSource = {
+  chunk_id?: string;
+  document_id?: string;
+  document_name?: string;
+  page_number?: number;
+  text?: string;
+  similarity_score?: number;
+};
+
+export type ChatBackendMessage = {
+  sender?: "user" | "assistant";
+  content: string;
+  created_at?: string;
+  confidence_score?: number;
+  evidence_sources?: ChatEvidenceSource[];
+  consensus?: AssistantDecision;
+  agent_executions?: unknown[];
+  evaluation_matrix?: unknown;
+};
+
 export class ApiClient {
   private static tokenProvider: AuthTokenProvider | null = null;
 
@@ -266,18 +286,21 @@ export class ApiClient {
   }
 
   static async getMessages(conversationId: string) {
-    return this.request<{ messages: any[] }>(`/chat/conversations/${conversationId}/messages`);
+    return this.request<{ messages: ChatBackendMessage[] }>(
+      `/chat/conversations/${conversationId}/messages`,
+    );
   }
 
   static async sendMessage(conversationId: string, content: string, documentIds?: string[]) {
     return this.request<{
-      user_message: any;
+      user_message: ChatBackendMessage;
       assistant_message: {
         content: string;
         confidence_score?: number;
-        evidence_sources?: any[];
+        evidence_sources?: ChatEvidenceSource[];
         consensus?: AssistantDecision;
-        agent_executions?: any[];
+        agent_executions?: unknown[];
+        evaluation_matrix?: unknown;
       };
     }>(`/chat/conversations/${conversationId}/messages`, {
       method: "POST",
