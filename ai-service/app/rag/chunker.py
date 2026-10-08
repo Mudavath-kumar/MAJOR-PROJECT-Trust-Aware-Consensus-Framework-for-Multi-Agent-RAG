@@ -33,6 +33,8 @@ def chunk_text(
             "text": chunk_text_content,
             "metadata": meta
         })
+        if i + chunk_size >= len(words):
+            break
 
     return chunks
 
@@ -48,17 +50,17 @@ def _is_valid_text(text: str) -> bool:
     return (printable / len(text)) > 0.85
 
 
-def _extract_pdf_text(file_path: str) -> str:
-    """Try multiple PDF extraction strategies in order; return first valid result."""
+def extract_pdf_pages_from_file(file_path: str) -> List[str]:
+    """Extract readable PDF text while preserving its original page boundaries."""
 
     # Strategy 1: pdfplumber — best for complex layouts and compressed streams
     try:
         import pdfplumber
         with pdfplumber.open(file_path) as pdf:
             pages = [page.extract_text() or "" for page in pdf.pages]
-        text = "\n".join(p for p in pages if p.strip())
+        text = "\n".join(pages)
         if _is_valid_text(text):
-            return text
+            return pages
     except ImportError:
         pass
     except Exception:
@@ -70,9 +72,9 @@ def _extract_pdf_text(file_path: str) -> str:
         doc = fitz.open(file_path)
         pages = [page.get_text() for page in doc]
         doc.close()
-        text = "\n".join(p for p in pages if p.strip())
+        text = "\n".join(pages)
         if _is_valid_text(text):
-            return text
+            return pages
     except Exception:
         pass
 
@@ -81,9 +83,9 @@ def _extract_pdf_text(file_path: str) -> str:
         import pypdf
         reader = pypdf.PdfReader(file_path)
         pages = [page.extract_text() or "" for page in reader.pages]
-        text = "\n".join(p for p in pages if p.strip())
+        text = "\n".join(pages)
         if _is_valid_text(text):
-            return text
+            return pages
     except Exception:
         pass
 
@@ -91,6 +93,40 @@ def _extract_pdf_text(file_path: str) -> str:
         "Could not extract readable text from this PDF. "
         "It may be a scanned/image-only PDF. Please upload a text-based PDF."
     )
+
+
+def _extract_pdf_text(file_path: str) -> str:
+    """Compatibility wrapper for callers that need flattened PDF text."""
+    return "\n".join(
+        page for page in extract_pdf_pages_from_file(file_path) if page.strip()
+    )
+
+
+def chunk_pdf_pages(
+    pages: List[str],
+    chunk_size: int = 500,
+    chunk_overlap: int = 100,
+    doc_metadata: Dict[str, Any] = None,
+) -> List[Dict[str, Any]]:
+    """Chunk each PDF page independently and attach its 1-based page number."""
+    chunks: List[Dict[str, Any]] = []
+    for page_number, page_text in enumerate(pages, start=1):
+        if not page_text or not page_text.strip():
+            continue
+        page_chunks = chunk_text(
+            page_text,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            doc_metadata=doc_metadata,
+        )
+        for page_chunk in page_chunks:
+            index = len(chunks)
+            metadata = page_chunk["metadata"]
+            metadata["page"] = page_number
+            metadata["chunk_index"] = index
+            page_chunk["chunk_id"] = f"chunk_{index + 1}_page_{page_number}"
+            chunks.append(page_chunk)
+    return chunks
 
 
 def extract_text_from_file(file_path: str, mime_type: str = "") -> str:

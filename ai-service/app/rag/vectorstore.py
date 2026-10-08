@@ -173,5 +173,11 @@ def query_vector_store(
     # retaining the exact tenant/document filter above.
     rows = list(col.find(filt, {"text": 1, "embedding": 1, "metadata": 1}))
     results = rank_rows(rows, query_embedding, query_text, top_k)
-    logger.info("Hybrid fallback search returned %d chunks (filter=%s)", len(results), filt)
-    return results
+    filtered_results = filter_vector_results(results, query_text, top_k)
+    logger.info(
+        "Hybrid fallback search kept %d/%d chunks (filter=%s)",
+        len(filtered_results),
+        len(results),
+        filt,
+    )
+    return filtered_results

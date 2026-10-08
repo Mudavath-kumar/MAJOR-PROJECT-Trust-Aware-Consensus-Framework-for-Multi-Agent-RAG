@@ -566,7 +566,7 @@ function ChatPage() {
     const turn: Turn = {
       id: Date.now(),
       question: q,
-      answer: "Retrieving verified evidence from the indexed documents…",
+      answer: "Searching the indexed documents for relevant passages…",
       hits,
       scores,
       decisionStatus: "abstain",
@@ -765,7 +765,7 @@ function ChatPage() {
       <PageHeader
         eyebrow="Multi-Agent RAG Pipeline"
         title="Chat with your documents."
-        description="Select any uploaded files below to ground the query. Every answer is synthesized, fact-checked and verified by 3 independent agents in real time."
+        description="Select uploaded files to ground your query. Answers use retrieved passages; review the cited sources and recorded agent checks to assess the evidence."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -1086,7 +1086,7 @@ function ChatPage() {
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
                             <div className="flex items-center gap-2">
                               <ShieldCheck size={16} className="text-accent" />
-                              <MonoLabel>Synthesized &amp; Verified Answer</MonoLabel>
+                              <MonoLabel>Response and evidence</MonoLabel>
                             </div>
                             <div className="flex items-center gap-2">
                               <span
@@ -1397,7 +1397,7 @@ function ChatPage() {
 
               {queryError && (
                 <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  {queryError}. No answer was generated without verified evidence.
+                  {queryError}. No answer was generated.
                 </div>
               )}
 

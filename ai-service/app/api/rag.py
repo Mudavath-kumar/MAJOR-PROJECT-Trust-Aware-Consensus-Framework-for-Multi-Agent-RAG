@@ -8,7 +8,12 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
-from ..rag.chunker import chunk_text, extract_text_from_file
+from ..rag.chunker import (
+    chunk_pdf_pages,
+    chunk_text,
+    extract_pdf_pages_from_file,
+    extract_text_from_file,
+)
 from ..rag.embeddings import compute_embeddings
 from ..rag.vectorstore import (
     add_document_chunks,
@@ -76,20 +81,37 @@ async def ingest_document(req: IngestRequest):
             except Exception as decode_err:
                 logger.warning("Failed to decode base64 content: %s — falling back to file_path", decode_err)
 
-        raw_text = extract_text_from_file(work_path, req.mime_type or "")
-        if not raw_text.strip():
-            raise ValueError("Document contains no extractable text")
-
-        chunks = chunk_text(
-            text=raw_text,
-            chunk_size=400,
-            chunk_overlap=80,
-            doc_metadata={
-                "document_id": req.document_id,
-                "document_name": req.filename,
-                "user_id": req.user_id,
-            }
+        doc_metadata = {
+            "document_id": req.document_id,
+            "document_name": req.filename,
+            "user_id": req.user_id,
+        }
+        is_pdf = (
+            os.path.splitext(req.filename)[1].lower() == ".pdf"
+            or (req.mime_type or "").lower().split(";")[0].strip() == "application/pdf"
         )
+        if is_pdf:
+            pdf_pages = await asyncio.to_thread(extract_pdf_pages_from_file, work_path)
+            chunks = await asyncio.to_thread(
+                chunk_pdf_pages,
+                pdf_pages,
+                chunk_size=400,
+                chunk_overlap=80,
+                doc_metadata=doc_metadata,
+            )
+        else:
+            raw_text = await asyncio.to_thread(extract_text_from_file, work_path, req.mime_type or "")
+            if not raw_text.strip():
+                raise ValueError("Document contains no extractable text")
+            chunks = await asyncio.to_thread(
+                chunk_text,
+                raw_text,
+                chunk_size=400,
+                chunk_overlap=80,
+                doc_metadata=doc_metadata,
+            )
+        if not chunks:
+            raise ValueError("Document contains no extractable text")
 
         texts = [c["text"] for c in chunks]
         embeddings = compute_embeddings(texts)

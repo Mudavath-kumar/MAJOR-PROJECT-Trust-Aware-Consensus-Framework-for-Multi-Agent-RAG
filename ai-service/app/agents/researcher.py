@@ -81,7 +81,7 @@ Provide your grounded synthesis and list your key factual propositions."""
                 "chunk_id": c.get("chunk_id", ""),
                 "text": c.get("text", "")[:200],
                 "similarity_score": c.get("similarity_score", 0.0),
-                "page_number": c.get("metadata", {}).get("page", 0),
+                "page_number": c.get("metadata", {}).get("page"),
             }
             for c in context_chunks[:3]
         ]
