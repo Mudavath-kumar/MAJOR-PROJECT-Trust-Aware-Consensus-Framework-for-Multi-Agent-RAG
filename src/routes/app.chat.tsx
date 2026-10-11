@@ -10,15 +10,12 @@ import {
   FileCode,
   FileText,
   Filter,
-  GitMerge,
   Layers,
   Loader2,
   MessageSquare,
-  Network,
   PanelLeft,
   Plus,
   RefreshCw,
-  Scale,
   ScanSearch,
   Search,
   SearchCheck,
@@ -27,18 +24,21 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trash2,
-  UploadCloud,
   Zap,
 } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { AGENT_STEPS } from "@/lib/trustrag-data";
 import { parseAnswerBlocks } from "@/lib/answer-format";
 import {
   formatSourcePage,
+  getChatErrorMessage,
+  hasMatchingEvidence,
   mapAgentExecutions,
+  mapEvidenceSources,
   mapChatScores,
+  resolveChatDisplayState,
   type AgentExecutionView,
   type ChatScoreSignals,
+  type EvidencePresentation,
 } from "@/lib/chat-presentation";
 import { ingestFile, useKnowledgeStore } from "@/lib/doc-store";
 import {
@@ -54,7 +54,6 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputFooter,
@@ -70,29 +69,20 @@ export const Route = createFileRoute("/app/chat")({
       {
         name: "description",
         content:
-          "Chat with your uploaded documents and watch the multi-agent pipeline retrieve, verify and score every answer in real time.",
+          "Ask questions about your uploaded documents and inspect the evidence and decision returned by TrustRAG.",
       },
       { property: "og:title", content: "TrustRAG AI Chat" },
       {
         property: "og:description",
         content:
-          "Real-time answers with source grounding, multi-agent consensus and evidence attribution.",
+          "Document-grounded answers with backend-returned evidence, citations, and recorded agent checks.",
       },
     ],
   }),
   component: ChatPage,
 });
 
-type Retrieved = {
-  id: string;
-  docId: string;
-  docName: string;
-  index: number;
-  page: number | null;
-  text: string;
-  similarity: number;
-  matchQuality: "high" | "medium" | "low";
-};
+type Retrieved = EvidencePresentation;
 
 type Turn = {
   id: number;
@@ -121,6 +111,28 @@ function formatMetric(value: number | null): string {
   return value === null ? "Not measured" : `${value.toFixed(1)}%`;
 }
 
+function ChatMessage({ from, children }: { from: "user" | "assistant"; children: ReactNode }) {
+  return (
+    <div
+      className={`group flex w-full max-w-[95%] flex-col gap-2 ${
+        from === "user" ? "is-user ml-auto justify-end" : "is-assistant"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ChatMessageContent({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={`is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground group-[.is-assistant]:text-foreground ${className ?? ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function getFileTypeColor(type: string) {
   switch (type.toUpperCase()) {
     case "PDF":
@@ -136,7 +148,11 @@ function getFileTypeColor(type: string) {
   }
 }
 
-function renderInline(text: string, onCitationClick?: (index: number) => void): ReactNode[] {
+function renderInline(
+  text: string,
+  onCitationClick: ((index: number) => void) | undefined,
+  evidenceCount: number,
+): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[\d+\])/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
@@ -165,6 +181,17 @@ function renderInline(text: string, onCitationClick?: (index: number) => void): 
     const citation = part.match(/^\[(\d+)\]$/);
     if (citation) {
       const citationIndex = Number(citation[1]);
+      if (!hasMatchingEvidence(citationIndex, evidenceCount)) {
+        return (
+          <span
+            key={index}
+            className="mx-0.5 font-mono text-[11px] text-muted-foreground"
+            title={`Citation ${citationIndex} has no matching evidence passage in this response`}
+          >
+            [{citationIndex}]
+          </span>
+        );
+      }
       return (
         <button
           key={index}
@@ -185,9 +212,11 @@ function renderInline(text: string, onCitationClick?: (index: number) => void): 
 function Markdown({
   text,
   onCitationClick,
+  evidenceCount,
 }: {
   text: string;
   onCitationClick?: (index: number) => void;
+  evidenceCount: number;
 }) {
   const blocks = parseAnswerBlocks(text);
 
@@ -200,7 +229,7 @@ function Markdown({
               key={index}
               className={`${block.level === 1 ? "text-base" : "text-sm"} font-semibold tracking-tight text-foreground`}
             >
-              {renderInline(block.text, onCitationClick)}
+              {renderInline(block.text, onCitationClick, evidenceCount)}
             </h3>
           );
         }
@@ -210,101 +239,14 @@ function Markdown({
             <List key={index} className="space-y-1.5 pl-5 text-muted-foreground marker:text-accent">
               {block.items.map((item, itemIndex) => (
                 <li key={itemIndex} className="pl-1">
-                  {renderInline(item, onCitationClick)}
+                  {renderInline(item, onCitationClick, evidenceCount)}
                 </li>
               ))}
             </List>
           );
         }
-        return <p key={index}>{renderInline(block.text, onCitationClick)}</p>;
+        return <p key={index}>{renderInline(block.text, onCitationClick, evidenceCount)}</p>;
       })}
-    </div>
-  );
-}
-
-function Timeline({ active, details }: { active: number; details: string[] }) {
-  const icons = [ScanSearch, BrainCircuit, SearchCheck, ShieldCheck, GitMerge, Network, BadgeCheck];
-  const progress = Math.min(100, (active / AGENT_STEPS.length) * 100);
-
-  return (
-    <div aria-label="Answer execution progress">
-      {/* Progress bar */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-          <div
-            className={`h-full rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-accent transition-[width] duration-500 ease-out ${active < AGENT_STEPS.length ? "animate-timeline-flow" : ""}`}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {Math.min(active, AGENT_STEPS.length)}/{AGENT_STEPS.length} Steps
-        </span>
-      </div>
-
-      {/* Step grid */}
-      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {AGENT_STEPS.map((s, i) => {
-          const done = i < active;
-          const running = i === active;
-          const pending = i > active;
-          const Icon = icons[i] || Check;
-
-          return (
-            <li
-              key={s.key}
-              className={`group relative overflow-hidden rounded-xl border p-3.5 transition-all duration-300
-                ${done ? "border-emerald-500/25 bg-emerald-500/5" : ""}
-                ${running ? "border-accent/40 bg-accent/10 shadow-[0_0_12px_rgba(var(--color-accent)/0.15)]" : ""}
-                ${pending ? "border-border/60 bg-muted/20 opacity-40" : ""}
-              `}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300
-                  ${done ? "bg-emerald-500 text-white shadow-sm" : ""}
-                  ${running ? "animate-timeline-pulse bg-accent text-accent-foreground shadow-md" : ""}
-                  ${pending ? "bg-muted text-muted-foreground" : ""}
-                `}
-                >
-                  {done ? (
-                    <Check size={14} strokeWidth={2.5} />
-                  ) : (
-                    <Icon size={14} strokeWidth={2} />
-                  )}
-                  {running && (
-                    <span className="absolute inset-0 rounded-full border border-accent animate-ping opacity-60" />
-                  )}
-                </span>
-
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <div
-                    className={`text-xs font-semibold leading-tight transition-colors duration-300
-                    ${done ? "text-emerald-400" : running ? "text-foreground" : "text-muted-foreground"}
-                  `}
-                  >
-                    {s.label}
-                  </div>
-                  {(done || running) && (
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      {details[i] ?? s.detail}
-                    </p>
-                  )}
-                </div>
-
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all duration-300
-                  ${done ? "bg-emerald-500/20 text-emerald-400" : ""}
-                  ${running ? "bg-accent/20 text-accent font-mono" : ""}
-                  ${pending ? "bg-muted text-muted-foreground/50" : ""}
-                `}
-                >
-                  {done ? "✓ Done" : running ? "Running" : "Queued"}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
     </div>
   );
 }
@@ -323,8 +265,8 @@ function EvidenceCard({
   rank: number;
   doc: string;
   page: number | null;
-  similarity: number;
-  matchQuality: "high" | "medium" | "low";
+  similarity: number | null;
+  matchQuality: "high" | "medium" | "low" | "unknown";
   text: string;
   highlight?: string;
   isSelected?: boolean;
@@ -335,12 +277,16 @@ function EvidenceCard({
       ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
       : matchQuality === "medium"
         ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
-        : "text-muted-foreground border-border bg-muted/30";
+        : matchQuality === "low"
+          ? "text-muted-foreground border-border bg-muted/30"
+          : "text-muted-foreground border-border bg-muted/30";
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className={`group cursor-pointer rounded-xl border p-3.5 transition-all duration-300 hover:border-accent/40 hover:bg-muted/40 ${
+      aria-pressed={Boolean(isSelected)}
+      className={`group w-full cursor-pointer rounded-xl border p-3.5 text-left transition-all duration-300 hover:border-accent/40 hover:bg-muted/40 ${
         isSelected
           ? "border-accent bg-accent/10 shadow-[0_0_16px_rgba(var(--color-accent)/0.2)] ring-1 ring-accent"
           : "border-border bg-card"
@@ -358,7 +304,7 @@ function EvidenceCard({
         <span
           className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] font-semibold ${tone}`}
         >
-          {matchQuality} similarity
+          {matchQuality === "unknown" ? "Similarity unavailable" : `${matchQuality} similarity`}
         </span>
       </div>
 
@@ -370,16 +316,20 @@ function EvidenceCard({
 
       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
         <span className="text-[10px] text-muted-foreground font-medium">Retrieval similarity</span>
-        <div className="flex items-center gap-2">
-          <div className="w-16">
-            <Meter value={similarity * 100} />
+        {similarity === null ? (
+          <span className="font-mono text-[11px] text-muted-foreground">Not recorded</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="w-16">
+              <Meter value={similarity * 100} />
+            </div>
+            <span className="font-mono text-[11px] font-bold tabular-nums text-foreground">
+              {Math.round(similarity * 100)}%
+            </span>
           </div>
-          <span className="font-mono text-[11px] font-bold tabular-nums text-foreground">
-            {Math.round(similarity * 100)}%
-          </span>
-        </div>
+        )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -389,16 +339,18 @@ function ChatPage() {
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [pending, setPending] = useState<string | null>(null);
-  const [step, setStep] = useState(0);
-  const [typed, setTyped] = useState("");
-  const [readyTurn, setReadyTurn] = useState<Turn | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [copyErrorId, setCopyErrorId] = useState<number | null>(null);
   const [votes, setVotes] = useState<Record<number, "up" | "down">>({});
   const [selectedCitation, setSelectedCitation] = useState<number | null>(null);
+  const [selectedEvidenceTurnId, setSelectedEvidenceTurnId] = useState<number | null>(null);
   const [expandedDeliberation, setExpandedDeliberation] = useState<Record<number, boolean>>({});
   const [isUploadingSource, setIsUploadingSource] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const draft = useRef<Turn | null>(null);
+  const requestVersionRef = useRef(0);
+  const conversationLoadVersionRef = useRef(0);
+  const turnIdRef = useRef(0);
 
   const [conversations, setConversations] = useState<
     { _id: string; title: string; updated_at?: string }[]
@@ -408,6 +360,12 @@ function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingConversation, setLoadingConversation] = useState(false);
   const [queryError, setQueryError] = useState<string | null>(null);
+  const [retryQuestion, setRetryQuestion] = useState<string | null>(null);
+  const [conversationError, setConversationError] = useState<string | null>(null);
+  const [historyActionError, setHistoryActionError] = useState<string | null>(null);
+  const [failedDeleteId, setFailedDeleteId] = useState<string | null>(null);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [historyReload, setHistoryReload] = useState(0);
 
   // Helper to parse backend messages into UI turns
   const parseMessagesToTurns = (msgs: ChatBackendMessage[]): Turn[] => {
@@ -423,21 +381,10 @@ function ChatPage() {
               : asst.consensus?.status === "partial"
                 ? "partial"
                 : "abstain");
-          const historyHits: Retrieved[] = (asst.evidence_sources || []).map((source, idx) => {
-            const similarity = source.similarity_score ?? 0;
-            return {
-              id: source.chunk_id || `hist-${idx}`,
-              docId: source.document_id || "",
-              docName: source.document_name || "Source document",
-              index: idx,
-              page: typeof source.page_number === "number" ? source.page_number : null,
-              text: source.text || "",
-              similarity,
-              matchQuality: similarity >= 0.8 ? "high" : similarity >= 0.6 ? "medium" : "low",
-            };
-          });
+          const historyHits = mapEvidenceSources(asst.evidence_sources);
+          const createdAt = asst.created_at ? new Date(asst.created_at) : null;
           loadedTurns.push({
-            id: new Date(asst.created_at || Date.now()).getTime() + i,
+            id: ++turnIdRef.current,
             question: msgs[i].content,
             answer: asst.content,
             hits: historyHits,
@@ -452,11 +399,11 @@ function ChatPage() {
             agents: mapAgentExecutions(asst.agent_executions),
             consensusSummary:
               asst.consensus?.synthesis || "Decision loaded from the authenticated backend.",
-            scopeDocs: ["All Indexed Sources"],
-            timestamp: new Date(asst.created_at || Date.now()).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            scopeDocs: ["Scope not recorded"],
+            timestamp:
+              createdAt && Number.isFinite(createdAt.getTime())
+                ? createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "Time unavailable",
           });
         }
       }
@@ -464,63 +411,98 @@ function ChatPage() {
     return loadedTurns;
   };
 
-  // Load existing conversation list on mount
-  useEffect(() => {
-    async function loadChatHistory() {
-      try {
-        const convList = await ApiClient.getConversations();
-        if (convList?.conversations && convList.conversations.length > 0) {
-          setConversations(convList.conversations);
-          const firstConv = convList.conversations[0];
-          setActiveConvId(firstConv._id);
-          const msgRes = await ApiClient.getMessages(firstConv._id);
-          if (msgRes?.messages && msgRes.messages.length > 0) {
-            setTurns(parseMessagesToTurns(msgRes.messages));
-          }
-        }
-      } catch {
-        // Non-fatal if unauthenticated or offline
-      }
-    }
-    void loadChatHistory();
-  }, []);
+  const resetCurrentRequest = () => {
+    requestVersionRef.current += 1;
+    setPending(null);
+    setQueryError(null);
+    setRetryQuestion(null);
+    setSelectedCitation(null);
+    setSelectedEvidenceTurnId(null);
+  };
 
-  const handleSelectConversation = async (convId: string) => {
-    if (convId === activeConvId) return;
+  const loadConversation = async (convId: string, force = false) => {
+    if (!force && convId === activeConvId) return;
+    const loadVersion = ++conversationLoadVersionRef.current;
+    resetCurrentRequest();
     setActiveConvId(convId);
+    setTurns([]);
+    setQuestion("");
+    setConversationError(null);
+    setHistoryActionError(null);
     setLoadingConversation(true);
     try {
       const msgRes = await ApiClient.getMessages(convId);
-      if (msgRes?.messages) {
-        setTurns(parseMessagesToTurns(msgRes.messages));
-      } else {
-        setTurns([]);
-      }
-    } catch (err) {
-      console.error("Failed to load conversation", err);
+      if (loadVersion !== conversationLoadVersionRef.current) return;
+      setTurns(msgRes?.messages ? parseMessagesToTurns(msgRes.messages) : []);
+    } catch (error) {
+      if (loadVersion !== conversationLoadVersionRef.current) return;
+      setConversationError(getChatErrorMessage(error, "Unable to load this conversation."));
     } finally {
-      setLoadingConversation(false);
+      if (loadVersion === conversationLoadVersionRef.current) setLoadingConversation(false);
     }
   };
 
-  const handleNewChat = () => {
-    setActiveConvId(null);
-    setTurns([]);
-    setPending(null);
-    setReadyTurn(null);
-    setQuestion("");
+  // Load history once, and discard results if the user starts/selects another chat first.
+  useEffect(() => {
+    const loadVersion = ++conversationLoadVersionRef.current;
+    let mounted = true;
+    const loadChatHistory = async () => {
+      setConversationError(null);
+      setHistoryActionError(null);
+      setLoadingConversation(true);
+      try {
+        const convList = await ApiClient.getConversations();
+        if (!mounted || loadVersion !== conversationLoadVersionRef.current) return;
+        const items = convList?.conversations ?? [];
+        setConversations(items);
+        const firstConv = items[0];
+        if (!firstConv) return;
+        setActiveConvId(firstConv._id);
+        const msgRes = await ApiClient.getMessages(firstConv._id);
+        if (!mounted || loadVersion !== conversationLoadVersionRef.current) return;
+        setTurns(msgRes?.messages ? parseMessagesToTurns(msgRes.messages) : []);
+      } catch (error) {
+        if (mounted && loadVersion === conversationLoadVersionRef.current) {
+          setConversationError(getChatErrorMessage(error, "Unable to load chat history."));
+        }
+      } finally {
+        if (mounted && loadVersion === conversationLoadVersionRef.current) {
+          setLoadingConversation(false);
+        }
+      }
+    };
+    void loadChatHistory();
+    return () => {
+      mounted = false;
+      conversationLoadVersionRef.current += 1;
+    };
+  }, [historyReload]);
+
+  const handleSelectConversation = (convId: string) => {
+    void loadConversation(convId);
   };
 
-  const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
-    e.stopPropagation();
+  const handleNewChat = () => {
+    conversationLoadVersionRef.current += 1;
+    resetCurrentRequest();
+    setActiveConvId(null);
+    setTurns([]);
+    setQuestion("");
+    setConversationError(null);
+    setHistoryActionError(null);
+    setLoadingConversation(false);
+  };
+
+  const handleDeleteConversation = async (convId: string) => {
+    setHistoryActionError(null);
+    setFailedDeleteId(null);
     try {
       await ApiClient.deleteConversation(convId);
       setConversations((prev) => prev.filter((c) => c._id !== convId));
-      if (activeConvId === convId) {
-        handleNewChat();
-      }
-    } catch (err) {
-      console.error("Failed to delete conversation", err);
+      if (activeConvId === convId) handleNewChat();
+    } catch (error) {
+      setHistoryActionError(getChatErrorMessage(error, "Unable to delete this conversation."));
+      setFailedDeleteId(convId);
     }
   };
 
@@ -530,24 +512,32 @@ function ChatPage() {
   }, [conversations, searchQuery]);
 
   // Active documents in scope (if scope is empty, all documents are searched)
-  const activeDocIds = scope.length ? scope : null;
+  const activeDocIds = scope.length
+    ? docs.filter((doc) => scope.includes(doc.id)).map((doc) => doc.id)
+    : null;
+  const hasUnavailableScope = scope.length > 0 && activeDocIds?.length === 0;
+  const hasMissingSelectedDocuments =
+    scope.length > 0 && activeDocIds !== null && activeDocIds.length < scope.length;
   const activeDocNames = useMemo(() => {
     if (scope.length === 0) return ["All Indexed Sources"];
-    return docs.filter((d) => scope.includes(d.id)).map((d) => d.name);
+    const selectedNames = docs.filter((d) => scope.includes(d.id)).map((d) => d.name);
+    return selectedNames.length ? selectedNames : ["Selected sources unavailable"];
   }, [docs, scope]);
 
   // Handle direct file upload right from chat page
   const handleSourceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadError(null);
     setIsUploadingSource(true);
     try {
       const doc = await ingestFile(file);
-      refresh();
+      await refresh();
       // Auto-select the newly uploaded file into active scope
-      setScope((prev) => [...prev, doc.id]);
+      setScope((prev) => (prev.includes(doc.id) ? prev : [...prev, doc.id]));
     } catch (error) {
       console.error("Source upload failed", error);
+      setUploadError(getChatErrorMessage(error, "Document upload failed. Try again."));
     } finally {
       setIsUploadingSource(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -555,175 +545,99 @@ function ChatPage() {
   };
 
   async function ask(q: string) {
-    const hits: Retrieved[] = [];
-    const scores: ChatScoreSignals = {
-      decision: null,
-      agentAgreement: null,
-      retrievalSimilarity: null,
-    };
+    const prompt = q.trim();
+    if (!prompt || pending) return;
+    if (hasUnavailableScope) {
+      setQueryError(
+        "The selected source is no longer available. Refresh the document list or select another source.",
+      );
+      setRetryQuestion(null);
+      return;
+    }
+    const requestVersion = ++requestVersionRef.current;
+    conversationLoadVersionRef.current += 1;
+    setLoadingConversation(false);
+    const requestConversationId = activeConvId;
+    const requestDocumentIds = activeDocIds ?? undefined;
+    const requestScopeDocs = [...activeDocNames];
     setQueryError(null);
-
-    const turn: Turn = {
-      id: Date.now(),
-      question: q,
-      answer: "Searching the indexed documents for relevant passages…",
-      hits,
-      scores,
-      decisionStatus: "abstain",
-      abstentionReason: null,
-      agents: [],
-      consensusSummary: "Waiting for the authenticated backend consensus response.",
-      scopeDocs: activeDocNames,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    draft.current = turn;
-    setPending(q);
-    setStep(0);
-    setTyped("");
-    setReadyTurn(null);
+    setRetryQuestion(null);
+    setConversationError(null);
+    setPending(prompt);
+    setSelectedEvidenceTurnId(null);
     setSelectedCitation(null);
 
-    // Call live backend & AI pipeline
     try {
-      let cId = activeConvId;
+      let cId = requestConversationId;
       if (!cId) {
-        const title = q.length > 28 ? q.slice(0, 28) + "…" : q;
+        const title = prompt.length > 28 ? prompt.slice(0, 28) + "…" : prompt;
         const created = await ApiClient.createConversation(title);
         cId = created?.conversation?._id;
+        if (requestVersion !== requestVersionRef.current) return;
         if (cId && created?.conversation) {
           setActiveConvId(cId);
           setConversations((prev) => [created.conversation, ...prev]);
         }
       }
       if (cId) {
-        const liveRes = await ApiClient.sendMessage(cId, q, activeDocIds || undefined);
-        if (liveRes?.assistant_message?.content) {
-          const asst = liveRes.assistant_message;
-          const liveHits: Retrieved[] = (asst.evidence_sources || []).map((source, index) => {
-            const similarity = source.similarity_score ?? 0;
-            return {
-              id: source.chunk_id || `evidence-${index}`,
-              docId: source.document_id || "",
-              docName: source.document_name || "Unknown source",
-              index,
-              page: typeof source.page_number === "number" ? source.page_number : null,
-              text: source.text || "",
-              similarity,
-              matchQuality: similarity >= 0.8 ? "high" : similarity >= 0.6 ? "medium" : "low",
-            };
-          });
-          const liveAgents = mapAgentExecutions(asst.agent_executions);
-
-          const updatedTurn: Turn = {
-            ...turn,
-            answer: asst.content,
-            hits: liveHits,
-            scores: mapChatScores({
-              confidenceScore: asst.confidence_score,
-              consensus: asst.consensus,
-              evaluationMatrix: asst.evaluation_matrix,
-            }),
-            decisionStatus:
-              asst.consensus?.decision_status ||
-              (asst.consensus?.status === "reached"
-                ? "answer"
-                : asst.consensus?.status === "partial"
-                  ? "partial"
-                  : "abstain"),
-            abstentionReason: asst.consensus?.abstention_reason || null,
-            scoreComponents: asst.consensus?.score_components,
-            agents: liveAgents,
-            consensusSummary: asst.consensus?.synthesis || turn.consensusSummary,
-          };
-          draft.current = updatedTurn;
-          setReadyTurn(updatedTurn);
-        } else {
+        const liveRes = await ApiClient.sendMessage(cId, prompt, requestDocumentIds);
+        if (requestVersion !== requestVersionRef.current) return;
+        const asst = liveRes?.assistant_message;
+        if (!asst || typeof asst.content !== "string" || !asst.content.trim()) {
           throw new Error("Backend did not provide a grounded assistant response");
         }
+
+        const liveHits = mapEvidenceSources(asst.evidence_sources);
+        const updatedTurn: Turn = {
+          id: ++turnIdRef.current,
+          question: prompt,
+          answer: asst.content,
+          hits: liveHits,
+          scores: mapChatScores({
+            confidenceScore: asst.confidence_score,
+            consensus: asst.consensus,
+            evaluationMatrix: asst.evaluation_matrix,
+          }),
+          decisionStatus:
+            asst.consensus?.decision_status ||
+            (asst.consensus?.status === "reached"
+              ? "answer"
+              : asst.consensus?.status === "partial"
+                ? "partial"
+                : "abstain"),
+          abstentionReason: asst.consensus?.abstention_reason || null,
+          scoreComponents: asst.consensus?.score_components,
+          agents: mapAgentExecutions(asst.agent_executions),
+          consensusSummary:
+            asst.consensus?.synthesis || "Decision returned by the authenticated backend.",
+          scopeDocs: requestScopeDocs,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setTurns((prev) => [...prev, updatedTurn]);
       } else {
         throw new Error("Backend did not provide a conversation");
       }
     } catch (error) {
+      if (requestVersion !== requestVersionRef.current) return;
       console.error("Backend RAG query failed", error);
-      setQueryError(error instanceof Error ? error.message : "The TrustRAG backend is unavailable");
-      setPending(null);
-      draft.current = null;
-      setStep(0);
-      setReadyTurn(null);
+      setQueryError(getChatErrorMessage(error, "The TrustRAG backend is unavailable."));
+      setRetryQuestion(prompt);
+    } finally {
+      if (requestVersion === requestVersionRef.current) setPending(null);
     }
   }
 
-  // Multi-agent pipeline animation
-  useEffect(() => {
-    if (!pending) return;
-    const t = setInterval(() => {
-      setStep((s) => {
-        // Pause at the second-to-last step while backend pipeline is processing
-        const maxHoldingStep = AGENT_STEPS.length - 2;
-        if (!readyTurn && s >= maxHoldingStep) {
-          return maxHoldingStep;
-        }
-        if (s >= AGENT_STEPS.length) {
-          clearInterval(t);
-          return s;
-        }
-        return s + 1;
-      });
-    }, 350);
-    return () => clearInterval(t);
-  }, [pending, readyTurn]);
-
-  // Real-time typewriter answer streaming - only runs when the real response is ready
-  useEffect(() => {
-    if (!pending || !readyTurn || step < AGENT_STEPS.length) return;
-    const full = readyTurn.answer ?? "";
-    let i = 0;
-    const t = setInterval(() => {
-      i += 5;
-      setTyped(full.slice(0, i));
-      if (i >= full.length) {
-        clearInterval(t);
-        const finished = readyTurn;
-        setTurns((prev) => [...prev, finished]);
-        setPending(null);
-        setReadyTurn(null);
-        setTyped("");
-        draft.current = null;
-      }
-    }, 12);
-    return () => clearInterval(t);
-  }, [pending, readyTurn, step]);
-
   const latest = turns[turns.length - 1];
-  const draftHits = draft.current?.hits;
-  const evidence = useMemo(() => draftHits ?? latest?.hits ?? [], [draftHits, latest]);
-  const activeHitsCount = draftHits?.length ?? evidence.length;
-
-  const stepDetails = useMemo(() => {
-    const n = activeHitsCount;
-    const sourcesCount = new Set((draft.current?.hits ?? evidence).map((h) => h.docName)).size;
-    if (!readyTurn) {
-      return [
-        "Waiting for the authenticated retrieval service",
-        "Waiting for the reasoning service",
-        "Waiting for evidence verification",
-        "Waiting for retrieval provenance signals",
-        "Waiting for consensus analysis",
-        "Waiting for the consensus result",
-        "The answer will appear only after verification",
-      ];
-    }
-    return [
-      `Retrieved ${n} candidate chunk${n === 1 ? "" : "s"} across ${sourcesCount} active document${sourcesCount === 1 ? "" : "s"}`,
-      "Synthesizing structured grounded proposition outline",
-      `${readyTurn.hits.length} evidence passage${readyTurn.hits.length === 1 ? "" : "s"} returned by the backend`,
-      "Cross-checking proposed claims against retrieved evidence",
-      "Auditing hallucination risk and resolving overlapping claims",
-      `${readyTurn.agents.length} agent execution${readyTurn.agents.length === 1 ? "" : "s"} recorded by the backend`,
-      "Answer assembled with the backend's decision and returned citations",
-    ];
-  }, [activeHitsCount, evidence, readyTurn]);
+  const displayState = resolveChatDisplayState({
+    pending: pending !== null,
+    hasError: queryError !== null,
+    decision: latest?.decisionStatus,
+  });
+  const evidenceTurn = selectedEvidenceTurnId
+    ? (turns.find((turn) => turn.id === selectedEvidenceTurnId) ?? latest)
+    : latest;
+  const evidence =
+    displayState === "pending" || displayState === "error" ? [] : (evidenceTurn?.hits ?? []);
 
   function exportTranscript() {
     const body = turns
@@ -738,7 +652,7 @@ function ChatPage() {
           t.hits
             .map(
               (h, i) =>
-                `[${i + 1}] ${h.docName} (${formatSourcePage(h.page)}, Similarity: ${Math.round(h.similarity * 100)}%)\n"${h.text}"\n`,
+                `[${i + 1}] ${h.docName} (${formatSourcePage(h.page)}, Similarity: ${h.similarity === null ? "not recorded" : `${Math.round(h.similarity * 100)}%`})\n"${h.text}"\n`,
             )
             .join("\n") +
           `AGENT AUDIT TRAIL:\n` +
@@ -765,7 +679,7 @@ function ChatPage() {
       <PageHeader
         eyebrow="Multi-Agent RAG Pipeline"
         title="Chat with your documents."
-        description="Select uploaded files to ground your query. Answers use retrieved passages; review the cited sources and recorded agent checks to assess the evidence."
+        description="Ask a question in your own words. Answers and citations come from the selected documents and the TrustRAG response."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -876,25 +790,29 @@ function ChatPage() {
                     return (
                       <div
                         key={conv._id}
-                        onClick={() => handleSelectConversation(conv._id)}
-                        className={`group relative flex items-center justify-between rounded-xl px-3 py-2.5 text-xs cursor-pointer transition-all duration-200 ${
+                        className={`group relative flex items-center justify-between rounded-xl px-2 py-1.5 text-xs transition-all duration-200 ${
                           isActive
                             ? "bg-accent/15 border border-accent/40 text-foreground font-semibold shadow-sm"
                             : "text-muted-foreground hover:bg-muted/60 hover:text-foreground border border-transparent"
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <button
+                          type="button"
+                          aria-current={isActive ? "page" : undefined}
+                          onClick={() => handleSelectConversation(conv._id)}
+                          className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        >
                           <MessageSquare
                             size={13}
                             className={isActive ? "text-accent shrink-0" : "shrink-0 opacity-50"}
                           />
                           <span className="truncate">{conv.title || "Untitled Conversation"}</span>
-                        </div>
+                        </button>
                         <button
                           type="button"
-                          onClick={(e) => handleDeleteConversation(e, conv._id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive hover:bg-destructive/10 rounded-md transition-all ml-1 shrink-0"
-                          title="Delete thread"
+                          onClick={() => void handleDeleteConversation(conv._id)}
+                          className="ml-1 shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                          aria-label={`Delete ${conv.title || "untitled conversation"}`}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -903,6 +821,49 @@ function ChatPage() {
                   })
                 )}
               </div>
+              {conversationError && (
+                <div
+                  role="alert"
+                  className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive"
+                >
+                  <p>{conversationError}</p>
+                  {activeConvId && (
+                    <button
+                      type="button"
+                      onClick={() => void loadConversation(activeConvId, true)}
+                      className="mt-2 underline underline-offset-2"
+                    >
+                      Retry loading this thread
+                    </button>
+                  )}
+                  {!activeConvId && (
+                    <button
+                      type="button"
+                      onClick={() => setHistoryReload((reload) => reload + 1)}
+                      className="mt-2 underline underline-offset-2"
+                    >
+                      Retry loading chat history
+                    </button>
+                  )}
+                </div>
+              )}
+              {historyActionError && (
+                <div
+                  role="alert"
+                  className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive"
+                >
+                  {historyActionError}
+                  {failedDeleteId && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteConversation(failedDeleteId)}
+                      className="mt-2 block underline underline-offset-2"
+                    >
+                      Retry delete
+                    </button>
+                  )}
+                </div>
+              )}
             </Panel>
           </aside>
         )}
@@ -936,6 +897,8 @@ function ChatPage() {
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
+                  aria-pressed={scope.length === 0}
                   onClick={() => setScope([])}
                   className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
                     scope.length === 0
@@ -947,6 +910,7 @@ function ChatPage() {
                 </button>
                 {scope.length > 0 && (
                   <button
+                    type="button"
                     onClick={() => setScope([])}
                     className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
                   >
@@ -987,6 +951,7 @@ function ChatPage() {
                   <button
                     key={doc.id}
                     type="button"
+                    aria-pressed={scope.length === 0 || isExplicit}
                     onClick={() => {
                       setScope((prev) => {
                         if (prev.includes(doc.id)) {
@@ -1040,6 +1005,35 @@ function ChatPage() {
               })}
             </div>
 
+            {uploadError && (
+              <div
+                role="alert"
+                className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs text-destructive"
+              >
+                <span>{uploadError}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingSource}
+                  className="h-7 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  Retry upload
+                </Button>
+              </div>
+            )}
+
+            {hasMissingSelectedDocuments && !hasUnavailableScope && (
+              <div
+                role="status"
+                className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-200"
+              >
+                Some selected documents are no longer available. This query will use only the
+                remaining selected sources.
+              </div>
+            )}
+
             {/* Current Scope Banner */}
             <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
@@ -1058,29 +1052,55 @@ function ChatPage() {
                   Chunks in Context)
                 </span>
               </span>
-              <span className="text-[11px] font-mono">Real-time Multi-Agent RAG</span>
+              <span className="text-[11px] font-mono">TrustRAG retrieval</span>
             </div>
           </div>
 
           {/* ========================================================================= */}
           {/* 💬 CHAT & EVIDENCE WORKSPACE */}
           {/* ========================================================================= */}
-          <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)]">
             {/* Left Column: Conversation */}
-            <div className="flex min-h-[72vh] flex-col">
+            <div className="mx-auto flex min-h-[72vh] w-full max-w-4xl flex-col">
+              {!sidebarOpen && (conversationError || historyActionError) && (
+                <div
+                  role="alert"
+                  className="mb-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                >
+                  <p>{conversationError || historyActionError}</p>
+                  {conversationError && activeConvId && (
+                    <button
+                      type="button"
+                      onClick={() => void loadConversation(activeConvId, true)}
+                      className="mt-2 underline underline-offset-2"
+                    >
+                      Retry loading this thread
+                    </button>
+                  )}
+                  {historyActionError && failedDeleteId && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteConversation(failedDeleteId)}
+                      className="mt-2 block underline underline-offset-2"
+                    >
+                      Retry delete
+                    </button>
+                  )}
+                </div>
+              )}
               <Conversation className="h-[clamp(460px,60vh,700px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
                 <ConversationContent className="gap-5 px-0 py-0 pr-1">
                   {turns.map((t) => (
                     <div key={t.id} className="space-y-4">
                       {/* User message */}
-                      <Message from="user">
-                        <MessageContent className="bg-primary text-primary-foreground shadow-sm">
+                      <ChatMessage from="user">
+                        <ChatMessageContent className="bg-primary text-primary-foreground shadow-sm">
                           {t.question}
-                        </MessageContent>
-                      </Message>
+                        </ChatMessageContent>
+                      </ChatMessage>
 
                       {/* Assistant response card */}
-                      <Message from="assistant">
+                      <ChatMessage from="assistant">
                         <Panel className="animate-rise w-full p-5 shadow-sm">
                           {/* Meta header */}
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
@@ -1129,7 +1149,11 @@ function ChatPage() {
                             )}
                             <Markdown
                               text={t.answer}
-                              onCitationClick={(citIdx) => setSelectedCitation(citIdx)}
+                              evidenceCount={t.hits.length}
+                              onCitationClick={(citIdx) => {
+                                setSelectedEvidenceTurnId(t.id);
+                                setSelectedCitation(citIdx);
+                              }}
                             />
                           </div>
 
@@ -1257,9 +1281,12 @@ function ChatPage() {
                                   <button
                                     key={c.id}
                                     type="button"
-                                    onClick={() => setSelectedCitation(i + 1)}
+                                    onClick={() => {
+                                      setSelectedEvidenceTurnId(t.id);
+                                      setSelectedCitation(i + 1);
+                                    }}
                                     className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all ${
-                                      selectedCitation === i + 1
+                                      selectedEvidenceTurnId === t.id && selectedCitation === i + 1
                                         ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
                                         : "border-border bg-muted/20 hover:bg-muted/50"
                                     }`}
@@ -1273,7 +1300,9 @@ function ChatPage() {
                                       </p>
                                       <p className="font-mono text-[10px] text-muted-foreground">
                                         {formatSourcePage(c.page)} ·{" "}
-                                        {Math.round(c.similarity * 100)}% match
+                                        {c.similarity === null
+                                          ? "Similarity not recorded"
+                                          : `${Math.round(c.similarity * 100)}% match`}
                                       </p>
                                     </div>
                                   </button>
@@ -1285,11 +1314,23 @@ function ChatPage() {
                           {/* Action buttons */}
                           <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
                             <button
-                              onClick={() => {
-                                void navigator.clipboard?.writeText(t.answer);
-                                setCopiedId(t.id);
-                                setTimeout(() => setCopiedId(null), 1500);
+                              onClick={async () => {
+                                setCopyErrorId(null);
+                                try {
+                                  if (!navigator.clipboard?.writeText) {
+                                    throw new Error(
+                                      "Clipboard access is not available in this browser.",
+                                    );
+                                  }
+                                  await navigator.clipboard.writeText(t.answer);
+                                  setCopiedId(t.id);
+                                  window.setTimeout(() => setCopiedId(null), 1500);
+                                } catch {
+                                  setCopyErrorId(t.id);
+                                }
                               }}
+                              type="button"
+                              aria-label="Copy answer"
                               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
                             >
                               {copiedId === t.id ? (
@@ -1300,13 +1341,16 @@ function ChatPage() {
                               {copiedId === t.id ? "Copied" : "Copy Answer"}
                             </button>
                             <button
+                              type="button"
                               onClick={() => ask(t.question)}
+                              disabled={pending !== null}
                               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
                             >
                               <RefreshCw size={13} /> Re-verify
                             </button>
                             <div className="ml-auto flex items-center gap-1">
                               <button
+                                type="button"
                                 onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
                                 className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
                                   votes[t.id] === "up"
@@ -1318,6 +1362,7 @@ function ChatPage() {
                                 <ThumbsUp size={13} />
                               </button>
                               <button
+                                type="button"
                                 onClick={() => setVotes((v) => ({ ...v, [t.id]: "down" }))}
                                 className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
                                   votes[t.id] === "down"
@@ -1330,52 +1375,65 @@ function ChatPage() {
                               </button>
                             </div>
                           </div>
+                          {copyErrorId === t.id && (
+                            <p role="status" className="mt-2 text-xs text-destructive">
+                              Clipboard access failed. Select and copy the answer manually.
+                            </p>
+                          )}
                         </Panel>
-                      </Message>
+                      </ChatMessage>
                     </div>
                   ))}
 
-                  {/* Pending Execution Card */}
-                  {pending && (
+                  {loadingConversation && turns.length === 0 && (
+                    <div
+                      role="status"
+                      className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"
+                    >
+                      <Loader2 size={16} className="animate-spin" /> Loading conversation…
+                    </div>
+                  )}
+
+                  {!loadingConversation && turns.length === 0 && !pending && !conversationError && (
+                    <div className="mx-auto flex max-w-lg flex-col items-center px-5 py-16 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-accent">
+                        <MessageSquare size={21} />
+                      </div>
+                      <h2 className="mt-4 text-base font-semibold text-foreground">
+                        Ask your documents
+                      </h2>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        Enter a question in your own words. TrustRAG will use the source scope above
+                        and show the returned evidence with its answer.
+                      </p>
+                    </div>
+                  )}
+
+                  {displayState === "pending" && pending && (
                     <>
-                      <Message from="user">
-                        <MessageContent className="bg-primary text-primary-foreground">
+                      <ChatMessage from="user">
+                        <ChatMessageContent className="bg-primary text-primary-foreground">
                           {pending}
-                        </MessageContent>
-                      </Message>
-                      <Message from="assistant">
-                        <Panel className="animate-rise w-full overflow-hidden p-0 shadow-lg">
-                          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5 bg-card">
-                            <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
-                            </span>
-                            <MonoLabel>Real-Time Multi-Agent Execution</MonoLabel>
-                            <span className="ml-auto font-mono text-[10px] font-semibold text-accent animate-pulse">
-                              {step >= AGENT_STEPS.length
-                                ? "Deliberation Complete · Generating"
-                                : readyTurn
-                                  ? "Consensus Achieved · Finalizing"
-                                  : "Agents Deliberating…"}
-                            </span>
-                          </div>
-
-                          <div className="p-5">
-                            <Timeline active={step} details={stepDetails} />
-                          </div>
-
-                          {step >= AGENT_STEPS.length && (
-                            <div className="border-t border-border bg-muted/20 px-5 py-4">
-                              <div className="mb-3 flex items-center gap-2">
-                                <ShieldCheck size={14} className="text-emerald-400" />
-                                <MonoLabel>Synthesizing Grounded Answer</MonoLabel>
+                        </ChatMessageContent>
+                      </ChatMessage>
+                      <ChatMessage from="assistant">
+                        <div role="status" aria-live="polite" className="w-full">
+                          <Panel className="animate-rise w-full p-5 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <Loader2 size={17} className="shrink-0 animate-spin text-accent" />
+                              <div>
+                                <p className="text-sm font-medium text-foreground">
+                                  Working on your question
+                                </p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Retrieving from the selected sources and waiting for the verified
+                                  response…
+                                </p>
                               </div>
-                              <Markdown text={typed} />
-                              <span className="animate-caret ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 rounded-sm bg-accent" />
                             </div>
-                          )}
-                        </Panel>
-                      </Message>
+                          </Panel>
+                        </div>
+                      </ChatMessage>
                     </>
                   )}
                 </ConversationContent>
@@ -1387,6 +1445,8 @@ function ChatPage() {
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
+                    type="button"
+                    disabled={pending !== null}
                     onClick={() => !pending && ask(s)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground hover:border-accent/40"
                   >
@@ -1395,9 +1455,24 @@ function ChatPage() {
                 ))}
               </div>
 
-              {queryError && (
-                <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  {queryError}. No answer was generated.
+              {displayState === "error" && queryError && (
+                <div
+                  role="alert"
+                  className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                >
+                  <p className="min-w-0 flex-1">{queryError} No answer was generated.</p>
+                  {retryQuestion && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void ask(retryQuestion)}
+                      disabled={pending !== null}
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <RefreshCw size={13} className="mr-1.5" /> Retry question
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -1405,14 +1480,15 @@ function ChatPage() {
               <PromptInput
                 onSubmit={(message) => {
                   if (!message.text.trim() || pending) return;
-                  ask(message.text.trim());
+                  void ask(message.text.trim());
                   setQuestion("");
                 }}
-                className="mt-3 rounded-2xl border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.06)] backdrop-blur-md"
+                className="sticky bottom-2 z-20 mt-3 rounded-2xl border-border bg-card/95 shadow-[0_10px_32px_rgba(15,23,42,0.14)] backdrop-blur-md"
               >
                 <PromptInputTextarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
+                  aria-label="Ask a question about your selected documents"
                   placeholder={
                     scope.length === 0
                       ? `Ask anything — searching all ${docs.length} indexed documents…`
@@ -1421,10 +1497,12 @@ function ChatPage() {
                   className="min-h-20 px-4 py-3 text-sm placeholder:text-muted-foreground/60"
                 />
                 <PromptInputFooter className="items-center justify-between px-3 pb-2.5">
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
+                  <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted-foreground font-mono">
                     <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
-                    <span>
-                      {scope.length === 0 ? "Scope: All Sources" : `Scope: ${scope.length} File(s)`}
+                    <span className="truncate">
+                      {scope.length === 0
+                        ? "Scope: All Sources"
+                        : `Scope: ${activeDocIds?.length ?? 0} File(s)`}
                     </span>
                   </div>
                   <PromptInputSubmit
@@ -1439,71 +1517,94 @@ function ChatPage() {
             {/* Right Column: Evidence Inspector Panel */}
             <Panel className="animate-rise h-fit p-5 xl:sticky xl:top-24">
               <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-expanded={inspectorOpen}
+                  onClick={() => setInspectorOpen((open) => !open)}
+                  className="flex items-center gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
                   <ScanSearch size={16} className="text-accent" />
                   <MonoLabel>Evidence Inspector</MonoLabel>
-                </div>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform ${inspectorOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
                 <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
                   {evidence.length} Chunks
                 </span>
               </div>
 
-              {evidence.length === 0 ? (
-                <div className="mt-6 rounded-xl border border-dashed border-border p-6 text-center">
-                  <FileText size={24} className="mx-auto text-muted-foreground/50" />
-                  <p className="mt-2 text-xs font-semibold text-foreground">
-                    No Evidence Retrieved Yet
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Ask a question to see exact document chunks, similarity scores, and citations
-                    highlighted here.
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-4 space-y-3 max-h-[580px] overflow-y-auto pr-1">
-                  {evidence.map((c, i) => (
-                    <EvidenceCard
-                      key={c.id}
-                      rank={i + 1}
-                      doc={c.docName}
-                      page={c.page}
-                      similarity={c.similarity}
-                      matchQuality={c.matchQuality}
-                      text={c.text}
-                      isSelected={selectedCitation === i + 1}
-                      onClick={() => setSelectedCitation(i + 1)}
-                    />
-                  ))}
-                </div>
+              {inspectorOpen &&
+                (evidence.length === 0 ? (
+                  <div className="mt-6 rounded-xl border border-dashed border-border p-6 text-center">
+                    <FileText size={24} className="mx-auto text-muted-foreground/50" />
+                    <p className="mt-2 text-xs font-semibold text-foreground">
+                      No Evidence Retrieved Yet
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Ask a question to see exact document chunks, similarity scores, and citations
+                      highlighted here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3 max-h-[580px] overflow-y-auto pr-1">
+                    {evidence.map((c, i) => (
+                      <EvidenceCard
+                        key={c.id}
+                        rank={i + 1}
+                        doc={c.docName}
+                        page={c.page}
+                        similarity={c.similarity}
+                        matchQuality={c.matchQuality}
+                        text={c.text}
+                        isSelected={
+                          selectedEvidenceTurnId === evidenceTurn?.id && selectedCitation === i + 1
+                        }
+                        onClick={() => {
+                          if (evidenceTurn) setSelectedEvidenceTurnId(evidenceTurn.id);
+                          setSelectedCitation(i + 1);
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+
+              {inspectorOpen && (
+                <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                  Evidence and Retrieval provenance shown here are taken from the backend response.
+                </p>
               )}
 
-              {/* Real-time Agent Consensus Breakdown */}
-              <div className="mt-5 border-t border-border pt-4">
-                <MonoLabel>Consensus Safeguards</MonoLabel>
-                <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <BadgeCheck size={14} className="mt-0.5 text-emerald-400 shrink-0" />
-                    <span>
-                      <strong className="text-foreground">Retriever Agent:</strong> Top-K cosine
-                      similarity semantic filtering.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <SearchCheck size={14} className="mt-0.5 text-cyan-400 shrink-0" />
-                    <span>
-                      <strong className="text-foreground">Fact-Checker:</strong> Cross-references
-                      propositions with domain truth.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ShieldCheck size={14} className="mt-0.5 text-amber-400 shrink-0" />
-                    <span>
-                      <strong className="text-foreground">Critic Auditor:</strong> Adversarial check
-                      for ungrounded statements.
-                    </span>
-                  </li>
-                </ul>
-              </div>
+              {/* TrustRAG consensus safeguards */}
+              {inspectorOpen && (
+                <div className="mt-5 border-t border-border pt-4">
+                  <MonoLabel>Consensus Safeguards</MonoLabel>
+                  <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <BadgeCheck size={14} className="mt-0.5 text-emerald-400 shrink-0" />
+                      <span>
+                        <strong className="text-foreground">Retriever Agent:</strong> Top-K cosine
+                        similarity semantic filtering.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <SearchCheck size={14} className="mt-0.5 text-cyan-400 shrink-0" />
+                      <span>
+                        <strong className="text-foreground">Fact-Checker:</strong> Cross-references
+                        propositions with domain truth.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <ShieldCheck size={14} className="mt-0.5 text-amber-400 shrink-0" />
+                      <span>
+                        <strong className="text-foreground">Critic Auditor:</strong> Adversarial
+                        check for ungrounded statements.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </Panel>
           </div>
         </div>

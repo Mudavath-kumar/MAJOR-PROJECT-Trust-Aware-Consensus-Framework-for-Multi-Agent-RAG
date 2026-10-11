@@ -12,6 +12,70 @@ export type ChatScoreSignals = {
   retrievalSimilarity: number | null;
 };
 
+export type EvidencePresentation = {
+  id: string;
+  docId: string;
+  docName: string;
+  index: number;
+  page: number | null;
+  text: string;
+  similarity: number | null;
+  matchQuality: "high" | "medium" | "low" | "unknown";
+};
+
+export type ChatDisplayState = "idle" | "pending" | "error" | "answer" | "partial" | "abstain";
+
+export function getChatErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message.trim() ? error.message.trim() : fallback;
+}
+
+export function hasMatchingEvidence(citationIndex: number, evidenceCount: number): boolean {
+  return Number.isInteger(citationIndex) && citationIndex > 0 && citationIndex <= evidenceCount;
+}
+
+export function mapEvidenceSources(value: unknown): EvidencePresentation[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.map((entry: unknown, index: number) => {
+    const source = asRecord(entry);
+    const similarity = finiteNumber(source.similarity_score);
+    const validSimilarity =
+      similarity !== null && similarity >= 0 && similarity <= 1 ? similarity : null;
+    const page = finiteNumber(source.page_number);
+
+    return {
+      id: cleanString(source.chunk_id) ?? `evidence-${index}`,
+      docId: cleanString(source.document_id) ?? "",
+      docName: cleanString(source.document_name) ?? "Unknown source",
+      index,
+      page: page !== null && Number.isInteger(page) && page > 0 ? page : null,
+      text: cleanString(source.text) ?? "",
+      similarity: validSimilarity,
+      matchQuality:
+        validSimilarity === null
+          ? "unknown"
+          : validSimilarity >= 0.8
+            ? "high"
+            : validSimilarity >= 0.6
+              ? "medium"
+              : "low",
+    };
+  });
+}
+
+export function resolveChatDisplayState(input: {
+  pending: boolean;
+  hasError: boolean;
+  decision?: unknown;
+}): ChatDisplayState {
+  if (input.pending) return "pending";
+  if (input.hasError) return "error";
+  if (input.decision === "answer" || input.decision === "partial" || input.decision === "abstain") {
+    return input.decision;
+  }
+  return "idle";
+}
+
 type UnknownRecord = Record<string, unknown>;
 
 function asRecord(value: unknown): UnknownRecord {
