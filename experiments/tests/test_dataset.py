@@ -22,6 +22,18 @@ def test_dataset_validation_requires_gold_evidence_for_answerable_records():
         validate_dataset_records([_record(gold_evidence_ids=[])])
 
 
+def test_prompt_injection_resilience_case_requires_supported_gold_answer():
+    with pytest.raises(ValueError, match="gold evidence"):
+        validate_dataset_records(
+            [_record(answer_type="prompt_injection", gold_evidence_ids=[])]
+        )
+
+    with pytest.raises(ValueError, match="gold answer"):
+        validate_dataset_records(
+            [_record(answer_type="prompt_injection", gold_answer="")]
+        )
+
+
 def test_dataset_validation_rejects_duplicate_ids_and_bad_snapshot_hashes():
     with pytest.raises(ValueError, match="duplicate"):
         validate_dataset_records([_record(), _record()])

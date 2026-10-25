@@ -82,12 +82,38 @@ class DecisionResult(BaseModel):
 
 
 def validate_verification_ids(
-    claims: Sequence[Claim], verifications: Sequence[ClaimVerification]
+    claims: Sequence[Claim],
+    verifications: Sequence[ClaimVerification],
+    allowed_evidence_ids: set[str] | None = None,
 ) -> None:
     known_claim_ids = {claim.claim_id for claim in claims}
     unknown_ids = sorted({item.claim_id for item in verifications} - known_claim_ids)
     if unknown_ids:
         raise ValueError(f"Verifications reference unknown claims: {', '.join(unknown_ids)}")
+    if allowed_evidence_ids is not None:
+        unknown_evidence_ids = sorted(
+            {
+                evidence_id
+                for verification in verifications
+                for evidence_id in verification.evidence_ids
+                if evidence_id not in allowed_evidence_ids
+            }
+        )
+        if unknown_evidence_ids:
+            raise ValueError(
+                "Verifications reference evidence outside retrieved context: "
+                + ", ".join(unknown_evidence_ids)
+            )
+        unsupported_citations = sorted(
+            verification.claim_id
+            for verification in verifications
+            if verification.label == "supported" and not verification.evidence_ids
+        )
+        if unsupported_citations:
+            raise ValueError(
+                "Supported verifications require evidence IDs for claims: "
+                + ", ".join(unsupported_citations)
+            )
 
 
 def _decode_json_object(raw_output: str) -> dict[str, Any]:

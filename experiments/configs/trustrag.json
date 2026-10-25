@@ -10,7 +10,16 @@
     "top_k": 5,
     "chunk_size": 400,
     "chunk_overlap": 80,
+    "reranking": {
+      "enabled": false
+    },
     "external_verification": true
+  },
+  "orchestration": {
+    "mode": "trust-aware-consensus"
+  },
+  "verification": {
+    "mode": "typed-claims"
   },
   "decision": {
     "typed_verification": true,

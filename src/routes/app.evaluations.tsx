@@ -28,7 +28,7 @@ export const Route = createFileRoute("/app/evaluations")({
       {
         name: "description",
         content:
-          "Enterprise-grade RAG evaluation matrix — Faithfulness, Context Precision, Answer Relevance, Hallucination Risk, and Consensus Alignment for every AI query.",
+          "Per-query RAG audit signals, their limitations, evidence traces, and decision outcomes.",
       },
       { property: "og:title", content: "TrustRAG Evaluations & Audit" },
     ],
@@ -39,12 +39,12 @@ export const Route = createFileRoute("/app/evaluations")({
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface EvaluationMatrix {
-  faithfulness?: number;
-  context_precision?: number;
-  answer_relevance?: number;
+  faithfulness?: number | null;
+  context_precision?: number | null;
+  answer_relevance?: number | null;
   hallucination_risk?: "low" | "medium" | "high";
-  composite_confidence?: number;
-  consensus_alignment?: number;
+  composite_confidence?: number | null;
+  consensus_alignment?: number | null;
 }
 
 type DecisionStatus = "answer" | "partial" | "abstain";
@@ -70,21 +70,21 @@ interface AuditSummary {
   total_evaluations: number;
   avg_faithfulness: number;
   avg_context_precision: number;
-  avg_answer_relevance: number;
+  avg_answer_relevance: number | null;
   hallucination_free_rate: number;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const scoreColor = (v?: number): string => {
-  if (v === undefined || v === null) return "text-muted-foreground";
+const scoreColor = (v?: number | null): string => {
+  if (v == null) return "text-muted-foreground";
   if (v >= 85) return "text-emerald-400";
   if (v >= 65) return "text-amber-400";
   return "text-red-400";
 };
 
-const scoreBg = (v?: number): string => {
-  if (v === undefined || v === null) return "bg-muted/40";
+const scoreBg = (v?: number | null): string => {
+  if (v == null) return "bg-muted/40";
   if (v >= 85) return "bg-emerald-500/10 border-emerald-500/20";
   if (v >= 65) return "bg-amber-500/10 border-amber-500/20";
   return "bg-red-500/10 border-red-500/20";
@@ -128,23 +128,23 @@ const decisionBadge = (status?: DecisionStatus): string => {
   }
 };
 
-const ScoreBar = ({ value, label }: { value?: number; label: string }) => (
+const ScoreBar = ({ value, label }: { value?: number | null; label: string }) => (
   <div className="flex flex-col gap-1">
     <div className="flex items-center justify-between">
       <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </span>
       <span className={cn("font-mono text-xs font-semibold tabular-nums", scoreColor(value))}>
-        {value !== undefined ? `${value}%` : "—"}
+        {value != null ? `${value}%` : "Not measured"}
       </span>
     </div>
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
       <div
         className={cn(
           "h-full rounded-full transition-all duration-700",
-          value !== undefined && value >= 85
+          value != null && value >= 85
             ? "bg-emerald-500"
-            : value !== undefined && value >= 65
+            : value != null && value >= 65
               ? "bg-amber-500"
               : "bg-red-500",
         )}
@@ -215,24 +215,24 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
           <span
             className={cn(
               "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider",
-              m.faithfulness !== undefined && m.faithfulness >= 85
+              m.faithfulness != null && m.faithfulness >= 85
                 ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
-                : m.faithfulness !== undefined && m.faithfulness >= 65
+                : m.faithfulness != null && m.faithfulness >= 65
                   ? "text-amber-400 border-amber-500/20 bg-amber-500/10"
                   : "text-red-400 border-red-500/20 bg-red-500/10",
             )}
           >
-            {m.faithfulness !== undefined ? `${m.faithfulness}%` : "—"}
+            {m.faithfulness != null ? `${m.faithfulness}%` : "—"}
           </span>
         </td>
         <td className="px-4 py-3">
           <span className={cn("font-mono text-xs tabular-nums", scoreColor(m.context_precision))}>
-            {m.context_precision !== undefined ? `${m.context_precision}%` : "—"}
+            {m.context_precision != null ? `${m.context_precision}%` : "—"}
           </span>
         </td>
         <td className="px-4 py-3">
           <span className={cn("font-mono text-xs tabular-nums", scoreColor(m.answer_relevance))}>
-            {m.answer_relevance !== undefined ? `${m.answer_relevance}%` : "—"}
+            {m.answer_relevance != null ? `${m.answer_relevance}%` : "Not measured"}
           </span>
         </td>
         <td className="px-4 py-3">
@@ -302,7 +302,12 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
                 <MonoLabel className="text-[9px]">Evaluation Breakdown</MonoLabel>
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
                   <MonoLabel className="text-[9px]">Decision</MonoLabel>
-                  <span className={cn("rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase", decisionBadge(record.decision_status))}>
+                  <span
+                    className={cn(
+                      "rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase",
+                      decisionBadge(record.decision_status),
+                    )}
+                  >
                     {record.decision_status ?? "abstain"}
                   </span>
                 </div>
@@ -311,9 +316,9 @@ const AuditRow = ({ record }: { record: AuditRecord }) => {
                     {record.abstention_reason}
                   </p>
                 )}
-                <ScoreBar value={m.faithfulness} label="Faithfulness" />
-                <ScoreBar value={m.context_precision} label="Context Precision" />
-                <ScoreBar value={m.answer_relevance} label="Answer Relevance" />
+                <ScoreBar value={m.faithfulness} label="Verified claim support*" />
+                <ScoreBar value={m.context_precision} label="Mean retrieval similarity*" />
+                <ScoreBar value={m.answer_relevance} label="Answer relevance" />
                 {m.consensus_alignment !== undefined && (
                   <ScoreBar value={m.consensus_alignment} label="Consensus Alignment" />
                 )}
@@ -402,8 +407,8 @@ function EvaluationsPage() {
     const headers = [
       "ID",
       "Query",
-      "Faithfulness(%)",
-      "Context Precision(%)",
+      "Verified Claim Support Heuristic(%)",
+      "Mean Retrieval Similarity Heuristic(%)",
       "Answer Relevance(%)",
       "Hallucination Risk",
       "Decision",
@@ -443,7 +448,7 @@ function EvaluationsPage() {
       <PageHeader
         eyebrow="Enterprise Compliance"
         title="Evaluations & Audit Trail"
-        description="Real-time RAG evaluation matrix for every AI query — Faithfulness, Context Precision, Answer Relevance, Hallucination Risk, and Composite Confidence derived from multi-agent consensus deliberation."
+        description="Per-query audit signals and evidence. Similarity and verifier scores are heuristics; answer relevance is not measured online."
         action={
           <div className="flex items-center gap-2">
             <button
@@ -489,24 +494,24 @@ function EvaluationsPage() {
         />
         <MetricCard
           icon={CheckCircle2}
-          label="Avg Faithfulness"
+          label="Avg verified claim support*"
           value={summary?.avg_faithfulness ?? 0}
           color="text-emerald-400"
-          description="Average grounding rate — answers derived from retrieved context"
+          description="Verifier-accepted claim share; an online heuristic, not labeled faithfulness"
         />
         <MetricCard
           icon={TrendingUp}
-          label="Avg Relevance"
-          value={summary?.avg_answer_relevance ?? 0}
+          label="Answer relevance"
+          value={summary?.avg_answer_relevance ?? "Not measured"}
           color="text-blue-400"
-          description="Average semantic match between query and generated answer"
+          description="Not scored by this online pipeline; evaluate offline on labeled questions"
         />
         <MetricCard
           icon={ShieldCheck}
-          label="Hallucination-Free"
+          label="Low critic-risk share"
           value={summary?.hallucination_free_rate ?? 0}
           color="text-violet-400"
-          description="Percentage of responses with low hallucination risk score"
+          description="Critic's risk estimate; not a ground-truth hallucination rate"
         />
       </div>
 
@@ -515,9 +520,9 @@ function EvaluationsPage() {
         <Panel className="animate-rise mt-4 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <MonoLabel>Context Precision Score</MonoLabel>
+              <MonoLabel>Mean retrieval similarity*</MonoLabel>
               <p className="mt-1 text-xs text-muted-foreground">
-                Average similarity of retrieved chunks to each query
+                Vector-similarity proxy; not gold-labeled context precision
               </p>
             </div>
             <div className="flex items-center gap-3 sm:shrink-0">
@@ -619,8 +624,8 @@ function EvaluationsPage() {
                 <tr className="border-y border-border text-muted-foreground">
                   {[
                     "Query",
-                    "Faithfulness",
-                    "Ctx Precision",
+                    "Claim Support*",
+                    "Retrieval Similarity*",
                     "Relevance",
                     "Halluc. Risk",
                     "Decision",

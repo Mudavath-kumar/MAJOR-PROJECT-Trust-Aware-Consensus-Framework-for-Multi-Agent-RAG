@@ -9,7 +9,7 @@ import { AIService } from "../services/ai.service.js";
 import { isDbConnected } from "../config/database.js";
 import DocumentModel from "../models/Document.js";
 import mongoose from "mongoose";
-import { assertRequestedDocumentIdsAreOwned } from "../utils/security-scope.js";
+import { resolveReadyDocumentIds } from "../utils/security-scope.js";
 import { decryptSecret } from "../utils/secret-box.js";
 
 export const getConversations = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -136,22 +136,24 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    if (document_ids !== undefined && !Array.isArray(document_ids)) {
+      res.status(400).json({ error: "document_ids must be an array" });
+      return;
+    }
     const requestedDocumentIds = Array.isArray(document_ids)
       ? document_ids.map((id: unknown) => String(id))
       : undefined;
-    let scopedDocumentIds: string[] | undefined;
-    if (requestedDocumentIds?.length) {
-      const validRequestedIds = requestedDocumentIds.filter((id) => mongoose.isValidObjectId(id));
-      const ownedDocuments = await DocumentModel.find({
-        user_id: req.user?._id,
-        _id: { $in: validRequestedIds },
-      })
-        .select("_id")
-        .lean();
-      scopedDocumentIds = assertRequestedDocumentIdsAreOwned(
-        requestedDocumentIds,
-        ownedDocuments.map((document) => document._id.toString()),
-      );
+    const readyDocuments = await DocumentModel.find({
+      user_id: req.user?._id,
+      status: "ready",
+    })
+      .select("_id")
+      .lean();
+    const readyDocumentIds = readyDocuments.map((document) => document._id.toString());
+    const scopedDocumentIds = resolveReadyDocumentIds(requestedDocumentIds, readyDocumentIds);
+    if (requestedDocumentIds?.some((id) => !mongoose.isValidObjectId(id))) {
+      res.status(403).json({ error: "Document scope rejected", message: "One or more selected documents are unavailable" });
+      return;
     }
 
     // Forward user's saved LLM settings to the AI pipeline
@@ -189,10 +191,10 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     });
 
     const evalMatrix = aiResult.evaluation_matrix || aiResult.consensus?.evaluation_matrix || {
-      faithfulness: 0,
-      context_precision: 0,
-      answer_relevance: 0,
-      consensus_alignment: 0,
+      faithfulness: null,
+      context_precision: null,
+      answer_relevance: null,
+      consensus_alignment: null,
       hallucination_risk: "high",
       composite_confidence: 0,
     };

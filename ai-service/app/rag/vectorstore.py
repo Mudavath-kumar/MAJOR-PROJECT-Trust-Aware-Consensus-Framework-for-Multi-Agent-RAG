@@ -15,7 +15,9 @@ def build_scope_filter(document_ids: Optional[List[str]], user_id: str) -> Dict[
 
     scope: Dict[str, Any] = {"user_id": user_id}
     ids = [str(document_id) for document_id in (document_ids or []) if str(document_id).strip()]
-    if len(ids) == 1:
+    if document_ids is not None and not ids:
+        scope["document_id"] = {"$in": []}
+    elif len(ids) == 1:
         scope["document_id"] = ids[0]
     elif ids:
         scope["document_id"] = {"$in": ids}
@@ -116,11 +118,12 @@ def query_vector_store(
     user_id: Optional[str] = None,
     query_text: str = "",
 ) -> List[Dict[str, Any]]:
-    col = _get_collection()
-
     if not user_id:
         raise ValueError("user_id is required for vector retrieval")
+    if document_ids is not None and not any(str(document_id).strip() for document_id in document_ids):
+        return []
 
+    col = _get_collection()
     scope_filter = build_scope_filter(document_ids, user_id)
     pre_filter: Dict[str, Any] = {
         key: (value if key != "user_id" else {"$eq": value})

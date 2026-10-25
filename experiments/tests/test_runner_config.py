@@ -1,8 +1,12 @@
 import json
+from pathlib import Path
 
 import pytest
 
 from experiments.runner import load_and_validate_config, merge_predictions, run_experiment
+
+
+CONFIG_DIR = Path(__file__).parents[1] / "configs"
 
 
 def test_config_requires_reproducibility_fields(tmp_path):
@@ -11,6 +15,35 @@ def test_config_requires_reproducibility_fields(tmp_path):
 
     with pytest.raises(ValueError, match="dataset_version"):
         load_and_validate_config(config_path)
+
+
+@pytest.mark.parametrize(
+    ("filename", "orchestration", "reranking", "verification"),
+    [
+        ("baseline-rag.json", "single-pass", False, "none"),
+        ("reranked-rag.json", "single-pass", True, "none"),
+        ("rag-verification.json", "single-pass", False, "typed-claims"),
+        ("multi-agent-rag.json", "fixed-multi-agent", False, "typed-claims"),
+        ("trustrag-no-external.json", "trust-aware-consensus", False, "typed-claims"),
+        ("trustrag.json", "trust-aware-consensus", False, "typed-claims"),
+    ],
+)
+def test_comparison_configs_declare_distinct_pipeline_modes(
+    filename, orchestration, reranking, verification
+):
+    config = load_and_validate_config(CONFIG_DIR / filename)
+
+    assert config["orchestration"]["mode"] == orchestration
+    assert config["retrieval"]["reranking"]["enabled"] is reranking
+    assert config["verification"]["mode"] == verification
+
+
+def test_trustrag_external_verification_variants_are_explicit():
+    without_external = load_and_validate_config(CONFIG_DIR / "trustrag-no-external.json")
+    full = load_and_validate_config(CONFIG_DIR / "trustrag.json")
+
+    assert without_external["retrieval"]["external_verification"] is False
+    assert full["retrieval"]["external_verification"] is True
 
 
 def test_merge_predictions_rejects_missing_or_duplicate_ids():
@@ -46,7 +79,14 @@ def test_run_experiment_writes_reproducible_artifacts(tmp_path):
                 "embedding_model": "test-embedding",
                 "prompt_version": "test-prompt-v1",
                 "temperature": 0.1,
-                "retrieval": {"top_k": 2, "chunk_size": 400, "chunk_overlap": 80},
+                "retrieval": {
+                    "top_k": 2,
+                    "chunk_size": 400,
+                    "chunk_overlap": 80,
+                    "reranking": {"enabled": False},
+                },
+                "orchestration": {"mode": "single-pass"},
+                "verification": {"mode": "none"},
                 "seed": 42,
             }
         ),
@@ -84,6 +124,9 @@ def test_run_experiment_writes_reproducible_artifacts(tmp_path):
                 "latency_ms": 100,
                 "claims": [{"supported": True}],
                 "estimated_cost_usd": 0.01,
+                    "llm_calls": 1,
+                    "verification_calls": 0,
+                    "retrieval_calls": 1,
             }
         )
         + "\n",
@@ -103,4 +146,7 @@ def test_run_experiment_writes_reproducible_artifacts(tmp_path):
     assert manifest["prompt_version"] == "test-prompt-v1"
     assert manifest["temperature"] == 0.1
     assert manifest["retrieval"]["top_k"] == 2
+    assert manifest["retrieval"]["reranking"]["enabled"] is False
+    assert manifest["orchestration"]["mode"] == "single-pass"
+    assert manifest["verification"]["mode"] == "none"
     assert manifest["seed"] == 42

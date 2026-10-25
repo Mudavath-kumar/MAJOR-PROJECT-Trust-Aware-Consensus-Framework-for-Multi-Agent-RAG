@@ -17,10 +17,10 @@ export interface IConsensusResultRecord extends Document {
   conflicts: any[];
   synthesis: string;
   evaluation_matrix?: {
-    faithfulness?: number;
-    context_precision?: number;
-    answer_relevance?: number;
-    consensus_alignment?: number;
+    faithfulness?: number | null;
+    context_precision?: number | null;
+    answer_relevance?: number | null;
+    consensus_alignment?: number | null;
     hallucination_risk?: "low" | "medium" | "high";
     composite_confidence?: number;
   };

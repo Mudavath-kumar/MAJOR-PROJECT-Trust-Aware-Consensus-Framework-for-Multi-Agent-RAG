@@ -1,0 +1,30 @@
+{
+  "name": "trustrag-no-external",
+  "dataset_version": "trustrag-v1",
+  "system": "evidence-gated-multi-agent-rag",
+  "model": "openai/gpt-4o-mini",
+  "embedding_model": "gemini-embedding-2",
+  "prompt_version": "evidence-gated-v1",
+  "temperature": 0.1,
+  "retrieval": {
+    "top_k": 5,
+    "chunk_size": 400,
+    "chunk_overlap": 80,
+    "reranking": {
+      "enabled": false
+    },
+    "external_verification": false
+  },
+  "orchestration": {
+    "mode": "trust-aware-consensus"
+  },
+  "verification": {
+    "mode": "typed-claims"
+  },
+  "decision": {
+    "typed_verification": true,
+    "abstention_gate": true,
+    "threshold_calibration_split": "development"
+  },
+  "seed": 42
+}

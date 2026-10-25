@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { cleanupFailedIngestion } from "../services/document-ingestion-cleanup.js";
 
 export const getDocuments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -110,10 +111,23 @@ export const uploadDocument = async (req: AuthRequest, res: Response): Promise<v
         message: "File uploaded and indexed successfully.",
       });
     } catch (err: any) {
-      await StorageService.deleteStoredObject(storagePath).catch(() => undefined);
+      const cleanupFailures = await cleanupFailedIngestion(
+        (newDoc._id as any).toString(),
+        req.user?._id || "",
+        storagePath,
+        {
+          deleteVectors: (documentId, userId) => AIService.deleteDocument(documentId, userId),
+          deleteStoredObject: (objectPath) => StorageService.deleteStoredObject(objectPath),
+        },
+      );
+      if (cleanupFailures.length) {
+        console.error("Failed to fully roll back document ingestion:", cleanupFailures);
+      }
       await DocumentModel.findByIdAndUpdate(newDoc._id, {
         status: "failed",
-        error_message: err.message,
+        error_message: cleanupFailures.length
+          ? `${err.message}; cleanup incomplete: ${cleanupFailures.join("; ")}`
+          : err.message,
       });
       res.status(502).json({
         error: "Document indexing failed",
@@ -186,10 +200,23 @@ export const uploadMultipleDocuments = async (req: AuthRequest, res: Response): 
         );
         results.push(readyDocument ?? newDoc);
       } catch (err: any) {
-        await StorageService.deleteStoredObject(storagePath).catch(() => undefined);
+        const cleanupFailures = await cleanupFailedIngestion(
+          (newDoc._id as any).toString(),
+          req.user?._id || "",
+          storagePath,
+          {
+            deleteVectors: (documentId, userId) => AIService.deleteDocument(documentId, userId),
+            deleteStoredObject: (objectPath) => StorageService.deleteStoredObject(objectPath),
+          },
+        );
+        if (cleanupFailures.length) {
+          console.error("Failed to fully roll back batch document ingestion:", cleanupFailures);
+        }
         await DocumentModel.findByIdAndUpdate(newDoc._id, {
           status: "failed",
-          error_message: err.message,
+          error_message: cleanupFailures.length
+            ? `${err.message}; cleanup incomplete: ${cleanupFailures.join("; ")}`
+            : err.message,
         });
         errors.push({ filename: file.originalname, error: err.message });
       } finally {

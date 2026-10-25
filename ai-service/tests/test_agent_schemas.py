@@ -67,6 +67,31 @@ def test_verification_ids_must_reference_known_claims():
         validate_verification_ids(claims, verifications)
 
 
+def test_verification_evidence_must_reference_retrieved_chunks():
+    claims = [Claim(claim_id="claim-1", text="Supported claim.", evidence_ids=["chunk-1"])]
+    verifications = [
+        ClaimVerification(
+            claim_id="claim-1",
+            label="supported",
+            evidence_ids=["invented-chunk"],
+            confidence=0.9,
+        )
+    ]
+
+    with pytest.raises(ValueError, match="invented-chunk"):
+        validate_verification_ids(claims, verifications, {"chunk-1"})
+
+
+def test_supported_verification_requires_at_least_one_evidence_chunk():
+    claims = [Claim(claim_id="claim-1", text="Supported claim.", evidence_ids=["chunk-1"])]
+    verifications = [
+        ClaimVerification(claim_id="claim-1", label="supported", evidence_ids=[], confidence=0.9)
+    ]
+
+    with pytest.raises(ValueError, match="require evidence"):
+        validate_verification_ids(claims, verifications, {"chunk-1"})
+
+
 def test_agent_json_payloads_parse_from_fenced_output():
     claims = parse_claims(
         '```json\n{"claims":[{"claim_id":"claim-1","text":"Supported.","evidence_ids":["chunk-1"]}]}\n```'

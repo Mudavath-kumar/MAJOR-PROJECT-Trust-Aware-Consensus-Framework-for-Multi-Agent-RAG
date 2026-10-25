@@ -19,6 +19,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppChatRouteImport } from './routes/app.chat'
 import { Route as AppEvaluationsRouteImport } from './routes/app.evaluations'
 import { Route as AppKnowledgeRouteImport } from './routes/app.knowledge'
+import { Route as AppResearchReviewRouteImport } from './routes/app.research-review'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppUploadRouteImport } from './routes/app.upload'
 
@@ -72,6 +73,11 @@ const AppKnowledgeRoute = AppKnowledgeRouteImport.update({
   path: '/knowledge',
   getParentRoute: () => AppRoute,
 } as any)
+const AppResearchReviewRoute = AppResearchReviewRouteImport.update({
+  id: '/research-review',
+  path: '/research-review',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app/chat': typeof AppChatRoute
   '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
+  '/app/research-review': typeof AppResearchReviewRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/app/chat': typeof AppChatRoute
   '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
+  '/app/research-review': typeof AppResearchReviewRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
   '/app': typeof AppIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/app/chat': typeof AppChatRoute
   '/app/evaluations': typeof AppEvaluationsRoute
   '/app/knowledge': typeof AppKnowledgeRoute
+  '/app/research-review': typeof AppResearchReviewRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/app/chat'
     | '/app/evaluations'
     | '/app/knowledge'
+    | '/app/research-review'
     | '/app/settings'
     | '/app/upload'
     | '/app/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/app/chat'
     | '/app/evaluations'
     | '/app/knowledge'
+    | '/app/research-review'
     | '/app/settings'
     | '/app/upload'
     | '/app'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/app/chat'
     | '/app/evaluations'
     | '/app/knowledge'
+    | '/app/research-review'
     | '/app/settings'
     | '/app/upload'
     | '/app/'
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppKnowledgeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/research-review': {
+      id: '/app/research-review'
+      path: '/research-review'
+      fullPath: '/app/research-review'
+      preLoaderRoute: typeof AppResearchReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
@@ -271,6 +290,7 @@ interface AppRouteChildren {
   AppChatRoute: typeof AppChatRoute
   AppEvaluationsRoute: typeof AppEvaluationsRoute
   AppKnowledgeRoute: typeof AppKnowledgeRoute
+  AppResearchReviewRoute: typeof AppResearchReviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppUploadRoute: typeof AppUploadRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -281,6 +301,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChatRoute: AppChatRoute,
   AppEvaluationsRoute: AppEvaluationsRoute,
   AppKnowledgeRoute: AppKnowledgeRoute,
+  AppResearchReviewRoute: AppResearchReviewRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppUploadRoute: AppUploadRoute,
   AppIndexRoute: AppIndexRoute,

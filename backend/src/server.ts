@@ -14,6 +14,7 @@ import chatRoutes from "./routes/chat.routes.js";
 import evidenceRoutes from "./routes/evidence.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import researchBenchmarkRoutes from "./routes/research-benchmark.routes.js";
 import { AIService } from "./services/ai.service.js";
 
 const app = express();
@@ -116,6 +117,7 @@ const apiRoutes: [string, express.Router][] = [
   ["/evidence", evidenceRoutes],
   ["/analytics", analyticsRoutes],
   ["/settings", settingsRoutes],
+  ["/research/benchmark", researchBenchmarkRoutes],
 ];
 
 for (const [routePath, router] of apiRoutes) {

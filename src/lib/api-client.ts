@@ -69,6 +69,54 @@ export type ChatBackendMessage = {
   evaluation_matrix?: unknown;
 };
 
+export type ResearchReviewDecision = "approved" | "needs_correction";
+export type ResearchAnswerType = "answerable" | "unanswerable" | "conflicting" | "prompt_injection";
+export type ResearchReviewStatus = ResearchReviewDecision | "unreviewed";
+
+export type ResearchBenchmarkList = {
+  dataset: { version: string; sourceDatasetVersion: string; total: number };
+  audit: { status: "passed" | "failed"; version: string; auditSha256: string; findings: string[] };
+  progress: { unreviewed: number; approved: number; needs_correction: number; total: number };
+  page: { number: number; size: number; total: number; pages: number };
+  records: Array<{
+    id: string;
+    question: string;
+    answerType: ResearchAnswerType;
+    status: ResearchReviewStatus;
+    notes: string;
+    updatedAt: string | null;
+  }>;
+};
+
+export type ResearchBenchmarkDetail = {
+  record: {
+    id: string;
+    dataset_version: string;
+    question: string;
+    answer_type: ResearchAnswerType;
+    gold_answer: string;
+    gold_evidence_ids: string[];
+    challenge: { intervention: string; synthetic: true } | null;
+    source_dataset: { license: string; name: string; record_id: string; split: string };
+  };
+  source: {
+    question: string;
+    answer: string;
+    supportingFacts: string[];
+    supportingFactTitles: string[];
+  } | null;
+  documents: Array<{
+    documentId: string;
+    path: string;
+    text: string;
+    synthetic: boolean;
+    evidenceIds: string[];
+  }>;
+  reviewBlockers: string[];
+  audit: { status: "passed" | "failed"; version: string; auditSha256: string; findings: string[] };
+  review: { decision: ResearchReviewDecision; notes: string; updatedAt: string } | null;
+};
+
 export class ApiClient {
   private static tokenProvider: AuthTokenProvider | null = null;
 
@@ -258,10 +306,57 @@ export class ApiClient {
         total_evaluations: number;
         avg_faithfulness: number;
         avg_context_precision: number;
-        avg_answer_relevance: number;
+        avg_answer_relevance: number | null;
         hallucination_free_rate: number;
       };
     }>("/evidence/audit-trail");
+  }
+
+  static async getResearchBenchmark(
+    params: {
+      page?: number;
+      type?: ResearchAnswerType | "all";
+      status?: ResearchReviewStatus | "all";
+      search?: string;
+    } = {},
+  ) {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", String(params.page));
+    if (params.type && params.type !== "all") query.set("type", params.type);
+    if (params.status && params.status !== "all") query.set("status", params.status);
+    if (params.search?.trim()) query.set("search", params.search.trim());
+    const suffix = query.size ? `?${query.toString()}` : "";
+    return this.request<ResearchBenchmarkList>(`/research/benchmark${suffix}`);
+  }
+
+  static async getResearchBenchmarkRecord(recordId: string) {
+    return this.request<ResearchBenchmarkDetail>(
+      `/research/benchmark/${encodeURIComponent(recordId)}`,
+    );
+  }
+
+  static async saveResearchBenchmarkReview(
+    recordId: string,
+    review: { decision: ResearchReviewDecision; notes: string; expectedUpdatedAt: string | null },
+  ) {
+    return this.request<{
+      review: { decision: ResearchReviewDecision; notes: string; updatedAt: string };
+    }>(`/research/benchmark/${encodeURIComponent(recordId)}/review`, {
+      method: "PUT",
+      body: JSON.stringify(review),
+    });
+  }
+
+  static async downloadResearchBenchmarkExport() {
+    const token = await this.getToken();
+    const response = await fetchWithRetry(`${API_BASE_URL}/research/benchmark/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || `Export failed (${response.status})`);
+    }
+    return response.blob();
   }
 
   // Chat & Pipeline endpoints

@@ -12,6 +12,7 @@ import {
   Bot,
   Check,
   ClipboardList,
+  ClipboardCheck,
   Database,
   ExternalLink,
   Hexagon,
@@ -53,6 +54,7 @@ type NavItem = {
     | "/app/knowledge"
     | "/app/analytics"
     | "/app/evaluations"
+    | "/app/research-review"
     | "/app/settings";
   label: string;
   shortLabel: string;
@@ -67,6 +69,12 @@ const NAV: NavItem[] = [
   { to: "/app/knowledge", label: "Knowledge Base", shortLabel: "Files", icon: Database },
   { to: "/app/analytics", label: "Analytics", shortLabel: "Analytics", icon: BarChart3 },
   { to: "/app/evaluations", label: "Evaluations", shortLabel: "Eval", icon: ClipboardList },
+  {
+    to: "/app/research-review",
+    label: "Research Review",
+    shortLabel: "Review",
+    icon: ClipboardCheck,
+  },
   { to: "/app/settings", label: "Settings", shortLabel: "Settings", icon: Settings },
 ];
 

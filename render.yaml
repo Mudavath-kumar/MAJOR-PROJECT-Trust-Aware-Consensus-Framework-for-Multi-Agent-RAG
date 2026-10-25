@@ -53,9 +53,10 @@ services:
     runtime: node
     plan: free
     region: oregon
-    rootDir: backend
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: node dist/server.js
+    # Keep the repository root visible at runtime: the authenticated research
+    # review API reads its allowlisted v4 candidate and corpus from experiments/.
+    buildCommand: npm --prefix backend install --include=dev && npm --prefix backend run build
+    startCommand: node backend/dist/server.js
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV

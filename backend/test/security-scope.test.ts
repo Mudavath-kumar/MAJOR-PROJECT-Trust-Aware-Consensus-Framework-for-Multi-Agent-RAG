@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   assertRequestedDocumentIdsAreOwned,
+  resolveReadyDocumentIds,
   withUserScope,
 } from "../src/utils/security-scope.js";
 
@@ -30,3 +31,20 @@ test("always applies the authenticated user scope to a query filter", () => {
   );
 });
 
+test("defaults chat retrieval to ready documents owned by the current user", () => {
+  assert.deepEqual(
+    resolveReadyDocumentIds(undefined, ["ready-a", "ready-b"]),
+    ["ready-a", "ready-b"],
+  );
+});
+
+test("an explicit empty selection stays empty instead of broadening to all documents", () => {
+  assert.deepEqual(resolveReadyDocumentIds([], ["ready-a", "ready-b"]), []);
+});
+
+test("a selected document outside the ready-owned set is rejected", () => {
+  assert.throws(
+    () => resolveReadyDocumentIds(["failed"], ["ready-a"]),
+    { name: "DocumentScopeError" },
+  );
+});

@@ -81,5 +81,9 @@ export const env = {
   CLERK_ISSUER: (process.env.CLERK_ISSUER || "").replace(/\/+$/, ""),
   CLERK_JWKS_URL: process.env.CLERK_JWKS_URL || "",
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || "",
+  CLERK_AUTHORIZED_PARTIES: (process.env.CLERK_AUTHORIZED_PARTIES || process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 
 };

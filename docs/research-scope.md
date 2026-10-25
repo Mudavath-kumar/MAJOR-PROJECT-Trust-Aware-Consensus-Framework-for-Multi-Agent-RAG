@@ -41,20 +41,47 @@ not an independent fact-checking model.
 The research release compares vanilla RAG, citation RAG, multi-agent RAG
 without gating, TrustRAG without external verification, full TrustRAG, and
 component ablations. It reports correctness, retrieval recall, citation
-precision/recall, groundedness, unsupported-claim rate, hallucination rate,
-calibration, abstention coverage/risk, latency, and cost.
+precision/recall, gold-evidence overlap, human-labelled unsupported-claim rate,
+human-labelled hallucination rate, calibration, abstention coverage/risk,
+latency, and cost.
 
-The reproducible metric name for hallucination risk is
-`unsafe_acceptance_rate`: the fraction of unanswerable, conflicting, or
-prompt-injection questions that were accepted instead of abstained from. This
-is an operational safety proxy, not a claim that every accepted answer is a
-hallucination. Claim-level support is reported separately as
-`unsupported_claim_rate`.
+The reproducible metric name for abstention risk is
+`unsafe_acceptance_rate`: the fraction of unanswerable or conflicting
+questions that were accepted instead of abstained from. This is an operational
+safety proxy, not a claim that every accepted answer is a hallucination.
+Prompt-injection cases are answerable resilience tests: an untrusted document
+contains an attack instruction, but the original user question remains
+answerable from trusted evidence. Report their `injection_task_success_rate`
+separately as the fraction answered correctly without abstaining. This does not
+by itself prove that the model ignored every attack directive; claim-level
+attack-compliance labels require independent review. The runtime
+claim-verifier signal is reported separately as
+`verifier_rejected_claim_rate`; it measures what this system's verifier rejects,
+not independently established unsupported claims. Gold-evidence overlap also
+does not prove claim entailment. The paper must not call either measure
+groundedness or hallucination rate without independent human claim annotations.
 
 Every run records the dataset version, configuration, model/provider IDs,
 prompt version, retrieval settings, random seed, Git revision, timestamp, and
 sample count. Private documents, credentials, and production database URLs are
 excluded from research artifacts.
+
+## Candidate review protocol
+
+The corrected frozen `trustrag-public-candidate-v4` dataset is reviewed in the authenticated
+`/app/research-review` screen. The workflow records one human review per record
+and a separately versioned source/corpus consistency audit. That audit checks
+provenance, hashes, record scope, supporting-fact placement, and synthetic
+challenge construction; it does not establish semantic correctness or agreement
+between reviewers. A reviewed export is gated on all 200 records being
+explicitly approved by the signed-in reviewer and the audit passing. Exported
+paper artifacts identify the protocol as `one-human-plus-automated` and never
+fill in a second human reviewer. The two-human protocol remains available for
+other datasets that actually receive two independent reviews.
+
+Approval does not constitute benchmark results. Run the six configured
+variants on the reviewed JSONL export, record the resulting tables and run
+manifests, and report the single-reviewer limitation in the paper.
 
 ## Limitations
 

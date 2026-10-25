@@ -98,7 +98,12 @@ Verify every claim using its claim ID and the retrieved evidence references prov
     try:
         verifications = parse_verifications(llm_output)
         known_claims = [Claim.model_validate(claim) for claim in researcher_output.get("claims", [])]
-        validate_verification_ids(known_claims, verifications)
+        retrieved_evidence_ids = {
+            str(chunk["chunk_id"])
+            for chunk in (context_chunks or [])
+            if chunk.get("chunk_id")
+        }
+        validate_verification_ids(known_claims, verifications, retrieved_evidence_ids)
     except (TypeError, ValueError) as exc:
         parse_error = str(exc)
 

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 export type EvaluationMatrixData = {
   faithfulness: number;
   context_precision: number;
-  answer_relevance: number;
+  answer_relevance: number | null;
   consensus_alignment: number;
   hallucination_risk: "low" | "medium" | "high" | string;
   composite_confidence: number;
@@ -82,8 +82,9 @@ export function EvaluationMatrixModal({
     hallucination_risk: "high",
     composite_confidence: 0,
   };
-  const formatScore = (value: number) => (matrix ? `${value}%` : "—");
-  const progressWidth = (value: number) => (matrix ? `${value}%` : "0%");
+  const formatScore = (value: number | null) => (matrix && value !== null ? `${value}%` : "—");
+  const progressWidth = (value: number | null) =>
+    matrix && value !== null ? `${Math.max(0, Math.min(value, 100))}%` : "0%";
 
   if (!isOpen) return null;
 
@@ -136,7 +137,7 @@ export function EvaluationMatrixModal({
                 {riskBadge}
               </div>
               <p className="text-xs text-muted-foreground">
-                Multi-agent consensus verification and objective hallucination evaluation
+                Runtime heuristics, claim checks, and evidence trace; not a labeled evaluation
               </p>
             </div>
           </div>
@@ -174,7 +175,7 @@ export function EvaluationMatrixModal({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Activity size={15} /> RAG Triad Metrics
+            <Activity size={15} /> Runtime Signals
           </button>
           <button
             onClick={() => setActiveTab("agents")}
@@ -213,43 +214,43 @@ export function EvaluationMatrixModal({
                     {formatScore(displayMatrix.composite_confidence)}
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Weighted reliability score
+                    Decision heuristic; not a calibrated probability
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Faithfulness
+                    Verified Claim Support*
                   </div>
                   <div className="mt-2 text-3xl font-bold tracking-tight text-emerald-400">
                     {formatScore(displayMatrix.faithfulness)}
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Claims grounded in context
+                    Claims accepted by the verifier
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Context Precision
+                    Retrieval Similarity*
                   </div>
                   <div className="mt-2 text-3xl font-bold tracking-tight text-blue-400">
                     {formatScore(displayMatrix.context_precision)}
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Top-k vector relevance
+                    Mean vector similarity, not precision
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Consensus Alignment
+                    Verifier–Critic Agreement*
                   </div>
                   <div className="mt-2 text-3xl font-bold tracking-tight text-purple-400">
                     {formatScore(displayMatrix.consensus_alignment)}
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Cross-agent agreement
+                    Agreement on claim support decisions
                   </div>
                 </div>
               </div>
@@ -263,7 +264,7 @@ export function EvaluationMatrixModal({
                 <div className="space-y-3.5">
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-foreground">Faithfulness / Groundedness</span>
+                      <span className="text-foreground">Verified claim support (heuristic)</span>
                       <span className="font-mono font-bold text-emerald-400">
                         {formatScore(displayMatrix.faithfulness)}
                       </span>
@@ -275,14 +276,14 @@ export function EvaluationMatrixModal({
                       />
                     </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      Propositions synthesized in the answer are strictly verifiable within the
-                      retrieved source chunks. Zero external hallucinations introduced.
+                      Fraction of extracted claims accepted by the evidence verifier. This online
+                      proxy is not a human-labeled faithfulness or hallucination measurement.
                     </p>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-foreground">Context Relevance / Precision</span>
+                      <span className="text-foreground">Mean retrieval similarity</span>
                       <span className="font-mono font-bold text-blue-400">
                         {formatScore(displayMatrix.context_precision)}
                       </span>
@@ -294,14 +295,14 @@ export function EvaluationMatrixModal({
                       />
                     </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      Similarity of the top passages returned by the configured tenant-scoped vector
-                      store.
+                      Mean similarity score of retrieved tenant-scoped passages; it is not a
+                      gold-labeled context-precision metric.
                     </p>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-foreground">Answer Relevance</span>
+                      <span className="text-foreground">Answer relevance</span>
                       <span className="font-mono font-bold text-cyan-400">
                         {formatScore(displayMatrix.answer_relevance)}
                       </span>
@@ -313,14 +314,14 @@ export function EvaluationMatrixModal({
                       />
                     </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      Direct semantic alignment between the user's intent and the final structured
-                      answer.
+                      Not measured by the online pipeline. Evaluate this offline against labeled
+                      questions before reporting it.
                     </p>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-foreground">Multi-Agent Consensus Agreement</span>
+                      <span className="text-foreground">Fact-checker / critic agreement</span>
                       <span className="font-mono font-bold text-purple-400">
                         {formatScore(displayMatrix.consensus_alignment)}
                       </span>
@@ -332,8 +333,8 @@ export function EvaluationMatrixModal({
                       />
                     </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      Unanimous or near-unanimous agreement ratio achieved between Retriever,
-                      Fact-Checker, Critic, and Reasoner agents.
+                      Agreement between the Fact Checker support verdicts and the Critic's
+                      unsupported-claim flags; this is not a four-agent vote.
                     </p>
                   </div>
                 </div>

@@ -22,10 +22,18 @@ export function assertRequestedDocumentIdsAreOwned(
   return requested;
 }
 
+export function resolveReadyDocumentIds(
+  requestedIds: string[] | undefined,
+  readyOwnedIds: string[],
+): string[] {
+  const ready = [...new Set(readyOwnedIds.map((id) => String(id).trim()).filter(Boolean))];
+  if (requestedIds === undefined) return ready;
+  return assertRequestedDocumentIdsAreOwned(requestedIds, ready);
+}
+
 export function withUserScope<T extends Record<string, unknown>>(
   filter: T,
   userId: string,
 ): T & { user_id: string } {
   return { ...filter, user_id: userId };
 }
-

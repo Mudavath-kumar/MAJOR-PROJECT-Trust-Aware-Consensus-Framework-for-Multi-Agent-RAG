@@ -39,8 +39,33 @@ interface ClerkClaims {
   name?: string;
 }
 
+export function hasAuthorizedClerkParty(
+  authorizedParty: unknown,
+  allowedParties: readonly string[],
+): boolean {
+  if (typeof authorizedParty !== "string" || !authorizedParty.trim()) return false;
+  const normalized = authorizedParty.trim().replace(/\/+$/, "").toLowerCase();
+  return allowedParties.some(
+    (party) => party.trim().replace(/\/+$/, "").toLowerCase() === normalized,
+  );
+}
+
 let jwksCache: { fetchedAt: number; keys: Map<string, Jwk> } | null = null;
 const JWKS_TTL_MS = 12 * 60 * 60 * 1000; // refresh at most twice a day
+
+export function verifyClerkSignature(
+  algorithm: "RS256" | "ES256",
+  signingInput: Buffer,
+  signature: Buffer,
+  publicKey: crypto.KeyObject,
+): boolean {
+  const verifyAlgorithm = algorithm === "RS256" ? "RSA-SHA256" : "SHA256";
+  const key =
+    algorithm === "ES256"
+      ? { key: publicKey, dsaEncoding: "ieee-p1363" as const }
+      : publicKey;
+  return crypto.verify(verifyAlgorithm, signingInput, key, signature);
+}
 
 /** Extract the frontend API host encoded in a Clerk publishable key. */
 function decodeClerkPublishableHost(key: string): string | null {
@@ -121,8 +146,7 @@ async function verifyClerkToken(token: string): Promise<ClerkClaims | null> {
 
   const signingInput = Buffer.from(`${headerB64}.${payloadB64}`);
   const signature = Buffer.from(signatureB64, "base64url");
-  const verifyAlgorithm = alg === "RS256" ? "RSA-SHA256" : "SHA256";
-  if (!crypto.verify(verifyAlgorithm, signingInput, publicKey, signature)) return null;
+  if (!verifyClerkSignature(alg, signingInput, signature, publicKey)) return null;
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const exp = payload.exp;
@@ -132,6 +156,7 @@ async function verifyClerkToken(token: string): Promise<ClerkClaims | null> {
 
   const iss = typeof payload.iss === "string" ? payload.iss.replace(/\/+$/, "") : undefined;
   if (env.CLERK_ISSUER && iss && iss !== env.CLERK_ISSUER) return null;
+  if (!hasAuthorizedClerkParty(payload.azp, env.CLERK_AUTHORIZED_PARTIES)) return null;
 
   const sub = payload.sub;
   if (typeof sub !== "string" || !sub) return null;

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -16,6 +17,8 @@ from .metrics import calculate_metrics
 
 
 RUNNER_VERSION = "trustrag-eval-1"
+REVIEW_AUDIT_VERSION = "trustrag-review-consistency-v1"
+REVIEW_CANDIDATE_VERSION = "trustrag-public-candidate-v4"
 REQUIRED_CONFIG_FIELDS = (
     "name",
     "dataset_version",
@@ -25,8 +28,12 @@ REQUIRED_CONFIG_FIELDS = (
     "prompt_version",
     "temperature",
     "retrieval",
+    "orchestration",
+    "verification",
     "seed",
 )
+ORCHESTRATION_MODES = {"single-pass", "fixed-multi-agent", "trust-aware-consensus"}
+VERIFICATION_MODES = {"none", "typed-claims"}
 SECRET_PATTERNS = (
     re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
     re.compile(r"sk-or-v1-[0-9A-Za-z]+"),
@@ -52,6 +59,94 @@ def _assert_no_secrets(value: Any, location: str = "artifact") -> None:
         raise ValueError(f"secret-like value detected in {location}; remove it before running")
 
 
+def review_protocol_metadata(records: Iterable[dict[str, Any]], *, require_approved: bool = False) -> dict[str, Any]:
+    records = list(records)
+    reviews = [record.get("review") for record in records]
+    if not records or not all(isinstance(review, dict) for review in reviews):
+        if require_approved:
+            raise ValueError("paper dataset requires completed review metadata")
+        return {"review_protocol": "unreviewed", "human_reviewer_count": 0}
+
+    if all(
+        review.get("reviewer_a") == "approved"
+        and review.get("reviewer_b") == "approved"
+        and review.get("resolution") == "resolved"
+        for review in reviews
+    ):
+        return {"review_protocol": "two-human-independent", "human_reviewer_count": 2}
+
+    protocol = "one-human-plus-automated"
+    audit_fields = ("status", "version", "audit_sha256", "source_sha256", "candidate_sha256", "manifest_sha256")
+    expected_audit = None
+    for record, review in zip(records, reviews):
+        if review.get("review_protocol") != protocol or review.get("human_reviewer_count") != 1 or review.get("human_review_status") != "approved":
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} requires valid human review metadata")
+        if "reviewer_a" in review or "reviewer_b" in review:
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} must not claim a second human reviewer")
+        try:
+            datetime.fromisoformat(str(review["reviewed_at"]).replace("Z", "+00:00"))
+        except (KeyError, ValueError):
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} has invalid reviewed_at")
+        audit = review.get("automated_audit")
+        if not isinstance(audit, dict) or audit.get("status") != "passed" or audit.get("version") != REVIEW_AUDIT_VERSION:
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} requires a passing automated review audit")
+        if any(not isinstance(audit.get(field), str) or not re.fullmatch(r"[a-f0-9]{64}", audit[field]) for field in audit_fields if field.endswith("sha256")):
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} has invalid review audit hashes")
+        expected_hash = hashlib.sha256(
+            "\n".join([audit["source_sha256"], audit["candidate_sha256"], audit["manifest_sha256"], audit["version"]]).encode()
+        ).hexdigest()
+        if audit["audit_sha256"] != expected_hash:
+            raise ValueError(f"dataset record {record.get('id', '<unknown>')} has a mismatched review audit hash")
+        fingerprint = tuple(audit.get(field) for field in audit_fields)
+        if expected_audit is None:
+            expected_audit = fingerprint
+        elif fingerprint != expected_audit:
+            raise ValueError("paper dataset contains inconsistent automated review audit metadata")
+    return {
+        "review_protocol": protocol,
+        "human_reviewer_count": 1,
+        "review_audit_version": REVIEW_AUDIT_VERSION,
+        "review_audit_sha256": expected_audit[2] if expected_audit else None,
+    }
+
+
+def _validate_reviewed_candidate_export(records: list[dict[str, Any]]) -> None:
+    dataset_dir = Path(__file__).resolve().parent / "datasets" / REVIEW_CANDIDATE_VERSION
+    candidate_path = dataset_dir / "trustrag-project-draft.jsonl"
+    manifest_path = dataset_dir / "trustrag-v1.manifest.json"
+    source_path = Path(__file__).resolve().parent / "datasets" / "hotpot-validation-sampled-200.source.json"
+    expected_paths = (candidate_path, manifest_path, source_path)
+    if not all(path.is_file() for path in expected_paths):
+        raise ValueError("one-human paper review requires the checked-in v4 candidate, source snapshot, and corpus manifest")
+    hashes = [hashlib.sha256(path.read_bytes()).hexdigest() for path in expected_paths]
+    review = records[0].get("review") or {}
+    audit = review.get("automated_audit") or {}
+    if [audit.get("candidate_sha256"), audit.get("manifest_sha256"), audit.get("source_sha256")] != hashes:
+        raise ValueError("review audit source, candidate, or manifest hashes do not match the checked-in v4 dataset")
+
+    corpus_manifest = _read_json(manifest_path)
+    synthetic_evidence_ids = {
+        str(chunk.get("evidence_id"))
+        for source in corpus_manifest.get("sources", [])
+        if "synthetic-conflict" in str(source.get("path", ""))
+        for chunk in source.get("chunks", [])
+    }
+    for record in records:
+        if record.get("answer_type") == "conflicting" and synthetic_evidence_ids.intersection(map(str, record.get("gold_evidence_ids", []))):
+            raise ValueError(f"reviewed record {record['id']} labels a synthetic conflict chunk as gold evidence")
+
+    original_records = load_jsonl(candidate_path)
+    original_by_id = {str(record["id"]): record for record in original_records}
+    if len(records) != len(original_by_id) or {str(record["id"]) for record in records} != set(original_by_id):
+        raise ValueError("one-human review export must contain the complete checked-in v4 candidate")
+    for reviewed_record in records:
+        original = original_by_id[str(reviewed_record["id"])]
+        reviewed_base = {key: value for key, value in reviewed_record.items() if key != "review"}
+        original_base = {key: value for key, value in original.items() if key != "review"}
+        if reviewed_base != original_base:
+            raise ValueError(f"reviewed record {reviewed_record['id']} differs from the frozen v4 candidate")
+
+
 def load_and_validate_config(path: str | Path) -> dict[str, Any]:
     config = _read_json(Path(path))
     for field in REQUIRED_CONFIG_FIELDS:
@@ -59,9 +154,19 @@ def load_and_validate_config(path: str | Path) -> dict[str, Any]:
             raise ValueError(f"config requires {field}")
     if not isinstance(config["retrieval"], dict):
         raise ValueError("config retrieval must be an object")
-    for field in ("top_k", "chunk_size", "chunk_overlap"):
+    for field in ("top_k", "chunk_size", "chunk_overlap", "reranking"):
         if field not in config["retrieval"]:
             raise ValueError(f"config retrieval requires {field}")
+    reranking = config["retrieval"]["reranking"]
+    if not isinstance(reranking, dict) or not isinstance(reranking.get("enabled"), bool):
+        raise ValueError("config retrieval reranking requires a boolean enabled field")
+    for field in ("orchestration", "verification"):
+        if not isinstance(config[field], dict):
+            raise ValueError(f"config {field} must be an object")
+    if config["orchestration"].get("mode") not in ORCHESTRATION_MODES:
+        raise ValueError("config orchestration mode is unsupported")
+    if config["verification"].get("mode") not in VERIFICATION_MODES:
+        raise ValueError("config verification mode is unsupported")
     if not isinstance(config["seed"], int):
         raise ValueError("config seed must be an integer")
     if not isinstance(config["temperature"], (int, float)) or not 0 <= config["temperature"] <= 2:
@@ -93,7 +198,13 @@ def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
     return records
 
 
-def validate_dataset_records(records: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def validate_dataset_records(
+    records: Iterable[dict[str, Any]],
+    *,
+    paper_mode: bool = False,
+    manifest: dict[str, Any] | None = None,
+    expected_counts: dict[str, int] | None = None,
+) -> list[dict[str, Any]]:
     records = list(records)
     required = {
         "id",
@@ -120,8 +231,10 @@ def validate_dataset_records(records: Iterable[dict[str, Any]]) -> list[dict[str
             raise ValueError(f"dataset record {record_id} has unsupported answer_type")
         if not isinstance(record["gold_evidence_ids"], list):
             raise ValueError(f"dataset record {record_id} gold_evidence_ids must be a list")
-        if record["answer_type"] == "answerable" and not record["gold_evidence_ids"]:
-            raise ValueError(f"dataset record {record_id} requires gold evidence for answerable questions")
+        if record["answer_type"] in {"answerable", "prompt_injection"} and not record["gold_evidence_ids"]:
+            raise ValueError(f"dataset record {record_id} requires gold evidence for answerable questions and prompt-injection resilience cases")
+        if record["answer_type"] in {"answerable", "prompt_injection"} and not str(record["gold_answer"]).strip():
+            raise ValueError(f"dataset record {record_id} requires a gold answer for answerable questions and prompt-injection resilience cases")
         if len(set(record["gold_evidence_ids"])) != len(record["gold_evidence_ids"]):
             raise ValueError(f"dataset record {record_id} has duplicate gold evidence IDs")
         if not isinstance(record["documents"], list) or not record["documents"]:
@@ -132,6 +245,52 @@ def validate_dataset_records(records: Iterable[dict[str, Any]]) -> list[dict[str
             snapshot = str(document.get("snapshot_sha256", ""))
             if not snapshot_pattern.fullmatch(snapshot):
                 raise ValueError(f"dataset record {record_id} has invalid snapshot_sha256")
+        if paper_mode:
+            review_protocol_metadata([record], require_approved=True)
+
+    if paper_mode:
+        protocol = review_protocol_metadata(records, require_approved=True)
+        if protocol["review_protocol"] == "one-human-plus-automated":
+            _validate_reviewed_candidate_export(records)
+
+    if manifest is not None:
+        manifest_sources = {
+            str(source.get("document_id")): source
+            for source in manifest.get("sources", [])
+            if isinstance(source, dict) and source.get("document_id")
+        }
+        manifest_evidence = {
+            str(chunk.get("evidence_id"))
+            for source in manifest_sources.values()
+            for chunk in source.get("chunks", [])
+            if chunk.get("evidence_id")
+        }
+        for record in records:
+            for document in record["documents"]:
+                document_id = str(document["document_id"])
+                source = manifest_sources.get(document_id)
+                if source is None:
+                    raise ValueError(f"dataset record {record['id']} references unknown document")
+                if document["snapshot_sha256"] != source.get("snapshot_sha256"):
+                    raise ValueError(f"dataset record {record['id']} has a stale document snapshot")
+            unknown_evidence = set(map(str, record["gold_evidence_ids"])) - manifest_evidence
+            if unknown_evidence:
+                raise ValueError(
+                    f"dataset record {record['id']} references unknown evidence: "
+                    + ", ".join(sorted(unknown_evidence))
+                )
+        if manifest.get("dataset_version") and any(
+            record["dataset_version"] != manifest["dataset_version"] for record in records
+        ):
+            raise ValueError("dataset version does not match corpus manifest")
+
+    if paper_mode and expected_counts is not None:
+        actual_counts = Counter(record["answer_type"] for record in records)
+        if dict(actual_counts) != dict(expected_counts):
+            raise ValueError(
+                f"dataset answer-type composition {dict(actual_counts)} does not match "
+                f"expected {dict(expected_counts)}"
+            )
     _assert_no_secrets(records, "dataset")
     return records
 
@@ -190,6 +349,7 @@ def run_experiment(
     output_path = Path(output_dir)
     config = load_and_validate_config(config_path)
     dataset = validate_dataset_records(load_jsonl(dataset_path))
+    review_metadata = review_protocol_metadata(dataset)
     predictions = load_jsonl(predictions_path)
     records = merge_predictions(dataset, predictions)
     metrics = calculate_metrics(records, k=int(config["retrieval"]["top_k"]))
@@ -207,12 +367,15 @@ def run_experiment(
         "git_revision": _git_revision(),
         "python_version": sys.version.split()[0],
         "dataset_version": config["dataset_version"],
+        **review_metadata,
         "system": config["system"],
         "model": config["model"],
         "embedding_model": config["embedding_model"],
         "prompt_version": config["prompt_version"],
         "temperature": config["temperature"],
         "retrieval": config["retrieval"],
+        "orchestration": config["orchestration"],
+        "verification": config["verification"],
         "seed": config["seed"],
         "sample_count": len(records),
         "config_sha256": _sha256(config_path),

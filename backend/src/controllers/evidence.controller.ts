@@ -7,6 +7,7 @@ import Conversation from "../models/Conversation.js";
 import AgentExecution from "../models/AgentExecution.js";
 import ConsensusResult from "../models/ConsensusResult.js";
 import { isDbConnected } from "../config/database.js";
+import { meanObservedScore } from "../utils/evaluation-summary.js";
 
 /**
  * Tenant isolation guard: a message may only be read by the user who owns the
@@ -155,10 +156,10 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
     const records = asstMessages.map((msg) => {
       const c = consensusMap.get(msg._id.toString());
       const evalMatrix = (c as any)?.evaluation_matrix ?? {
-        faithfulness: 0,
-        context_precision: 0,
-        answer_relevance: 0,
-        consensus_alignment: 0,
+        faithfulness: null,
+        context_precision: null,
+        answer_relevance: null,
+        consensus_alignment: null,
         hallucination_risk: "high",
         composite_confidence: 0,
       };
@@ -187,15 +188,9 @@ export const listAuditRecords = async (req: AuthRequest, res: Response): Promise
 
     // Summary calculations
     const total = records.length;
-    const avgFaith = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.faithfulness ?? 0), 0) / total)
-      : 0;
-    const avgPrecision = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.context_precision ?? 0), 0) / total)
-      : 0;
-    const avgRelevance = total
-      ? Math.round(records.reduce((acc, r) => acc + (r.evaluation_matrix.answer_relevance ?? 0), 0) / total)
-      : 0;
+    const avgFaith = meanObservedScore(records.map((r) => r.evaluation_matrix.faithfulness));
+    const avgPrecision = meanObservedScore(records.map((r) => r.evaluation_matrix.context_precision));
+    const avgRelevance = meanObservedScore(records.map((r) => r.evaluation_matrix.answer_relevance));
     const hallucinationFreeCount = records.filter(
       (r) => r.evaluation_matrix.hallucination_risk === "low"
     ).length;

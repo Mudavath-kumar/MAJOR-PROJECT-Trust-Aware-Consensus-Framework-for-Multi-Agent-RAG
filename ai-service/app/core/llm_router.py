@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 from .config import settings
+from .llm_telemetry import complete_llm_attempt, record_llm_attempt
 
 logger = logging.getLogger("trustrag.llm")
 
@@ -64,6 +65,7 @@ async def call_llm(
     async def _try_gemini() -> Optional[str]:
         if not (key and _gemini_available):
             return None
+        attempt = record_llm_attempt("gemini", chosen_model)
         try:
             client = _get_client(key)
             response = await client.aio.models.generate_content(
@@ -76,15 +78,19 @@ async def call_llm(
                 ),
             )
             if response and response.text:
+                complete_llm_attempt(attempt, succeeded=True)
                 return response.text
             logger.warning("Gemini returned an empty response.")
+            complete_llm_attempt(attempt, succeeded=False)
         except Exception as e:
+            complete_llm_attempt(attempt, succeeded=False)
             logger.warning("Gemini failed (model=%s): %s", chosen_model, e)
         return None
 
     async def _try_openrouter() -> Optional[str]:
         if not settings.OPENROUTER_API_KEY:
             return None
+        attempt = record_llm_attempt("openrouter", settings.OPENROUTER_MODEL)
         try:
             import httpx
             headers = {
@@ -110,8 +116,11 @@ async def call_llm(
                 resp.raise_for_status()
                 content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
                 if content:
+                    complete_llm_attempt(attempt, succeeded=True)
                     return content
+            complete_llm_attempt(attempt, succeeded=False)
         except Exception as e:
+            complete_llm_attempt(attempt, succeeded=False)
             logger.warning("OpenRouter failed (model=%s): %s", settings.OPENROUTER_MODEL, e)
         return None
 

@@ -1,9 +1,10 @@
 import os
-import asyncio
 import logging
+import asyncio
 import base64
 import hmac
 import tempfile
+import time
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
@@ -15,6 +16,7 @@ from ..rag.chunker import (
     extract_text_from_file,
 )
 from ..rag.embeddings import compute_embeddings
+from ..rag.query_rewriter import rewrite_search_query
 from ..rag.vectorstore import (
     add_document_chunks,
     delete_document_chunks,
@@ -24,7 +26,6 @@ from ..rag.vectorstore import (
 from ..agents.researcher import run_researcher
 from ..agents.fact_checker import run_fact_checker
 from ..agents.critic import run_critic
-from ..agents.reasoner import run_reasoner
 from ..agents.trust_assessor import assess_trust
 from ..consensus.engine import compute_multi_agent_consensus
 from ..core.config import settings
@@ -114,15 +115,16 @@ async def ingest_document(req: IngestRequest):
             raise ValueError("Document contains no extractable text")
 
         texts = [c["text"] for c in chunks]
-        embeddings = compute_embeddings(texts)
+        embeddings = await asyncio.to_thread(compute_embeddings, texts)
         ids = [f"{req.document_id}_{c['chunk_id']}" for c in chunks]
         metas = [c["metadata"] for c in chunks]
 
-        add_document_chunks(
+        await asyncio.to_thread(
+            add_document_chunks,
             chunk_ids=ids,
             embeddings=embeddings,
             documents=texts,
-            metadatas=metas
+            metadatas=metas,
         )
 
         logger.info("Ingest complete: %s -> %d chunks", req.filename, len(chunks))
@@ -168,11 +170,12 @@ async def query_pipeline(req: QueryRequest):
         top_k = max(1, min(20, int(user_settings.get("similarity_top_k", 5))))
 
         # 1. Compute query embedding
-        q_embeddings = compute_embeddings([req.query])
+        q_embeddings = await asyncio.to_thread(compute_embeddings, [req.query])
         q_emb = q_embeddings[0]
 
         # 2. Vector search retrieved chunks
-        retrieved_chunks = query_vector_store(
+        retrieved_chunks = await asyncio.to_thread(
+            query_vector_store,
             query_embedding=q_emb,
             top_k=top_k,
             document_ids=req.document_ids,
@@ -202,7 +205,7 @@ async def query_pipeline(req: QueryRequest):
                     "evaluation_matrix": {
                         "faithfulness": 0,
                         "context_precision": 0,
-                        "answer_relevance": 0,
+                        "answer_relevance": None,
                         "consensus_alignment": 0,
                         "hallucination_risk": "high",
                         "composite_confidence": 0,
@@ -211,7 +214,7 @@ async def query_pipeline(req: QueryRequest):
                 "evaluation_matrix": {
                     "faithfulness": 0,
                     "context_precision": 0,
-                    "answer_relevance": 0,
+                    "answer_relevance": None,
                     "consensus_alignment": 0,
                     "hallucination_risk": "high",
                     "composite_confidence": 0,
@@ -230,38 +233,19 @@ async def query_pipeline(req: QueryRequest):
             and retrieval_quality < 0.75
         )
 
-        # Researcher and reasoner only read the retrieved context, so start them
-        # together. Fact-checking still depends on the researcher's claims and
-        # starts as soon as those claims are available.
-        reasoner_task = asyncio.create_task(
-            run_reasoner(
-                query=req.query,
-                context_chunks=retrieved_chunks,
-                model=preferred_model,
-                api_key=gemini_key,
-            )
+        researcher_res = await run_researcher(
+            query=req.query,
+            context_chunks=retrieved_chunks,
+            model=preferred_model,
+            api_key=gemini_key
         )
-        try:
-            researcher_res = await run_researcher(
-                query=req.query,
-                context_chunks=retrieved_chunks,
-                model=preferred_model,
-                api_key=gemini_key
-            )
-        except Exception:
-            reasoner_task.cancel()
-            await asyncio.gather(reasoner_task, return_exceptions=True)
-            raise
-        fact_checker_res, reasoner_res = await asyncio.gather(
-            run_fact_checker(
-                query=req.query,
-                researcher_output=researcher_res,
-                model=preferred_model,
-                api_key=gemini_key,
-                tavily_key=tavily_key if external_verification_enabled else "",
-                context_chunks=retrieved_chunks,
-            ),
-            reasoner_task,
+        fact_checker_res = await run_fact_checker(
+            query=req.query,
+            researcher_output=researcher_res,
+            model=preferred_model,
+            api_key=gemini_key,
+            tavily_key=tavily_key if external_verification_enabled else "",
+            context_chunks=retrieved_chunks,
         )
 
         # 5. Agent 3: Critic
@@ -280,7 +264,6 @@ async def query_pipeline(req: QueryRequest):
             fact_checker=fact_checker_res,
             critic=critic_res,
             trust_assessor=trust_res,
-            reasoner=reasoner_res,
             retrieved_chunks=retrieved_chunks,
             threshold=threshold
         )
@@ -313,13 +296,17 @@ async def query_pipeline(req: QueryRequest):
                 fact_checker=fact_checker_res,
                 critic=critic_res,
                 trust_assessor=trust_res,
-                reasoner=reasoner_res,
                 retrieved_chunks=retrieved_chunks,
                 threshold=threshold,
             )
 
         # Prepare evidence sources
-        evidence_sources = researcher_res.get("sources_cited", [])
+        verified_evidence_ids = set(consensus.get("verified_evidence_ids", []))
+        evidence_sources = [
+            source
+            for source in researcher_res.get("sources_cited", [])
+            if str(source.get("chunk_id", "")) in verified_evidence_ids
+        ]
         eval_matrix = consensus.get("evaluation_matrix", {})
 
         return {
@@ -335,7 +322,6 @@ async def query_pipeline(req: QueryRequest):
                 fact_checker_res,
                 critic_res,
                 trust_res,
-                reasoner_res,
             ],
             "evidence_sources": evidence_sources,
             "external_sources": [
