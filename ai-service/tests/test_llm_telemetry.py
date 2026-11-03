@@ -1,4 +1,6 @@
+import asyncio
 from types import SimpleNamespace
+import pytest
 
 from app.core.llm_telemetry import capture_llm_telemetry, complete_llm_attempt, record_llm_attempt
 from app.core import llm_router
@@ -91,6 +93,67 @@ def test_llm_router_records_provider_fallback_attempts(monkeypatch):
     assert result == "fallback response"
     assert capture.attempts == [
         {"provider": "gemini", "model": "gemini-test-model", "succeeded": False},
+        {"provider": "gemini", "model": "gemini-3.5-flash-lite", "succeeded": False},
         {"provider": "openrouter", "model": "openai/test-model", "succeeded": True},
     ]
     assert "secret" not in repr(capture.attempts)
+
+
+def test_llm_router_retries_gemini_once_after_transient_rate_limit(monkeypatch):
+    class Models:
+        attempts = 0
+
+        async def generate_content(self, **_kwargs):
+            self.attempts += 1
+            if self.attempts == 1:
+                error = RuntimeError("gateway timeout")
+                error.code = 429
+                raise error
+            return SimpleNamespace(text="recovered response")
+
+    models = Models()
+    client = SimpleNamespace(aio=SimpleNamespace(models=models))
+
+    monkeypatch.setattr(llm_router, "_gemini_available", True)
+    monkeypatch.setattr(llm_router, "_get_client", lambda _key: client)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "AIza-unit-test-secret")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "")
+
+    result = asyncio.run(llm_router.call_llm("prompt", model="gemini-test-model"))
+
+    assert result == "recovered response"
+    assert models.attempts == 2
+
+
+@pytest.mark.parametrize("status_code", [503, 504])
+def test_llm_router_uses_flash_lite_when_primary_model_is_unavailable(monkeypatch, status_code):
+    class Models:
+        requested_models = []
+
+        async def generate_content(self, *, model, **_kwargs):
+            self.requested_models.append(model)
+            if model == "gemini-3.8-flash":
+                error = RuntimeError("model currently unavailable")
+                error.code = status_code
+                raise error
+            return SimpleNamespace(text="fallback model response")
+
+    models = Models()
+    client = SimpleNamespace(aio=SimpleNamespace(models=models))
+    monkeypatch.setattr(llm_router, "_gemini_available", True)
+    monkeypatch.setattr(llm_router, "_get_client", lambda _key: client)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "AIza-unit-test-secret")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "")
+
+    result = asyncio.run(llm_router.call_llm("prompt", model="gemini-3.8-flash"))
+
+    assert result == "fallback model response"
+    assert models.requested_models == ["gemini-3.8-flash", "gemini-3.5-flash-lite"]
+
+
+def test_active_provider_prefers_configured_gemini_without_key_prefix_guess(monkeypatch):
+    monkeypatch.setattr(llm_router, "_gemini_available", True)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "configured-google-key")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "configured-openrouter-key")
+
+    assert llm_router._get_active_provider() == "gemini"
