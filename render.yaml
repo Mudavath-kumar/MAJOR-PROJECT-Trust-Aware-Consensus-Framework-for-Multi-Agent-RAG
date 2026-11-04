@@ -28,6 +28,12 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: qwen/qwen3.8-27b
+      - key: LLM_PROVIDER
+        value: auto
       - key: TAVILY_API_KEY
         sync: false
       - key: AI_SERVICE_TOKEN
