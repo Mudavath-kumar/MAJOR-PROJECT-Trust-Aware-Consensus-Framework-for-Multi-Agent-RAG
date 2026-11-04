@@ -1,0 +1,58 @@
+{
+  "by_category": {
+    "answerable": {
+      "Approved": 100,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "conflicting": {
+      "Approved": 25,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "prompt_injection": {
+      "Approved": 25,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "unanswerable": {
+      "Approved": 41,
+      "Needs Review": 1,
+      "Not Approved": 8
+    }
+  },
+  "candidate_sha256": "edf797c836e6a2996113ebdd7f7e5bd6795367d481db32ff5e6d48f3782b8a79",
+  "dataset_version": "trustrag-v1",
+  "decision_counts": {
+    "Approved": 191,
+    "Needs Review": 1,
+    "Not Approved": 8
+  },
+  "human_approval_recorded": false,
+  "human_review_status_counts": {
+    "pending": 200
+  },
+  "limitations": [
+    "AI decisions are not human approvals or ground-truth adjudication.",
+    "The eight Not Approved records are preserved in the original candidate and must be corrected in a new dataset version before inclusion.",
+    "q-0128 needs an explicit policy for false-premise questions.",
+    "The 200-record candidate is not human-approved and is not a frozen paper benchmark snapshot."
+  ],
+  "needs_review_ids": [
+    "q-0128"
+  ],
+  "not_approved_ids": [
+    "q-0106",
+    "q-0108",
+    "q-0126",
+    "q-0127",
+    "q-0134",
+    "q-0137",
+    "q-0143",
+    "q-0147"
+  ],
+  "prior_automated_review_sha256": "c01e072f22e97942a3bd531a5f20ebc3717c6ecd3f6e006963067e6afb411003",
+  "record_count": 200,
+  "review_type": "AI-assisted per-example evidence and label review; not human review",
+  "unique_id_count": 200
+}

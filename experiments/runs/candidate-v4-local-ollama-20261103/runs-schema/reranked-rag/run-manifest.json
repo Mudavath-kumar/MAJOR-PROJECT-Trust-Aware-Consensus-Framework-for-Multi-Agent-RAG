@@ -1,0 +1,53 @@
+{
+  "config_sha256": "303fb24282a35b0d0d6adbdc44eea48846400a5aac9727b76d3396b403883505",
+  "corpus_manifest_sha256": "d1a973ddd6f3e7d715b20c796e4841fd6d350bf964ea5bbdcd569fa8f8dce71c",
+  "dataset_sha256": "57b199fe7c16409408e5c11bbc1bcf853b26be60ca95859f0bd71d6809f2ae82",
+  "dataset_version": "trustrag-v1",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "generated_at": "2026-11-03T19:09:23.059790+00:00",
+  "git_revision": "02503fb4e881974193dd20b43fd08a354a178aa5",
+  "human_reviewer_count": 0,
+  "llm_failed_attempts": 0,
+  "llm_model_attempts": {
+    "qwen2.5-coder:3b": 4
+  },
+  "llm_provider_attempts": {
+    "ollama": 4
+  },
+  "llm_successful_provider_models": {
+    "ollama/qwen2.5-coder:3b": 4
+  },
+  "model": "qwen2.5-coder:3b",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "paper_eligible": false,
+  "predictions_sha256": "e608a3d11f44ab579eb7be5b68cb2f253e556bcbe3b144dc2207410d266e5fc8",
+  "prompt_version": "reranked-v1",
+  "python_version": "3.10.0",
+  "raw_outputs_retained": true,
+  "retrieval": {
+    "candidate_k": 20,
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": true,
+      "strategy": "hybrid-lexical-semantic-v1"
+    },
+    "top_k": 5
+  },
+  "review_protocol": "unreviewed",
+  "run_mode": "exploratory",
+  "runner_version": "trustrag-eval-1",
+  "sample_count": 4,
+  "seed": 42,
+  "status_counts": {
+    "answer": 4
+  },
+  "system": "vanilla-rag-with-reranking",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "none"
+  }
+}

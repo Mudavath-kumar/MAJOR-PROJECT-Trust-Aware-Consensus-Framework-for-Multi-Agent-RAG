@@ -3,6 +3,54 @@ export type AnswerBlock =
   | { type: "paragraph"; text: string }
   | { type: "list"; ordered: boolean; items: string[] };
 
+const INTERNAL_CLAIM_FIELDS = /["'](?:claims|claim_id|evidence_ids)["']\s*:/i;
+
+function claimTexts(value: unknown): string[] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  const record = value as Record<string, unknown>;
+  const claims = Array.isArray(record.claims)
+    ? record.claims
+    : typeof record.claim_id === "string"
+      ? [record]
+      : [];
+  return claims
+    .map((claim) => {
+      if (!claim || typeof claim !== "object" || Array.isArray(claim)) return "";
+      const text = (claim as Record<string, unknown>).text;
+      return typeof text === "string" ? text.trim() : "";
+    })
+    .filter(Boolean);
+}
+
+/** Remove internal claim schema fields leaked into older or malformed responses. */
+export function normalizeAnswerText(answer: string): string {
+  const raw = answer.trim();
+  if (!raw || !INTERNAL_CLAIM_FIELDS.test(raw)) return raw;
+
+  try {
+    const parsedTexts = claimTexts(JSON.parse(raw));
+    if (parsedTexts.length) return parsedTexts.join("\n\n");
+  } catch {
+    // Historical records may contain truncated JSON. Recover only its text fields.
+  }
+
+  const recovered = Array.from(
+    raw.matchAll(/"text"\s*:\s*("(?:\\.|[^"\\])*")/g),
+    ([, encodedText]) => {
+      try {
+        const value: unknown = JSON.parse(encodedText);
+        return typeof value === "string" ? value.trim() : "";
+      } catch {
+        return "";
+      }
+    },
+  ).filter(Boolean);
+
+  return recovered.length
+    ? recovered.join("\n\n")
+    : "This response could not be formatted safely. Please run the question again.";
+}
+
 function flushParagraph(blocks: AnswerBlock[], lines: string[]) {
   const text = lines.join(" ").replace(/\s+/g, " ").trim();
   if (text) blocks.push({ type: "paragraph", text });

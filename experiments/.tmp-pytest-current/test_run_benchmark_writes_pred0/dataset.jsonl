@@ -1,0 +1,1 @@
+{"id": "q-0001", "dataset_version": "test-v1", "question": "What is the answer?", "answer_type": "answerable", "gold_answer": "Paris", "gold_evidence_ids": ["doc-policy-fbf5d955e921:chunk_1_0"], "documents": [{"document_id": "doc-policy-fbf5d955e921", "snapshot_sha256": "fbf5d955e921f9b830040ec0204904a1d8fac050a35d1116c8e1ac07a1aaf972"}]}

@@ -1,0 +1,1 @@
+{"id": "q1", "dataset_version": "smoke-v1", "question": "What is the capital of France?", "answer_type": "answerable", "gold_answer": "Paris", "gold_evidence_ids": ["c1"], "documents": [{"document_id": "doc-1", "snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}

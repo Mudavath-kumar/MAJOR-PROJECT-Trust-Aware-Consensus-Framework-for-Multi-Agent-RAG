@@ -1,0 +1,25 @@
+{
+  "dataset_version": "trustrag-v1",
+  "source_candidate": "C:\\Users\\kumar\\Downloads\\Major-Project\\trustarc-core\\experiments\\datasets\\trustrag-public-candidate-v4\\trustrag-project-draft.jsonl",
+  "record_count": 200,
+  "unique_id_count": 200,
+  "duplicate_ids": [],
+  "category_counts": {
+    "answerable": 100,
+    "conflicting": 25,
+    "prompt_injection": 25,
+    "unanswerable": 50
+  },
+  "review_status_counts": {
+    "pending": 200
+  },
+  "missing_evidence_references": [],
+  "invalid_evidence_chunk_hashes": [],
+  "semantic_support_verdict": "Not automatically established; every record remains subject to human review.",
+  "source_document_pages": "The corpus snapshots contain article sections but no page numbers; section headings are included.",
+  "batch_size": 25,
+  "batch_count": 8,
+  "document_reference_count": 250,
+  "invalid_document_references_or_snapshot_hashes": [],
+  "gold_answer_support_verdict": "Not established automatically; no answer was labeled supported/unsupported without semantic review."
+}

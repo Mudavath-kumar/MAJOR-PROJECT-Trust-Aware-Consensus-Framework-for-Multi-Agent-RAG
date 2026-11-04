@@ -93,14 +93,13 @@ def _default_embedder(texts: list[str]) -> list[list[float]]:
     return compute_embeddings(texts)
 
 
-def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        for record in records:
-            handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
-
-
-def _augment_manifest(output_dir: Path, manifest_path: Path, *, paper_mode: bool) -> None:
+def _augment_manifest(
+    output_dir: Path,
+    manifest_path: Path,
+    *,
+    paper_mode: bool,
+    raw_outputs_retained: bool = False,
+) -> None:
     path = output_dir / "run-manifest.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     predictions = [
@@ -126,8 +125,9 @@ def _augment_manifest(output_dir: Path, manifest_path: Path, *, paper_mode: bool
             successful_provider_models[key] = successful_provider_models.get(key, 0) + 1
     payload.update(
         {
-            "run_mode": "paper" if paper_mode else "smoke",
+            "run_mode": "paper" if paper_mode else ("exploratory" if raw_outputs_retained else "smoke"),
             "paper_eligible": paper_mode,
+            "raw_outputs_retained": raw_outputs_retained,
             "corpus_manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
             "llm_provider_attempts": dict(sorted(provider_attempts.items())),
             "llm_model_attempts": dict(sorted(model_attempts.items())),
@@ -148,6 +148,7 @@ def run_benchmark(
     backend: Any | None = None,
     context_provider: ContextProvider | None = None,
     embedder: Callable[[list[str]], list[list[float]]] | None = None,
+    retain_raw_outputs: bool = False,
 ) -> Path:
     config_path = Path(config_path)
     dataset_path = Path(dataset_path)
@@ -176,46 +177,71 @@ def run_benchmark(
     if context_provider is None:
         rows = load_corpus_rows(manifest)
         retriever = InMemoryRetriever(rows, embedder or _default_embedder)
+    output_path.mkdir(parents=True, exist_ok=True)
+    partial_predictions_path = output_path / "predictions-input.partial.jsonl"
+    execution_state: dict[str, Any] = {
+        "completed_prediction_count": 0,
+        "failed_record_id": None,
+        "failed_llm_attempts": [],
+        "failed_prediction": None,
+    }
 
     async def execute() -> list[dict[str, Any]]:
         predictions: list[dict[str, Any]] = []
-        for record in dataset:
-            started = perf_counter()
-            with capture_llm_telemetry() as telemetry:
-                context = (
-                    context_provider(record, profile)
-                    if context_provider is not None
-                    else retriever.search(
-                        record["question"],
-                        profile.top_k,
-                        rerank=profile.reranking_enabled,
-                        candidate_k=int(config["retrieval"].get("candidate_k", profile.top_k)),
-                        document_ids={
-                            str(document["document_id"])
-                            for document in record.get("documents", [])
-                        },
-                    )
-                )
-                prediction = await run_variant_query(
-                    profile,
-                    record["question"],
-                    context,
-                    active_backend,
-                    record_id=str(record["id"]),
-                )
-            prediction["llm_calls"] = len(telemetry.attempts)
-            prediction["llm_attempts"] = [dict(attempt) for attempt in telemetry.attempts]
-            prediction["latency_ms"] = max(0, round((perf_counter() - started) * 1000))
-            if paper_mode and prediction["status"] != "abstain" and not any(
-                attempt.get("succeeded") is True for attempt in telemetry.attempts
-            ):
-                raise RuntimeError(
-                    f"paper query {record['id']} returned an answer without a successful provider call"
-                )
-            predictions.append(prediction)
+        with partial_predictions_path.open("w", encoding="utf-8", newline="\n") as handle:
+            for record in dataset:
+                started = perf_counter()
+                telemetry = None
+                prediction = None
+                execution_state["failed_record_id"] = str(record["id"])
+                try:
+                    with capture_llm_telemetry() as telemetry:
+                        context = (
+                            context_provider(record, profile)
+                            if context_provider is not None
+                            else retriever.search(
+                                record["question"],
+                                profile.top_k,
+                                rerank=profile.reranking_enabled,
+                                candidate_k=int(config["retrieval"].get("candidate_k", profile.top_k)),
+                                document_ids={
+                                    str(document["document_id"])
+                                    for document in record.get("documents", [])
+                                },
+                            )
+                        )
+                        prediction = await run_variant_query(
+                            profile,
+                            record["question"],
+                            context,
+                            active_backend,
+                            record_id=str(record["id"]),
+                        )
+                    if not paper_mode and not retain_raw_outputs:
+                        prediction.pop("retrieved_evidence", None)
+                        prediction.pop("agent_outputs", None)
+                    prediction["llm_calls"] = len(telemetry.attempts)
+                    prediction["llm_attempts"] = [dict(attempt) for attempt in telemetry.attempts]
+                    prediction["latency_ms"] = max(0, round((perf_counter() - started) * 1000))
+                    if paper_mode and prediction["status"] != "abstain" and not any(
+                        attempt.get("succeeded") is True for attempt in telemetry.attempts
+                    ):
+                        raise RuntimeError(
+                            f"paper query {record['id']} returned an answer without a successful provider call"
+                        )
+                    predictions.append(prediction)
+                    handle.write(json.dumps(prediction, sort_keys=True, ensure_ascii=False) + "\n")
+                    handle.flush()
+                    execution_state["completed_prediction_count"] = len(predictions)
+                    execution_state["failed_record_id"] = None
+                except Exception:
+                    execution_state["failed_llm_attempts"] = [
+                        dict(attempt) for attempt in (telemetry.attempts if telemetry else [])
+                    ]
+                    execution_state["failed_prediction"] = prediction
+                    raise
         return predictions
 
-    output_path.mkdir(parents=True, exist_ok=True)
     try:
         predictions = asyncio.run(execute())
         if paper_mode and not any(
@@ -225,9 +251,14 @@ def run_benchmark(
         ):
             raise RuntimeError("paper benchmark made no successful LLM provider calls")
         predictions_path = output_path / "predictions-input.jsonl"
-        _write_jsonl(predictions_path, predictions)
+        partial_predictions_path.replace(predictions_path)
         run_experiment(config_path, dataset_path, predictions_path, output_path)
-        _augment_manifest(output_path, manifest_path, paper_mode=paper_mode)
+        _augment_manifest(
+            output_path,
+            manifest_path,
+            paper_mode=paper_mode,
+            raw_outputs_retained=retain_raw_outputs,
+        )
         return output_path
     except Exception as exc:
         error_manifest = {
@@ -236,6 +267,10 @@ def run_benchmark(
             "status": "error",
             "error_type": type(exc).__name__,
             "error_message": str(exc),
+            **execution_state,
+            "partial_predictions_file": (
+                partial_predictions_path.name if partial_predictions_path.is_file() else None
+            ),
         }
         output_path.mkdir(parents=True, exist_ok=True)
         (output_path / "error-manifest.json").write_text(
@@ -251,6 +286,11 @@ def main() -> None:
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--paper", action="store_true", help="require the reviewed 200-record composition")
+    parser.add_argument(
+        "--retain-raw-outputs",
+        action="store_true",
+        help="retain evidence and stage outputs for a non-paper exploratory run",
+    )
     args = parser.parse_args()
     print(
         run_benchmark(
@@ -259,6 +299,7 @@ def main() -> None:
             args.manifest,
             args.output_dir,
             paper_mode=args.paper,
+            retain_raw_outputs=args.retain_raw_outputs,
         )
     )
 

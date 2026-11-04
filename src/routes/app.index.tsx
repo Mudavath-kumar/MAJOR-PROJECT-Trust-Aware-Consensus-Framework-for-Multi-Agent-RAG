@@ -20,7 +20,8 @@ export const Route = createFileRoute("/app/")({
       { title: "Dashboard — TrustRAG Console" },
       {
         name: "description",
-        content: "Documents indexed, queries answered, confidence and trust averages at a glance.",
+        content:
+          "Documents indexed, queries answered, confidence and consensus averages at a glance.",
       },
       { property: "og:title", content: "TrustRAG Dashboard" },
       { property: "og:description", content: "Live view of your evidence-backed AI workspace." },
@@ -200,7 +201,7 @@ function Dashboard() {
           delay={120}
         />
         <Stat
-          label="Avg trust score"
+          label="Avg consensus"
           value={metrics.avg_consensus_score === null ? null : Number(metrics.avg_consensus_score)}
           suffix="%"
           decimals={1}

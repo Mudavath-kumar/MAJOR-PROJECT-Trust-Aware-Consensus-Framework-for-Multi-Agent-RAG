@@ -102,9 +102,12 @@ def filter_vector_results(
         searchable = f"{result.get('text', '')} {metadata.get('document_name', '')}"
         lexical = lexical_relevance(query_text, searchable)
         semantic = float(result.get("similarity_score", 0.0))
-        if lexical <= 0.0 and semantic < 0.88:
+        if lexical <= 0.0 and semantic < 0.65:
             continue
         filtered.append((semantic + min(0.1, lexical * 0.1), result))
+
+    if not filtered and results:
+        return results[:top_k]
 
     filtered.sort(key=lambda item: item[0], reverse=True)
     return [result for _, result in filtered[:top_k]]

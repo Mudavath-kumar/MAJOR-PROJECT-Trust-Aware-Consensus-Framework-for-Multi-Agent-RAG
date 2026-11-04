@@ -1,0 +1,29 @@
+{
+  "dataset_version": "trustrag-v1",
+  "decision": {
+    "abstention_gate": false,
+    "typed_verification": true
+  },
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "model": "gemini-3.6-flash",
+  "name": "multi-agent-rag",
+  "orchestration": {
+    "mode": "fixed-multi-agent"
+  },
+  "prompt_version": "multi-agent-v1",
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 5
+  },
+  "seed": 42,
+  "system": "multi-agent-without-decision-gate",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "typed-claims"
+  }
+}

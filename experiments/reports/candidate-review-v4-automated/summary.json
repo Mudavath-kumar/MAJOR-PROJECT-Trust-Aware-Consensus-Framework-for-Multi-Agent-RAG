@@ -1,0 +1,38 @@
+{
+  "approved_count": 179,
+  "approved_exploratory_count": 179,
+  "by_category": {
+    "answerable": {
+      "Approved": 100,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "conflicting": {
+      "Approved": 25,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "prompt_injection": {
+      "Approved": 25,
+      "Needs Review": 0,
+      "Not Approved": 0
+    },
+    "unanswerable": {
+      "Approved": 29,
+      "Needs Review": 21,
+      "Not Approved": 0
+    }
+  },
+  "candidate_sha256": "edf797c836e6a2996113ebdd7f7e5bd6795367d481db32ff5e6d48f3782b8a79",
+  "dataset_version": "trustrag-v1",
+  "human_approval_recorded": false,
+  "limitations": [
+    "Automated decisions are not human approvals.",
+    "Answer strings that appear in unanswerable scoped corpora remain Needs Review because lexical occurrence alone does not establish whether the relation is answerable.",
+    "This export is not a frozen paper benchmark snapshot and cannot pass the paper-mode review gate."
+  ],
+  "needs_review_count": 21,
+  "not_approved_count": 0,
+  "record_count": 200,
+  "review_type": "automated source-linked consistency and evidence audit"
+}

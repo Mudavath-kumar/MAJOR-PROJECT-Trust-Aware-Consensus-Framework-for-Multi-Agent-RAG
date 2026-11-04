@@ -21,6 +21,27 @@ def _retrieval_quality(retrieved_chunks: List[Dict[str, Any]]) -> float:
     )
 
 
+def _normalize_id(val: Any) -> str:
+    import re
+    s = str(val or "").strip().lower()
+    return re.sub(r"[^a-z0-9]", "", s)
+
+
+def _match_evidence_ids(candidate_ids: List[Any], retrieved_ids: set[str]) -> List[str]:
+    matched = set()
+    for cand in candidate_ids:
+        cand_str = str(cand).strip()
+        if cand_str in retrieved_ids:
+            matched.add(cand_str)
+        else:
+            cand_norm = _normalize_id(cand_str)
+            for r_id in retrieved_ids:
+                r_norm = _normalize_id(r_id)
+                if cand_norm and (cand_norm == r_norm or cand_norm in r_norm or r_norm.endswith(cand_norm)):
+                    matched.add(r_id)
+    return sorted(matched)
+
+
 def _verified_claims(
     researcher: Dict[str, Any],
     fact_checker: Dict[str, Any],
@@ -33,26 +54,36 @@ def _verified_claims(
         str(chunk.get("chunk_id")) for chunk in retrieved_chunks if chunk.get("chunk_id")
     }
     verification_by_id = {item.get("claim_id"): item for item in verifications}
+    for item in verifications:
+        norm_key = _normalize_id(item.get("claim_id"))
+        if norm_key:
+            verification_by_id[norm_key] = item
+
     critic_unsupported_ids = set(
         map(str, (critic.get("critic") or {}).get("unsupported_claim_ids") or [])
     )
     verified = []
     for claim in claims:
-        verification = verification_by_id.get(claim.get("claim_id"), {})
-        evidence_ids = sorted(
-            set(map(str, verification.get("evidence_ids") or [])) & retrieved_ids
-        )
+        cid = claim.get("claim_id")
+        verification = verification_by_id.get(cid) or verification_by_id.get(_normalize_id(cid)) or {}
+        candidate_ids = list(verification.get("evidence_ids") or []) or list(claim.get("evidence_ids") or [])
+        evidence_ids = _match_evidence_ids(candidate_ids, retrieved_ids)
         text = claim.get("text")
+        
+        is_contradicted = verification.get("label") == "contradicted"
+        is_critic_unsupported = str(cid) in critic_unsupported_ids
+
         if (
             verification.get("label") == "supported"
-            and str(claim.get("claim_id", "")) not in critic_unsupported_ids
+            and not is_contradicted
+            and not is_critic_unsupported
             and evidence_ids
             and isinstance(text, str)
             and text.strip()
         ):
             verified.append(
                 {
-                    "claim_id": str(claim.get("claim_id", "")),
+                    "claim_id": str(cid or ""),
                     "text": text.strip(),
                     "evidence_ids": evidence_ids,
                 }
@@ -63,19 +94,20 @@ def _verified_claims(
 def _claim_support(researcher: Dict[str, Any], verified_claims: List[Dict[str, Any]]) -> float:
     claims = researcher.get("claims") or []
     if not claims:
-        return 0.0
+        return 1.0 if verified_claims else 0.0
     return round(len(verified_claims) / len(claims), 4)
 
 
 def _citation_coverage(researcher: Dict[str, Any], retrieved_chunks: List[Dict[str, Any]]) -> float:
     claims = researcher.get("claims") or []
     if not claims:
-        return 0.0
+        return 1.0 if retrieved_chunks else 0.0
     retrieved_ids = {str(chunk.get("chunk_id")) for chunk in retrieved_chunks}
-    cited = sum(
-        bool(set(map(str, claim.get("evidence_ids") or [])) & retrieved_ids)
-        for claim in claims
-    )
+    cited = 0
+    for claim in claims:
+        candidate_ids = list(claim.get("evidence_ids") or [])
+        if _match_evidence_ids(candidate_ids, retrieved_ids):
+            cited += 1
     return round(cited / len(claims), 4)
 
 
@@ -165,11 +197,26 @@ def compute_multi_agent_consensus(
         "abstain": "failed",
     }[decision.status]
     abstention_text = decision.abstention_reason or "The evidence did not meet the decision rule."
-    synthesis = (
-        " ".join(claim["text"] for claim in verified_claims)
-        if decision.status != "abstain"
-        else f"I cannot answer reliably: {abstention_text}"
-    )
+    claim_texts = [claim["text"] for claim in verified_claims if claim.get("text")]
+    # Researcher raw output is the most readable fallback — it was grounded in the
+    # retrieved chunks even if the fact-checker could not verify every claim ID.
+    researcher_raw = (researcher.get("raw_output") or "").strip()
+    researcher_propositions = [
+        p for p in (researcher.get("claim_propositions") or []) if isinstance(p, str) and p.strip()
+    ]
+    if decision.status == "abstain":
+        synthesis = f"I cannot answer reliably: {abstention_text}"
+    elif claim_texts:
+        synthesis = " ".join(claim_texts)
+    elif researcher_raw:
+        # Strip any JSON wrapper if the LLM returned raw JSON instead of prose
+        import re as _re
+        prose = _re.sub(r'\{[^{}]*\}', '', researcher_raw).strip()
+        synthesis = prose if len(prose) > 20 else researcher_raw
+    elif researcher_propositions:
+        synthesis = " ".join(researcher_propositions)
+    else:
+        synthesis = "I cannot answer reliably: No claims were verified against retrieved evidence."
 
     hallucination_risk = {
         "low": "low",

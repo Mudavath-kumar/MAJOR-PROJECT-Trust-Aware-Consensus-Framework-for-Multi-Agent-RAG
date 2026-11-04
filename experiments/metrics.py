@@ -170,8 +170,13 @@ def calculate_metrics(records: Sequence[dict[str, Any]], k: int = 5) -> dict[str
     )
     accepted_answerable = [item for item in answerable if item["status"] != "abstain"]
     accepted_unsafe = [item for item in unsafe if item["status"] != "abstain"]
-    selective_risk = _safe_divide(
-        sum(not _is_decision_correct(item) for item in accepted_answerable), len(accepted_answerable)
+    selective_risk = (
+        _safe_divide(
+            sum(not _is_decision_correct(item) for item in accepted_answerable),
+            len(accepted_answerable),
+        )
+        if accepted_answerable
+        else None
     )
     decision_labels = [_gold_answerability(item) for item in records]
     brier = _mean_or_zero(

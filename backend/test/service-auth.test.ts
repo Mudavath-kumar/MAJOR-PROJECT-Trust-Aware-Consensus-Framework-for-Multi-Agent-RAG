@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import { generateKeyPairSync, sign } from "node:crypto";
 import { hasValidServiceToken } from "../src/utils/service-auth.js";
 import { normalizeServiceUrl } from "../src/config/environment.js";
-import { hasAuthorizedClerkParty, verifyClerkSignature } from "../src/middleware/auth.js";
+import {
+  hasAuthorizedClerkParty,
+  hasValidClerkStandardClaims,
+  recoverClerkUserAfterDuplicate,
+  verifyClerkSignature,
+} from "../src/middleware/auth.js";
 
 test("accepts only an exact configured internal service token", () => {
   assert.equal(hasValidServiceToken("service-secret", "service-secret"), true);
@@ -59,4 +64,44 @@ test("accepts Clerk tokens only from configured authorized parties", () => {
     false,
   );
   assert.equal(hasAuthorizedClerkParty(undefined, ["https://example.com"]), false);
+});
+
+test("requires valid Clerk expiration and configured issuer claims", () => {
+  const now = 1_800_000_000;
+  const valid = { exp: now + 60, iss: "https://issuer.clerk.accounts.dev/" };
+
+  assert.equal(hasValidClerkStandardClaims(valid, "https://issuer.clerk.accounts.dev", now), true);
+  assert.equal(hasValidClerkStandardClaims({ iss: valid.iss }, "https://issuer.clerk.accounts.dev", now), false);
+  assert.equal(hasValidClerkStandardClaims({ ...valid, exp: "later" }, "https://issuer.clerk.accounts.dev", now), false);
+  assert.equal(hasValidClerkStandardClaims({ ...valid, exp: now }, "https://issuer.clerk.accounts.dev", now), false);
+  assert.equal(hasValidClerkStandardClaims({ exp: valid.exp }, "https://issuer.clerk.accounts.dev", now), false);
+  assert.equal(hasValidClerkStandardClaims({ ...valid, iss: "https://attacker.example" }, "https://issuer.clerk.accounts.dev", now), false);
+});
+
+test("recovers the existing Clerk user after a concurrent unique-index insert wins", async () => {
+  const duplicateError = Object.assign(new Error("duplicate key"), { code: 11000 });
+  const existingUser = { id: "clerk-user-1" };
+  let lookups = 0;
+
+  const user = await recoverClerkUserAfterDuplicate(duplicateError, async () => {
+    lookups += 1;
+    return existingUser;
+  });
+
+  assert.equal(user, existingUser);
+  assert.equal(lookups, 1);
+});
+
+test("does not hide unrelated errors or unrecoverable duplicate-key errors", async () => {
+  const ordinaryError = new Error("database unavailable");
+  const duplicateError = Object.assign(new Error("duplicate key"), { code: 11000 });
+
+  await assert.rejects(
+    recoverClerkUserAfterDuplicate(ordinaryError, async () => null),
+    (error) => error === ordinaryError,
+  );
+  await assert.rejects(
+    recoverClerkUserAfterDuplicate(duplicateError, async () => null),
+    (error) => error === duplicateError,
+  );
 });

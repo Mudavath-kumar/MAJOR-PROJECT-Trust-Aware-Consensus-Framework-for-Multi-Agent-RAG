@@ -1,0 +1,11 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "[Errno 11001] getaddrinfo failed",
+  "error_type": "ConnectError",
+  "failed_at": "2026-11-03T20:30:05.095725+00:00",
+  "model": "gemini-3.6-flash",
+  "paper_eligible": false,
+  "run_mode": "exploratory",
+  "status": "error",
+  "variant": "reranked-rag"
+}

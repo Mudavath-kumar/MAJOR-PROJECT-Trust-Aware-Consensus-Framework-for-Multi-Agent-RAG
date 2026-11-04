@@ -104,13 +104,21 @@ function UploadPage() {
   );
 
   const indexedChunks = docs.reduce((s, d) => s + d.chunkCount, 0);
+  const assessedTrustScores = docs.flatMap((doc) =>
+    typeof doc.trust === "number" && Number.isFinite(doc.trust) ? [doc.trust] : [],
+  );
+  const averageSourceTrust = assessedTrustScores.length
+    ? Math.round(
+        assessedTrustScores.reduce((sum, score) => sum + score, 0) / assessedTrustScores.length,
+      )
+    : null;
 
   return (
     <>
       <PageHeader
         eyebrow="Ingestion"
         title="Give the agents something to read."
-        description="PDF, DOCX, TXT and Markdown. Files are parsed, chunked, embedded and scored for source authority — then they're instantly available in chat."
+        description="PDF, DOCX, TXT and Markdown are parsed, chunked and embedded, then made available for evidence-grounded chat."
         action={
           <Link
             to="/app/chat"
@@ -181,10 +189,12 @@ function UploadPage() {
           { label: "Documents indexed", value: docs.length, icon: FileText },
           { label: "Chunks embedded", value: indexedChunks, icon: MessageSquare },
           {
-            label: "Avg source trust",
-            value: docs.length
-              ? `${Math.round(docs.reduce((s, d) => s + (d.trust ?? 0), 0) / docs.length)}%`
-              : "—",
+            label: "Source trust",
+            value: averageSourceTrust === null ? "Not assessed" : `${averageSourceTrust}%`,
+            hint:
+              averageSourceTrust === null
+                ? "No provenance scores are recorded for these documents."
+                : `Average across ${assessedTrustScores.length} assessed document(s).`,
             icon: ShieldCheck,
           },
         ].map((s) => (
@@ -196,6 +206,9 @@ function UploadPage() {
               </span>
             </div>
             <p className="mt-3 text-2xl font-semibold tabular-nums">{s.value}</p>
+            {"hint" in s && s.hint && (
+              <p className="mt-2 text-xs text-muted-foreground">{s.hint}</p>
+            )}
           </Panel>
         ))}
       </div>

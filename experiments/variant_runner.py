@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 import json
 from pathlib import Path
 import sys
@@ -13,13 +13,20 @@ from .runner import ORCHESTRATION_MODES, VERIFICATION_MODES
 
 
 class VariantBackend(Protocol):
+    external_verification_available: bool
+
     async def single_pass(self, query: str, context: list[dict[str, Any]], profile: "VariantProfile") -> dict[str, Any]: ...
     async def researcher(self, query: str, context: list[dict[str, Any]], profile: "VariantProfile") -> dict[str, Any]: ...
     async def fact_checker(
         self, query: str, researcher: dict[str, Any], context: list[dict[str, Any]], profile: "VariantProfile"
     ) -> dict[str, Any]: ...
     async def critic(
-        self, query: str, researcher: dict[str, Any], fact_checker: dict[str, Any], profile: "VariantProfile"
+        self,
+        query: str,
+        researcher: dict[str, Any],
+        fact_checker: dict[str, Any],
+        context: list[dict[str, Any]],
+        profile: "VariantProfile",
     ) -> dict[str, Any]: ...
     async def trust_assessor(self, context: list[dict[str, Any]]) -> dict[str, Any]: ...
     async def consensus(
@@ -31,6 +38,28 @@ class VariantBackend(Protocol):
         context: list[dict[str, Any]],
         profile: "VariantProfile",
     ) -> dict[str, Any]: ...
+
+
+def _external_verification_profile(profile: "VariantProfile", enabled: bool) -> "VariantProfile":
+    return replace(
+        profile,
+        external_verification=bool(profile.external_verification and enabled),
+    )
+
+
+def _should_trigger_external_verification(
+    *, enabled: bool, api_key_available: bool, retrieval_quality: float
+) -> bool:
+    service_path = str(Path(__file__).resolve().parents[1] / "ai-service")
+    if service_path not in sys.path:
+        sys.path.insert(0, service_path)
+    from app.core.verification_policy import should_trigger_external_verification
+
+    return should_trigger_external_verification(
+        enabled=enabled,
+        api_key_available=api_key_available,
+        retrieval_quality=retrieval_quality,
+    )
 
 
 @dataclass(frozen=True)
@@ -89,6 +118,8 @@ class PredictionRecord:
     estimated_cost_usd: float | None = None
     abstention_reason: str | None = None
     critic_diagnostics: dict[str, Any] | None = None
+    retrieved_evidence: list[dict[str, Any]] = field(default_factory=list)
+    agent_outputs: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -111,11 +142,30 @@ class PredictionRecord:
             ),
             "abstention_reason": self.abstention_reason,
             "critic_diagnostics": self.critic_diagnostics,
+            "retrieved_evidence": self.retrieved_evidence,
+            "agent_outputs": self.agent_outputs,
         }
 
 
 def _retrieved_ids(context: list[dict[str, Any]]) -> list[str]:
     return list(dict.fromkeys(str(chunk.get("chunk_id")) for chunk in context if chunk.get("chunk_id")))
+
+
+def _evidence_snapshots(context: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    snapshots = []
+    for chunk in context:
+        metadata = chunk.get("metadata") or {}
+        snapshots.append(
+            {
+                "chunk_id": str(chunk.get("chunk_id", "")),
+                "text": str(chunk.get("text", "")),
+                "similarity_score": chunk.get("similarity_score"),
+                "document_id": str(metadata.get("document_id", "")),
+                "document_name": str(metadata.get("document_name", "")),
+                "page": metadata.get("page"),
+            }
+        )
+    return snapshots
 
 
 def _evidence_from_claims(claims: list[dict[str, Any]]) -> list[str]:
@@ -218,7 +268,6 @@ async def run_variant_query(
             abstention_reason="No supporting evidence was retrieved.",
         ).to_dict()
 
-    agent_stage_calls = 0
     verification_calls = 0
     answer = ""
     claims: list[dict[str, Any]] = []
@@ -227,18 +276,20 @@ async def run_variant_query(
     decision_score = 0.0
     abstention_reason = None
     critic_diagnostics = None
+    agent_outputs: list[dict[str, Any]] = []
 
     if profile.name in {"baseline-rag", "reranked-rag"}:
         generated = await backend.single_pass(query, context, profile)
-        agent_stage_calls = 1
+        agent_outputs.append({"stage": "generator", "output": generated})
         answer = str(generated.get("answer", "")).strip()
         claims = _single_pass_claims(generated, set(retrieved_ids))
         cited_ids = _evidence_from_claims(claims)
         decision_score = _support_score(claims)
     elif profile.name == "rag-verification":
         researcher = await backend.researcher(query, context, profile)
+        agent_outputs.append({"stage": "researcher", "output": researcher})
         fact_checker = await backend.fact_checker(query, researcher, context, profile)
-        agent_stage_calls = 2
+        agent_outputs.append({"stage": "fact_checker", "output": fact_checker})
         verification_calls = 1
         claims = _verified_claims(researcher, fact_checker, set(retrieved_ids))
         cited_ids = _evidence_from_claims(claims)
@@ -249,10 +300,12 @@ async def run_variant_query(
             abstention_reason = "No answer claims were generated."
     elif profile.name == "multi-agent-rag":
         researcher = await backend.researcher(query, context, profile)
+        agent_outputs.append({"stage": "researcher", "output": researcher})
         fact_checker = await backend.fact_checker(query, researcher, context, profile)
-        critic = await backend.critic(query, researcher, fact_checker, profile)
+        agent_outputs.append({"stage": "fact_checker", "output": fact_checker})
+        critic = await backend.critic(query, researcher, fact_checker, context, profile)
+        agent_outputs.append({"stage": "critic", "output": critic})
         critic_diagnostics = dict(critic.get("critic") or {})
-        agent_stage_calls = 3
         verification_calls = 1
         claims = _verified_claims(researcher, fact_checker, set(retrieved_ids))
         cited_ids = _evidence_from_claims(claims)
@@ -263,13 +316,63 @@ async def run_variant_query(
             abstention_reason = "No answer claims were generated."
     elif profile.name in {"trustrag", "trustrag-no-external"}:
         researcher = await backend.researcher(query, context, profile)
-        fact_checker = await backend.fact_checker(query, researcher, context, profile)
-        critic = await backend.critic(query, researcher, fact_checker, profile)
+        agent_outputs.append({"stage": "researcher", "output": researcher})
+        retrieval_quality = sum(float(chunk.get("similarity_score", 0.0)) for chunk in context) / len(context)
+        external_check_enabled = _should_trigger_external_verification(
+            enabled=profile.external_verification,
+            api_key_available=bool(getattr(backend, "external_verification_available", False)),
+            retrieval_quality=retrieval_quality,
+        )
+        fact_checker_profile = _external_verification_profile(profile, external_check_enabled)
+        fact_checker = await backend.fact_checker(
+            query,
+            researcher,
+            context,
+            fact_checker_profile,
+        )
+        agent_outputs.append(
+            {
+                "stage": "fact_checker",
+                "external_verification": fact_checker_profile.external_verification,
+                "output": fact_checker,
+            }
+        )
+        critic = await backend.critic(query, researcher, fact_checker, context, profile)
+        critic_diagnostics = dict(critic.get("critic") or {})
+        agent_outputs.append({"stage": "critic", "output": critic})
         trust_assessor = await backend.trust_assessor(context)
+        agent_outputs.append({"stage": "trust_assessor", "output": trust_assessor})
         consensus = await backend.consensus(
             researcher, fact_checker, critic, trust_assessor, context, profile
         )
-        agent_stage_calls = 3
+        agent_outputs.append({"stage": "consensus", "output": consensus})
+        if (
+            profile.external_verification
+            and bool(getattr(backend, "external_verification_available", False))
+            and consensus.get("status") != "reached"
+        ):
+            if not external_check_enabled:
+                fact_checker_profile = _external_verification_profile(profile, True)
+                fact_checker = await backend.fact_checker(
+                    query,
+                    researcher,
+                    context,
+                    fact_checker_profile,
+                )
+                agent_outputs.append(
+                    {
+                        "stage": "fact_checker_retry",
+                        "external_verification": fact_checker_profile.external_verification,
+                        "output": fact_checker,
+                    }
+                )
+            critic = await backend.critic(query, researcher, fact_checker, context, profile)
+            critic_diagnostics = dict(critic.get("critic") or {})
+            agent_outputs.append({"stage": "critic_retry", "output": critic})
+            consensus = await backend.consensus(
+                researcher, fact_checker, critic, trust_assessor, context, profile
+            )
+            agent_outputs.append({"stage": "consensus_retry", "output": consensus})
         verification_calls = 1
         claims = _verified_claims(researcher, fact_checker, set(retrieved_ids))
         cited_ids = _evidence_from_claims(claims)
@@ -289,12 +392,14 @@ async def run_variant_query(
         decision_score=decision_score,
         claims=claims,
         latency_ms=int((perf_counter() - started) * 1000),
-        agent_stage_calls=agent_stage_calls,
+        agent_stage_calls=len(agent_outputs),
         llm_calls=0,
         verification_calls=verification_calls,
         retrieval_calls=1,
         abstention_reason=abstention_reason,
         critic_diagnostics=critic_diagnostics,
+        retrieved_evidence=_evidence_snapshots(context),
+        agent_outputs=agent_outputs,
     ).to_dict()
 
 
@@ -332,6 +437,7 @@ class ServiceBackend:
         self._compute_consensus = compute_multi_agent_consensus
         self._call_llm = call_llm
         self._tavily_key = tavily_key or settings.TAVILY_API_KEY
+        self.external_verification_available = bool(self._tavily_key)
 
     async def single_pass(self, query, context, profile):
         context_text = "\n\n".join(
@@ -354,6 +460,7 @@ class ServiceBackend:
         payload = _decode_json_object(raw)
         if not isinstance(payload.get("answer"), str) or not isinstance(payload.get("claims"), list):
             raise ValueError("single-pass output requires answer and claims")
+        payload["raw_output"] = raw
         return payload
 
     async def researcher(self, query, context, profile):
@@ -368,11 +475,11 @@ class ServiceBackend:
             context_chunks=context,
         )
 
-    async def critic(self, query, researcher, fact_checker, profile):
+    async def critic(self, query, researcher, fact_checker, context, profile):
         return await self._run_critic(
             query=query,
             researcher_output=researcher,
-            fact_checker_output=fact_checker,
+            context_chunks=context,
             model=profile.model,
         )
 

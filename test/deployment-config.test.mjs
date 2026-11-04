@@ -13,7 +13,12 @@ test("Render blueprint targets the live Express backend and repository root", ()
   assert.match(render, /name:\s+trustrag-backend-j3oe/);
   assert.match(render, /dockerfilePath:\s+\.\/Dockerfile\.ai-service/);
   assert.match(render, /dockerContext:\s+\./);
-  assert.match(render, /rootDir:\s+backend/);
+  assert.match(
+    render,
+    /buildCommand:\s+npm --prefix backend install --include=dev && npm --prefix backend run build/,
+  );
+  assert.match(render, /startCommand:\s+node backend\/dist\/server\.js/);
+  assert.doesNotMatch(render, /^\s+rootDir:/m);
   assert.match(render, /key:\s+AI_SERVICE_URL[\s\S]*?property:\s+hostport/);
   assert.doesNotMatch(render, /trustarc-core\/backend|trustarc-core\/Dockerfile/);
 });
@@ -21,10 +26,22 @@ test("Render blueprint targets the live Express backend and repository root", ()
 test("backend and AI service are linked with one internal token", () => {
   const tokenDeclarations = [...render.matchAll(/key:\s+AI_SERVICE_TOKEN/g)];
   assert.equal(tokenDeclarations.length, 2);
-  assert.match(render, /name:\s+trustrag-backend-j3oe[\s\S]*?key:\s+AI_SERVICE_TOKEN[\s\S]*?generateValue:\s+true/);
-  assert.match(render, /name:\s+trustrag-ai-service[\s\S]*?key:\s+AI_SERVICE_TOKEN[\s\S]*?envVarKey:\s+AI_SERVICE_TOKEN/);
-  assert.match(render, /name:\s+trustrag-ai-service[\s\S]*?key:\s+AI_SERVICE_URL[\s\S]*?name:\s+trustrag-ai-service/);
-  assert.match(render, /name:\s+trustrag-backend-j3oe[\s\S]*?key:\s+AI_SERVICE_URL[\s\S]*?name:\s+trustrag-ai-service/);
+  assert.match(
+    render,
+    /name:\s+trustrag-backend-j3oe[\s\S]*?key:\s+AI_SERVICE_TOKEN[\s\S]*?generateValue:\s+true/,
+  );
+  assert.match(
+    render,
+    /name:\s+trustrag-ai-service[\s\S]*?key:\s+AI_SERVICE_TOKEN[\s\S]*?envVarKey:\s+AI_SERVICE_TOKEN/,
+  );
+  assert.match(
+    render,
+    /name:\s+trustrag-ai-service[\s\S]*?key:\s+AI_SERVICE_URL[\s\S]*?name:\s+trustrag-ai-service/,
+  );
+  assert.match(
+    render,
+    /name:\s+trustrag-backend-j3oe[\s\S]*?key:\s+AI_SERVICE_URL[\s\S]*?name:\s+trustrag-ai-service/,
+  );
 });
 
 test("Render generates the backend settings encryption key", () => {

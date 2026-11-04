@@ -1,0 +1,596 @@
+% Evidence-aligned IEEE conference draft for the TrustRAG repository.
+% Exploratory local results are reported separately from paper-eligible reviewed results.
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.symbols,fit,calc}
+
+\tikzset{
+  trustrag box/.style={draw,rounded corners=2pt,align=center,font=\scriptsize,
+    minimum height=7mm,text width=24mm,inner sep=3pt,fill=blue!4},
+  trustrag store/.style={draw,cylinder,shape border rotate=90,aspect=0.25,
+    align=center,font=\scriptsize,text width=23mm,minimum height=9mm,fill=orange!8},
+  trustrag decision/.style={draw,diamond,aspect=2.0,align=center,font=\scriptsize,
+    text width=20mm,inner sep=1pt,fill=yellow!12},
+  trustrag arrow/.style={-{Latex[length=1.6mm]},draw=black!75,thick},
+  trustrag optional/.style={-{Latex[length=1.6mm]},draw=blue!65,dashed,thick},
+  trustrag planned/.style={draw,dashed,rounded corners=2pt,align=center,
+    font=\scriptsize,text width=25mm,inner sep=3pt,fill=gray!7}
+}
+
+\newcommand{\TrustRAG}{TrustRAG}
+
+\begin{document}
+
+\title{Trust-Aware Evidence Gating for Multi-Agent Retrieval-Augmented Generation: System Design and Evaluation Protocol}
+
+\author{\IEEEauthorblockN{P.~Madhavi}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\
+Vardhaman College of Engineering\\Hyderabad, Telangana, India\\
+sonymadhavi23@gmail.com}
+\and
+\IEEEauthorblockN{Mudavath Kumar}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\
+Vardhaman College of Engineering\\Hyderabad, Telangana, India\\
+kc893825@gmail.com}
+\and
+\IEEEauthorblockN{Katkam Sriram}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\
+Vardhaman College of Engineering\\Hyderabad, Telangana, India\\
+sriramkatkam8@gmail.com}
+\and
+\IEEEauthorblockN{K.~Kavya Sai}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\
+Vardhaman College of Engineering\\Hyderabad, Telangana, India\\
+kavyasaikothapally@gmail.com}}
+
+\maketitle
+
+\begin{abstract}
+Retrieval-augmented generation (RAG) supplies language models with document evidence, but retrieval can be incomplete or irrelevant and generated claims can remain unsupported. This paper describes the implemented \TrustRAG{} system, which combines tenant-scoped retrieval, structured claim extraction, typed claim verification, critique, and a deterministic answer/partial/abstain rule. Its score weights retrieval quality, claim support, citation coverage, and critic safety; a separate similarity-derived trust signal is returned but excluded from that score. We specify an offline comparison across six configured variants and a 200-example HotpotQA-derived review candidate. A separate AI-assisted semantic pass classified 191 records as provisional passes, flagged eight unanswerable records whose scoped evidence answers them, and retained one false-premise item for review; all 200 human-review states remain pending. A retrieval-only diagnostic measured Recall@5 of 1.00 on 125 answerable and injection cases. A separate four-record local pilot used Qwen2.5-Coder:3B through Ollama and cached MiniLM embeddings. All six configured pipelines produced four predictions. Their exact-match/token-F1 pairs were 0.00/0.00, 1.00/1.00, 0.00/0.1818, 0.00/0.2374, 0.00/0.1818, and 0.00/0.0370. The first four answered both unsafe examples; the two TrustRAG gate variants answered one and abstained on one. Tavily was disabled for the Full TrustRAG run, so its web-verification effect was not evaluated. These small, unreviewed pilot results are operational diagnostics, not paper-grade comparative evidence.
+\end{abstract}
+
+\begin{IEEEkeywords}
+retrieval-augmented generation, evidence verification, abstention, multi-agent systems, evaluation, trustworthy AI
+\end{IEEEkeywords}
+
+\section{Introduction}
+Large language models can produce fluent answers that are unsupported by their input evidence. Retrieval-augmented generation combines a retriever with a generator to provide task-specific evidence~\cite{lewis2020rag,gao2023rag}. However, a RAG pipeline can still fail when evidence is missed, irrelevant, conflicting, or misused. Prior work has explored adaptive retrieval and self-critique~\cite{asai2024selfrag}, corrective retrieval~\cite{yan2024crag}, and automated evaluation of context relevance and answer faithfulness~\cite{saadfalcon2024ares,es2024ragas}. These works motivate measuring answer quality together with retrieval behavior, abstention, and computational cost.
+
+This paper documents the implementation and exploratory evaluation of \TrustRAG{}, a document-grounded question-answering application. The system retrieves passages from a user's indexed documents, obtains structured outputs from a researcher, claim verifier, and critic, computes a deterministic evidence decision score, and returns an answer, a partial answer, or an abstention. A separate deterministic provenance score is reported to the client. A conditional Tavily check may be used by the fact-checking stage, but web results are not promoted to citations from the user's document collection. Because hosted generation was unavailable or payment-limited, a local Qwen2.5-Coder:3B exploratory pilot ran six configured pipelines on four unreviewed examples each. Tavily was disabled, so the Full TrustRAG web-verification effect was not evaluated. The pilot exposes unsafe acceptance and citation failures and does not establish a TrustRAG advantage.
+
+The research question is: does the evidence-gated decision layer improve supported-answer quality and safe abstention relative to simpler RAG variants, at a measurable latency and provider-cost trade-off? This is an empirical question. Six exploratory pipelines generated four predictions each, but the sample is unreviewed and too small to support an accuracy or hallucination-reduction claim; the dataset has not passed the human-review gate required for paper-eligible runs.
+
+The contributions of this manuscript are limited to: (1) a description of the implemented TrustRAG data and decision path; (2) an explicit operational decision formula and label vocabulary; and (3) a reproducible six-variant evaluation protocol with metrics, denominators, and reporting requirements. The individual ideas of retrieval, verification, critique, or multi-agent orchestration are not claimed as novel.
+
+\subsection{Problem Statement and Research Objectives}
+Given a user query $q$ and an authorized document set $D_u$, the system must return a response whose factual propositions are traceable to retrieved chunks from $D_u$, or abstain when that evidence is absent or contradictory. Retrieval similarity, claim-level verification, citation coverage, and critic judgments are imperfect signals; their combination is therefore a decision heuristic, not a correctness guarantee. This study has three objectives: (i) document the implemented request, evidence, and decision flow; (ii) define a frozen-corpus comparison measuring answer quality, evidence overlap, unsafe acceptance, abstention, and operational cost; and (iii) test whether the decision gate changes these outcomes relative to simpler configured variants. Objective (iii) remains unanswered until the reviewed benchmark is run.
+
+\section{Background and Related Work}
+RAG augments a language model with passages retrieved from an external corpus~\cite{lewis2020rag}. Surveys describe the evolution from naive pipelines to advanced and modular retrieval, augmentation, and generation designs~\cite{gao2023rag}. Self-RAG uses adaptive retrieval and self-reflection, while Corrective RAG evaluates retrieved evidence and can invoke corrective retrieval actions~\cite{asai2024selfrag,yan2024crag}. Those methods provide relevant design context; \TrustRAG{} is not an implementation of either method.
+
+RAG evaluation is multi-dimensional. ARES evaluates context relevance, answer faithfulness, and answer relevance, and uses human annotations to support its evaluation estimates~\cite{saadfalcon2024ares}. RAGAs provides reference-free measures for RAG pipelines~\cite{es2024ragas}. RAGTruth supplies manually annotated claim-level hallucination data for RAG outputs~\cite{niu2024ragtruth}. The present repository's benchmark metrics use reviewed answers and evidence identifiers; evidence overlap is not equivalent to human-annotated claim entailment. Accordingly, this paper does not label its automated verifier rejection rate as a human hallucination rate.
+
+Trustworthiness surveys discuss factuality, robustness, fairness, transparency, accountability, and privacy as distinct concerns~\cite{zhou2024trustworthy}. In \TrustRAG{}, the runtime trust assessor is a deterministic heuristic based on retrieved-chunk similarity. It does not assess authoritativeness, freshness, or objective truth. We therefore call it a provenance/retrieval signal and avoid interpreting it as calibrated source trust.
+
+\section{System Scope and Implementation}
+\subsection{Application Architecture}
+The browser application is implemented with React, TypeScript, and TanStack Start. An Express/TypeScript backend authenticates requests, enforces document ownership, stores document metadata in MongoDB, stores original files in Backblaze B2, and calls the authenticated FastAPI/Python AI service. The AI service extracts and chunks documents, creates embeddings using the configured Gemini embedding identifier, stores tenant-scoped vectors in MongoDB Atlas Vector Search, retrieves evidence, runs the query pipeline, and returns a structured response. Clerk provides user identity. Tavily is an optional external-checking integration; it is not the document object store.
+
+The benchmark configuration names \texttt{openai/gpt-4o-mini} as its requested generator and \texttt{gemini-embedding-2} as its embedding model. The runtime router can select a configured provider or fallback, so the actual successful provider/model must be read from each run's telemetry and manifest. A configured model string alone is not evidence that the model served a query.
+
+The application separates the user's browser identity from service credentials. The frontend obtains an authenticated session token; the backend verifies that identity and associates document operations with the corresponding owner before forwarding a request to the AI service. The AI service receives a scoped user identifier and optional selected document identifiers, and retrieval applies that scope when searching chunks. A correct answer retrieved from another user's collection would be a security failure, not a successful RAG result. The paper benchmark is isolated from production collections and uses a frozen corpus rather than reading a user's live documents.
+
+The persistence path has distinct responsibilities. Backblaze B2 stores uploaded source objects, MongoDB stores application metadata and access-related records, and Atlas Vector Search stores chunk vectors and retrieval metadata used by the AI service. Consequently, checking that an upload object exists is not sufficient evidence that ingestion succeeded: a valid end-to-end ingestion must also extract text, create chunks, generate embeddings, persist indexed chunks, and make those chunks retrievable under the correct tenant scope. Paper results, when available, must be generated from the frozen benchmark corpus and not inferred from the application's operational document dashboard.
+
+The service boundary also affects failure reporting. An unavailable embedding provider, database, or generation provider should produce an explicit failed operation or abstention rather than a plausible answer assembled from stale or unrelated content. These failure paths are product correctness requirements, but they are not empirical benchmark results unless represented as labelled cases and recorded in run predictions.
+
+
+\subsection{Document Retrieval}
+The production document path uses 400-word chunks with an 80-word overlap. Query retrieval requests a configurable top-$k$ (default 5, bounded by the service) from MongoDB Atlas Vector Search with tenant and optional document scope. If Atlas returns no usable results or errors, the fallback loads only rows matching that same scope and ranks them using both stored-vector cosine similarity and lexical relevance; its score is the larger of those signals before a relevance filter. This is a hybrid semantic--lexical fallback, not BM25. The benchmark's reranked variant is separate: it retrieves a candidate pool of 20 and applies its configured hybrid lexical-semantic ranking before retaining the top 5.
+
+Chunk boundaries trade off passage completeness against retrieval granularity. With a 400-word window and 80-word overlap, adjacent windows share context so a fact near a boundary is less likely to be separated from its explanation. The benchmark uses the same chunking values across configured variants to avoid attributing a chunking change to the orchestration change. The reranked variant changes candidate ordering as specified by its own configuration; it does not silently change the document corpus or final top-$k$.
+
+The vector path computes a 384-dimensional query embedding with the configured Gemini embedding service and performs vector search over scoped chunks. A fallback score is not guaranteed to share a calibrated or directly comparable scale with an Atlas score; the runtime retrieval-quality component is the arithmetic mean of returned chunks' \texttt{similarity\_score} values. The benchmark runner uses an in-memory retriever against a hashed corpus snapshot; Standard RAG uses cosine ranking, while reranked retrieval uses a candidate pool and a maximum of semantic and lexical scores. These offline retrieval implementations are not identical to production Atlas operations and must be identified in every report.
+
+
+\subsection{Query Roles and Output}
+The request path invokes a researcher to extract claims and source references, a fact-checker to assign typed claim outcomes against retrieved passages, and a critic to assess unsupported assertions and contradictions. A deterministic trust assessor reports a score derived from retrieved-chunk similarity. A separate reasoner module exists in the codebase but is not invoked in the current production query path; it is therefore not described as a participating runtime agent here.
+
+Figure~\ref{fig:query-workflow} shows the production branch order, including immediate abstention on empty retrieval and the single bounded re-evaluation path.
+
+Claim-verification labels are \texttt{supported}, \texttt{contradicted}, and \texttt{insufficient}. Final decision labels are \texttt{answer}, \texttt{partial}, and \texttt{abstain}. When enabled and a Tavily key is available, the first external check is triggered when mean retrieval quality is strictly below 0.75. If the first consensus status is not \texttt{reached}, the service performs at most one further critic/consensus pass; it supplies Tavily context to a second fact-check call only if the initial pass did not already use it. This retry does not retrieve again from the user's document corpus. Web sources may inform the verifier's cross-check but cannot become evidence identifiers from the user's indexed documents.
+
+The roles have different outputs and should not be treated as independent voters. The researcher extracts propositions and associates them with retrieved chunk identifiers. The fact-checker evaluates propositions against scoped evidence and, when the configured external check is invoked, can use that result in its assessment. The critic reviews researcher and verifier outputs for unsupported claims and contradictions. The trust assessor is deterministic and summarizes retrieval similarity/provenance metadata. The consensus implementation consumes the researcher, fact-checker, critic, and retrieved chunks; it does not weight the trust-assessor score. The sequential calls can share a model provider and evidence, so agreement among their outputs is not statistically independent corroboration.
+
+For a non-abstaining decision, the consensus engine assembles the response by joining the text of claims that pass the fact-checker, retrieved-evidence-ID, and critic filters. It does not call the Reasoning Agent or a separate final synthesis model. User-facing citations are restricted to retrieved source chunks whose identifiers survive consensus verification. The score's four components and the separately returned similarity-based trust signal are runtime heuristics, not empirical correctness rates.
+
+At the query level, no retrieved chunks causes immediate abstention before any agent call. With evidence, the service runs the role outputs and decision rule. External checking is conditional and bounded; the retry is fact-checking/critique/consensus over the same retrieved context, not iterative retrieval over the user's indexed documents.
+
+
+\subsection{Decision Score and Abstention}
+Let $r$, $s$, $c$, and $u$ denote normalized retrieval quality, claim support, citation coverage, and critic safety, respectively. The implementation computes
+\begin{equation}
+ S = 0.20r + 0.35s + 0.25c + 0.20u.
+ \label{eq:score}
+\end{equation}
+Let $R_q$ be the retrieved chunk set and $C_q$ the researcher's structured claims. The engine defines $r$ as the mean returned retrieval score (zero when $R_q$ is empty). Let $V_q$ contain claims accepted by the verified-claim filter: the fact-checker label is supported, at least one evidence identifier intersects $R_q$, and the critic has not marked the claim unsupported. Then $s=|V_q|/|C_q|$, or zero if there are no claims. Citation coverage is
+\begin{equation}
+c=\frac{|\{x\in C_q:E_x\cap R_q\ne\varnothing\}|}{|C_q|},
+\end{equation}
+or zero with no claims; it tests retrieved-ID overlap and does not require a supported verifier label. Critic safety is $u=0$ if unsupported claim IDs are present, $u=1$ for low risk without such IDs, $u=0.5$ for medium risk, and $u=0$ for high or missing risk. The separate trust-assessor value is the mean retrieved similarity score (zero for an empty set), so it summarizes substantially the same retrieval signal and is not an independent source-authority measure. Figure~\ref{fig:consensus-rule} summarizes the component inputs and decision branches. In production, $r$ may reflect Atlas vector scores or fallback hybrid scores, so its numeric interpretation depends on the retrieval path.
+
+The weights are fixed implementation constants, not learned or empirically optimized. The default threshold is 0.80 on the normalized score; a request may provide a bounded threshold. Missing verified claims or any contradicted fact-check label forces abstention regardless of score. Otherwise, scores at or above the threshold are initially labeled \texttt{answer}; scores within 0.20 below it are \texttt{partial}; lower scores are \texttt{abstain}. An answer is additionally downgraded to \texttt{partial} if $s<1$, even when its weighted score meets the threshold. These runtime values are heuristics, not calibrated probabilities.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[node distance=5mm and 5mm,scale=.88,transform shape]
+  \node[trustrag box] (client) {User\\React / TanStack\\Clerk session};
+  \node[trustrag box,right=of client] (api) {Express API\\JWT/JWKS auth\\owner + scope checks};
+  \node[trustrag box,right=of api] (ai) {FastAPI AI service\\internal service token};
+  \node[trustrag box,right=of ai] (parse) {File parsing\\page-aware PDF\\400/80 chunks};
+  \node[trustrag box,right=of parse] (embed) {Gemini\\384-D embeddings};
+  \node[trustrag store,right=of embed] (atlas) {MongoDB Atlas\\Vector Search};
+  \draw[trustrag arrow] (client)--(api);
+  \draw[trustrag arrow] (api)--(ai);
+  \draw[trustrag arrow] (ai)--(parse);
+  \draw[trustrag arrow] (parse)--(embed);
+  \draw[trustrag arrow] (embed)--(atlas);
+  \node[trustrag store,below=12mm of api] (b2) {Backblaze B2\\original files};
+  \node[trustrag store,right=of b2] (mongo) {MongoDB\\metadata, chats, reviews};
+  \draw[trustrag arrow] (api)--(b2);
+  \draw[trustrag arrow] (api)--(mongo);
+  \node[trustrag box,below=12mm of atlas] (retrieve) {Scoped retrieval\\user + selected document IDs};
+  \node[trustrag box,left=of retrieve] (agents) {Researcher $\rightarrow$ Fact Checker $\rightarrow$ Critic};
+  \node[trustrag box,left=of agents] (trust) {Deterministic\\Trust Assessor};
+  \node[trustrag box,left=of trust] (consensus) {Consensus score\\and decision gate};
+  \node[trustrag box,left=of consensus] (response) {Answer / partial / abstain\\verified chunk references};
+  \draw[trustrag arrow] (atlas)--(retrieve);
+  \draw[trustrag arrow] (retrieve)--(agents);
+  \draw[trustrag arrow] (retrieve)--(trust);
+  \draw[trustrag arrow] (agents)--(consensus);
+  \draw[trustrag arrow] (trust)--(consensus);
+  \draw[trustrag arrow] (consensus)--(response);
+  \draw[trustrag arrow] (response.north) |- (client.south);
+  \node[trustrag planned,below=of agents] (llm) {LLM router\\Gemini / OpenRouter\\provider fallback};
+  \draw[trustrag optional] (llm)--(agents);
+  \node[trustrag planned,below=of retrieve] (web) {Optional Tavily\\cross-check context};
+  \draw[trustrag optional] (web)--(agents);
+  \node[draw,dashed,rounded corners,fit=(client)(api)(ai)(parse)(embed)(atlas)(b2)(mongo)(retrieve)(agents)(trust)(consensus)(response)(llm)(web),inner sep=5mm,label=above:{Implemented application and AI-service boundaries}] {};
+\end{tikzpicture}
+\caption{TrustRAG architecture. The Reasoning Agent is not in the production request path. Dashed nodes denote provider routing and optional web cross-checking; web results are not corpus citations.}
+\label{fig:architecture}
+\end{figure*}
+
+Figure~\ref{fig:architecture} separates the upload/indexing path from the query path: the production backend persists the original object and metadata, while the AI service stores embeddings and chunk records in the vector collection. The benchmark uses a frozen corpus and does not read production user documents.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[scale=.82,transform shape]
+  \node[trustrag box,text width=35mm] (auth) at (0,0) {Authenticated request\\conversation ownership checked};
+  \node[trustrag box,text width=35mm] (scope) at (0,-1.15) {Intersect requested IDs with this user's ready documents};
+  \node[trustrag box,text width=35mm] (retrieval) at (0,-2.3) {Query embedding and tenant/document-scoped retrieval};
+  \node[trustrag decision] (evidence) at (0,-3.65) {Any chunks?};
+  \node[trustrag box] (noev) at (-3.2,-4.9) {Immediate abstention\\no agent calls};
+  \node[trustrag box] (research) at (0,-4.9) {Researcher extracts structured claims};
+  \node[trustrag decision] (trigger) at (3.3,-4.9) {$r<0.75$ and Tavily configured?};
+  \node[trustrag box] (factweb) at (1.8,-6.15) {Fact Checker\\document + web cross-check};
+  \node[trustrag box] (factdoc) at (4.8,-6.15) {Fact Checker\\document evidence only};
+  \node[trustrag box,text width=34mm] (audit) at (0,-7.4) {Critic audit and deterministic trust assessment};
+  \node[trustrag box] (consensus) at (0,-8.55) {Weighted consensus and evidence gate};
+  \node[trustrag decision] (retryq) at (3.3,-8.55) {Reached or external check unavailable?};
+  \node[trustrag planned] (retry) at (6.3,-9.75) {At most one bounded retry\\same chunks; web check only if not already used};
+  \node[trustrag decision] (final) at (0,-10.0) {Final status};
+  \node[trustrag box] (out) at (0,-11.2) {Answer / partial / abstain\\verified document references};
+  \draw[trustrag arrow] (auth)--(scope);
+  \draw[trustrag arrow] (scope)--(retrieval);
+  \draw[trustrag arrow] (retrieval)--(evidence);
+  \draw[trustrag arrow] (evidence)--node[right,font=\scriptsize]{yes}(research);
+  \draw[trustrag arrow] (evidence)--node[above,font=\scriptsize]{no}(noev);
+  \draw[trustrag arrow] (research)--(trigger);
+  \draw[trustrag arrow] (trigger)--node[left,font=\scriptsize]{yes}(factweb);
+  \draw[trustrag arrow] (trigger)--node[right,font=\scriptsize]{no}(factdoc);
+  \draw[trustrag arrow] (factweb)--(audit);
+  \draw[trustrag arrow] (factdoc)--(audit);
+  \draw[trustrag arrow] (research)--(audit);
+  \draw[trustrag arrow] (audit)--(consensus);
+  \draw[trustrag arrow] (consensus)--(retryq);
+  \draw[trustrag arrow] (retryq)--node[right,font=\scriptsize]{no; configured}(retry);
+  \draw[trustrag optional] (retry)--(final);
+  \draw[trustrag arrow] (retryq)--node[left,font=\scriptsize]{yes}(final);
+  \draw[trustrag arrow] (consensus)--(final);
+  \draw[trustrag arrow] (final)--(out);
+  \draw[trustrag arrow] (noev)|-(out);
+\end{tikzpicture}
+\caption{Production query workflow. Tavily is a conditional cross-check; a bounded second pass reuses the retrieved chunks and does not run corpus retrieval again.}
+\label{fig:query-workflow}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[node distance=6mm and 6mm,scale=.86,transform shape]
+  \node[trustrag box] (r) {Retrieval quality\\$r$};
+  \node[trustrag box,right=of r] (s) {Verified claim support\\$s$};
+  \node[trustrag box,right=of s] (c) {Retrieved-ID coverage\\$c$};
+  \node[trustrag box,right=of c] (u) {Critic safety\\$u$};
+  \node[trustrag box,text width=38mm,below=of s] (score) {$S=0.20r+0.35s+0.25c+0.20u$\\trust-assessor value excluded};
+  \node[trustrag decision,below=of score] (hard) {No verified claim or contradiction?};
+  \node[trustrag box,left=of hard] (abstain1) {Abstain};
+  \node[trustrag decision,below=of hard] (pass) {$S\geq\tau$?\\$\tau=0.80$ default};
+  \node[trustrag decision,left=of pass] (allclaims) {$s=1$?};
+  \node[trustrag box,left=of allclaims] (answer) {Answer};
+  \node[trustrag box,below=of allclaims] (partial1) {Partial answer\\downgrade for $s<1$};
+  \node[trustrag decision,right=of pass] (floor) {$S\geq\tau-0.20$?};
+  \node[trustrag box,right=of floor] (partial2) {Partial answer};
+  \node[trustrag box,below=of floor] (abstain2) {Abstain};
+  \draw[trustrag arrow] (r)--(score);
+  \draw[trustrag arrow] (s)--(score);
+  \draw[trustrag arrow] (c)--(score);
+  \draw[trustrag arrow] (u)--(score);
+  \draw[trustrag arrow] (score)--(hard);
+  \draw[trustrag arrow] (hard)--node[above,font=\scriptsize]{yes}(abstain1);
+  \draw[trustrag arrow] (hard)--node[right,font=\scriptsize]{no}(pass);
+  \draw[trustrag arrow] (pass)--node[above,font=\scriptsize]{yes}(allclaims);
+  \draw[trustrag arrow] (allclaims)--node[above,font=\scriptsize]{yes}(answer);
+  \draw[trustrag arrow] (allclaims)--node[right,font=\scriptsize]{no}(partial1);
+  \draw[trustrag arrow] (pass)--node[above,font=\scriptsize]{no}(floor);
+  \draw[trustrag arrow] (floor)--node[above,font=\scriptsize]{yes}(partial2);
+  \draw[trustrag arrow] (floor)--node[right,font=\scriptsize]{no}(abstain2);
+\end{tikzpicture}
+\caption{Operational consensus rule. The gate uses verified evidence and contradiction checks before score bands; a score-qualified answer is downgraded when not all generated claims are supported.}
+\label{fig:consensus-rule}
+\end{figure*}
+
+\section{Benchmark Design and Experimental Protocol}
+\subsection{Candidate Dataset}
+The repository contains a frozen \texttt{trustrag-public-candidate-v4} dataset candidate derived from the HotpotQA distractor validation sample~\cite{yang2018hotpotqa}. Its planned composition is 200 examples: 100 answerable, 50 unanswerable relative to scoped evidence, 25 controlled-conflict cases, and 25 prompt-injection resilience cases. The candidate README states that its review states are pending. Dataset review and an automated source/corpus integrity audit are separate from model evaluation. The current workflow records one human reviewer plus automated consistency checks; it does not establish independent inter-annotator agreement or guarantee semantic correctness.
+
+The 25 prompt-injection cases are answerable resilience tasks: untrusted context contains an instruction, while trusted evidence still supports the original question. They should be evaluated for correct task completion and separately audited for instruction compliance. They must not be counted as cases that should always be abstained from. HotpotQA-derived text redistribution must comply with its applicable license and attribution/share-alike terms.
+
+The planned counts are candidate-dataset design values, not completed reviewed or evaluated sample counts. Before a paper run, the reviewed export, source/corpus hashes, all review statuses, and integrity audit must pass the repository's paper-mode gate. The same frozen IDs, corpus, model/provider record, and retrieval configuration must be used for all systems.
+
+\subsection{Comparison Systems}
+The experiment matrix has six configured variants:
+\begin{enumerate}
+ \item \textbf{Standard RAG}: single-pass retrieval and generation without reranking, typed verification, or abstention gate.
+ \item \textbf{Reranked RAG}: single-pass generation with hybrid lexical-semantic reranking of 20 candidates to top 5.
+ \item \textbf{RAG + Verification}: single-pass RAG with typed claim verification and no consensus abstention gate.
+ \item \textbf{Fixed Multi-Agent RAG}: fixed multi-agent roles with typed verification but without the TrustRAG decision gate.
+ \item \textbf{TrustRAG without external checking}: evidence-gated TrustRAG configuration with external verification disabled.
+ \item \textbf{Full TrustRAG}: evidence-gated TrustRAG with conditional external checking enabled.
+\end{enumerate}
+These are configured experimental variants; their labels do not imply completed runs. The dataset, prompt versions, retrieval parameters, random seed, code revision, effective provider/model, and timestamps must be recorded in the run manifests.
+
+\subsection{Configuration}
+Table~\ref{tab:config} separates repository configuration values from experimental outcomes.
+\begin{table}[t]
+\centering
+\caption{Configured Benchmark Parameters}
+\label{tab:config}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.47\columnwidth}p{0.43\columnwidth}}
+\toprule
+Parameter & Configured value \\
+\midrule
+Embedding identifier & \texttt{gemini-embedding-2} \\
+Requested generation model & \texttt{openai/gpt-4o-mini} \\
+Generation temperature & 0.1 \\
+Chunk size / overlap & 400 / 80 words \\
+Retrieval top-$k$ & 5 \\
+Reranked candidate pool & 20 (reranked variant only) \\
+Random seed & 42 \\
+Decision weights $(s,c,r,u)$ & 0.35, 0.25, 0.20, 0.20 \\
+Default decision threshold & 0.80 \\
+Candidate benchmark size & 200 planned examples \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The requested generation model is not necessarily the model actually used when runtime fallback is activated. Final reporting must use the successful provider/model identifiers recorded per prediction and in the run manifest. The candidate benchmark's 200 examples are pending review in the checked-in dataset snapshot; they are not a test-set denominator.
+
+\subsection{Metrics and Statistical Analysis}
+All quality metrics are computed from labelled predictions, not the application's dashboard scores. Exact match and token F1 are computed on the answerable and prompt-injection pilot examples against provisional candidate reference answers; no pilot record has completed human review. Recall@5 measures the fraction of gold evidence identifiers retrieved in the first five chunks. Citation precision and recall compare cited chunk identifiers with reviewed gold evidence identifiers. Gold-evidence citation rate is evidence overlap and does not establish claim entailment.
+
+For unsafe examples (unanswerable or conflicting), \emph{unsafe acceptance rate} is the fraction not abstained from, and \emph{abstention coverage} is the fraction abstained from. These are operational decision metrics, not human-labelled hallucination rates. Coverage is the fraction of all questions receiving answer or partial status. Selective risk is the error rate among accepted answerable questions under the benchmark's declared answer-scoring rule. Prompt-injection task success is reported separately as the fraction answered correctly without abstention; it is not a complete attack-compliance audit.
+
+Expected calibration error (ECE; 10 equal-width bins in the current metric implementation) and Brier score compare the runtime decision score with the binary gold answerability label. Since the score is heuristic, these are decision-score calibration diagnostics and must not be presented as evidence of calibrated model probabilities. The verifier-rejected-claim rate is reported only for claims the verifier actually reviewed; it is not a human hallucination annotation. A human-labelled hallucination rate requires independent claim-level labels and is not available in the current project artifacts.
+
+Operational metrics are end-to-end latency (mean, p50, p95), LLM calls/query, typed-verification rate, retrieval calls/query, and cost/query only when complete token-usage and pricing telemetry exist. Report metric-specific denominators and stratified 95\% bootstrap intervals. Compare systems with paired intervals over the same question IDs. Threshold selection and any calibration must use development data only; the test set must remain untouched until the protocol is frozen.
+
+Let $G_i$ be the set of gold evidence identifiers for answerable example $i$, $R_i^k$ the retrieved identifiers among the first $k$ chunks, and $C_i$ the cited identifiers. Retrieval recall and citation overlap are defined as
+\begin{equation}
+ \mathrm{Recall@}k_i = \frac{|G_i \cap R_i^k|}{|G_i|}, \qquad
+ P_i = \frac{|G_i \cap C_i|}{|C_i|}, \qquad
+ R_i = \frac{|G_i \cap C_i|}{|G_i|}.
+\end{equation}
+Zero-denominator behavior follows the benchmark implementation and must be disclosed with denominator counts. These overlap measures assess whether expected evidence identifiers were retrieved or cited; they cannot establish semantic entailment for every answer sentence.
+
+For unsafe examples (unanswerable or conflicting), unsafe acceptance is the fraction not abstained from, and unsafe abstention coverage is the fraction abstained from. Coverage is the fraction of all questions receiving answer or partial status. Selective risk is the error rate among accepted answerable questions under the benchmark's declared scoring rule. Prompt-injection task success is the fraction of designated injection cases answered correctly without abstention. Every result needs its subset denominator; a percentage without the number of eligible examples can conceal a small or empty sample.
+
+Calibration diagnostics use decision score $p_i$ as a heuristic confidence and binary target $y_i$ for whether the question is answerable from scoped evidence. The Brier score is
+\begin{equation}
+ \mathrm{BS} = \frac{1}{N}\sum_{i=1}^{N}(p_i-y_i)^2.
+\end{equation}
+ECE partitions scores into ten equal-width bins $B_m$ and reports
+\begin{equation}
+ \mathrm{ECE} = \sum_{m=1}^{10}\frac{|B_m|}{N}
+ \left|\operatorname{acc}(B_m)-\operatorname{conf}(B_m)\right|.
+\end{equation}
+Here, $\operatorname{acc}$ is the mean binary answerability label and $\operatorname{conf}$ is the mean runtime decision score in that bin. These formulas diagnose alignment of an operational score with labels; they do not convert the score into a probability or prove calibration on other domains.
+
+For uncertainty, the reporting workflow computes bootstrap intervals from saved predictions and paired comparisons matched by question ID. The manuscript should report the bootstrap sample count and seed recorded by the generated report, not assume them from a prior run. Paired differences are more informative than comparing independent intervals because each system is evaluated on the same examples. An interval that includes zero does not support a directional improvement claim. Report exact denominators, missing values, and failed queries rather than silently dropping difficult cases.
+
+The primary comparison should be defined before inspecting test results. A suitable primary outcome is selective risk at a predeclared coverage level, or unsafe acceptance on unanswerable/conflicting cases if coverage matching is unavailable. Secondary outcomes can include token F1, Recall@5, citation recall, injection task success, p95 latency, and measured cost. This ordering reduces the temptation to select whichever metric appears favorable after the runs. Any threshold or weight change after inspecting test outputs creates a new experiment and requires a new untouched test set.
+
+\subsection{Reproducibility and Run Acceptance}
+A benchmark run is reportable only when the dataset review/export gate passes, the corpus and inputs match their recorded hashes, each expected record has exactly one prediction, and the run manifest is successful and paper-eligible. The report generator checks that saved metrics recompute from predictions and that the prediction-input hash matches the manifest. These integrity checks help detect artifact substitution or accidental dataset mixing; they do not validate annotation semantics.
+
+For every variant, retain the reviewed dataset export, corpus manifest, configuration, prompt version, prediction input and evaluated predictions, metrics, bootstrap comparison output, and run manifest. Credentials, production file contents, and production database URLs must not appear in that bundle. Record the Git revision and the successful provider/model from request telemetry. If provider fallback occurs, preserve that information and explain the resulting model mixture; do not report only the preferred model configured in JSON.
+
+Each per-question prediction artifact also retains the retrieved passage text and identifiers, citation identifiers, parsed agent decisions, and raw outputs returned by the researcher, verifier, critic, and single-pass generator when that stage exposes them. Consensus and deterministic trust-assessment outputs are retained as structured decisions; they are not raw LLM generations. Provider-attempt telemetry records the provider, model, and success state. Token usage and local energy are not emitted by the current router telemetry. Hosted API charges were \$0.00 in these local runs; total compute cost remains unmeasured rather than inferred.
+
+Hold dataset IDs, corpus snapshot, chunk size/overlap, top-$k$, embedding model, and requested generation settings constant wherever a variant is not intended to change that factor. The reranked variant changes its candidate pool and ordering. Verification variants change claim-checking roles and gating according to their configurations. External checking is enabled only in the full TrustRAG variant and remains conditional at query time. Report actual calls from telemetry rather than policy-implied counts. This control matrix isolates intended differences, although provider nondeterminism and fallback behavior remain sources of variation.
+
+The candidate dataset describes four answer categories, but those counts alone do not create a valid test protocol. Before the benchmark is run, state whether the reviewed candidate is a fixed test set or whether a separate development collection is used to choose thresholds. If the same records are used both for threshold tuning and final evaluation, the results are not an unbiased held-out estimate. The repository requires development-only threshold calibration; the final manuscript must document the actual split, review protocol, and record counts from the export and manifest.
+
+The workflow in Fig.~\ref{fig:evaluation-workflow} separates candidate review, corpus integrity, model execution, and report generation. Later stages are configured in code but remain blocked until a reviewed export passes the paper-mode gate.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[node distance=5mm and 6mm,scale=.88,transform shape]
+  \node[trustrag box,text width=31mm] (candidate) {Candidate dataset\\200 records\\all review pending};
+  \node[trustrag planned,right=of candidate] (review) {Human review + integrity audit\\paper-mode export gate};
+  \node[trustrag planned,right=of review] (snapshot) {Frozen corpus snapshot\\hash and scope checks};
+  \node[trustrag planned,right=of snapshot] (runs) {Six configured variants\\fixed inputs and telemetry};
+  \node[trustrag planned,below=of runs] (metrics) {Metrics with denominators\\answer / evidence / safety / cost};
+  \node[trustrag planned,left=of metrics] (stats) {Paired comparisons\\bootstrap intervals};
+  \node[trustrag planned,left=of stats] (report) {CSV / JSON / LaTeX report\\unrun outcomes marked not evaluated};
+  \draw[trustrag arrow] (candidate)--(review);
+  \draw[trustrag optional] (review)--(snapshot);
+  \draw[trustrag optional] (snapshot)--(runs);
+  \draw[trustrag optional] (runs)--(metrics);
+  \draw[trustrag optional] (metrics)--(stats);
+  \draw[trustrag optional] (stats)--(report);
+  \node[draw,dashed,red!65,rounded corners,fit=(review)(snapshot)(runs)(metrics)(stats)(report),inner sep=4mm,label=below:{Configured workflow; no paper-eligible run artifacts were present in the inspected repository}] {};
+\end{tikzpicture}
+\caption{Research evaluation workflow. Dashed stages are configured but have not produced reportable results in the inspected snapshot.}
+\label{fig:evaluation-workflow}
+\end{figure*}
+
+
+
+
+
+\section{Results}
+\subsection{Evaluation Status and Exploratory Results}
+On 3--4 November 2026, we audited the v4 candidate against its source-linked evidence and attempted the six-variant exploratory matrix. The structural audit retained per-record decisions, reasons, and evidence references. A subsequent AI-assisted semantic pass inspected all 21 unanswerable records previously flagged because their answer string occurred in scope. It classified eight as Not Approved because scoped evidence answered the question, 12 as provisional unanswerable passes because the occurrence lacked the required relation, and one (q-0128) as Needs Review because the question has a false or malformed premise. Across all 200 records, the AI-assisted outcomes are 191 provisional passes, eight Not Approved, and one Needs Review. This is not human approval: all 200 original human-review states remain pending, and the candidate is not a frozen paper benchmark snapshot.
+
+The initial generation-matrix attempts on 179 provisional records failed at Gemini embedding or provider preflight (quota, transport, HTTP 402, and HTTP 504 errors). The cached local \texttt{sentence-transformers/all-MiniLM-L6-v2} model completed a retrieval-only pass for all 179 records and six retrieval profiles, with Recall@5 of 1.00 over 125 answerable/injection records. A separate local pilot selected \texttt{q-0001}, \texttt{q-0101}, \texttt{q-0151}, and \texttt{q-0176}, one candidate from each category, and ran Qwen2.5-Coder:3B through Ollama. All six configured pipelines completed four records each using the same IDs and cached MiniLM embeddings with generation temperature 0.1. External web verification was disabled for the Full TrustRAG run because no hosted API calls were used; therefore that row measures the local pipeline without web evidence. The local generation runs did not perform human review, measure local compute cost, or evaluate the 200-record candidate.
+
+Table~\ref{tab:run-status} reports the outcome for each system. All six local pipelines produced four-record outputs; the Full TrustRAG run did not make an external web call and therefore does not measure that feature's effect.
+
+\begin{table*}[t]
+\centering
+\caption{Local Pilot Run Status and Reporting Limits}
+\label{tab:run-status}
+\begin{tabular}{p{0.20\textwidth}p{0.20\textwidth}p{0.20\textwidth}p{0.31\textwidth}}
+\toprule
+Variant & Pilot target & Current status & Reported outcomes \\
+\midrule
+Standard RAG & Same four IDs & Completed, $n=4$ & Local pilot metrics reported; exploratory only \\
+Reranked RAG & Same four IDs & Completed, $n=4$ & Local pilot metrics reported; exploratory only \\
+RAG + Verification & Same four IDs & Completed, $n=4$ & Local pilot metrics reported; exploratory only \\
+Fixed Multi-Agent RAG & Same four IDs & Completed, $n=4$ & Local pilot metrics reported; exploratory only \\
+TrustRAG, no external & Same four IDs & Completed, $n=4$ & Local pilot metrics reported; external API disabled \\
+Full TrustRAG policy & Same four IDs & Completed, $n=4$ & Tavily disabled; no web-verification effect measured \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\centering
+\caption{Dataset Review and Exploratory Run Status (4 November 2026)}
+\label{tab:readiness}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.43\columnwidth}r>{\raggedright\arraybackslash}p{0.37\columnwidth}}
+\toprule
+Audit item & Count & Interpretation \\
+\midrule
+Candidate records & 200 & Frozen v4 draft snapshot \\
+Answerable & 100 & Candidate category \\
+Unanswerable & 50 & Candidate category \\
+Conflicting & 25 & Candidate category \\
+Prompt-injection resilience & 25 & Candidate category \\
+Human review pending & 200/200 & Automated audit is not human approval \\
+Automated construction pass & 179 & Initial consistency checks; not human approval \\
+AI-assisted provisional pass & 191 & Evidence-based triage only; not paper eligible \\
+AI-assisted Not Approved & 8 & Scoped evidence answers the candidate question \\
+AI-assisted Needs Review & 1 & q-0128 false-premise policy unresolved \\
+Configured system variants & 6 & Experiment configurations present \\
+Completed local pilot variants & 6/6 & Six configured pipelines produced four predictions each \\
+Completed pilot predictions & 24 & Six variants, four records each \\
+Remaining variants & 0/6 & Full TrustRAG run had external web search disabled \\
+Human-approved pilot examples & 0/4 & All four source records remain pending review \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The initial 179-record generation matrix stopped at embedding preflight. A separate local pilot used four candidate records (one per category), Qwen2.5-Coder:3B through Ollama, and cached \texttt{sentence-transformers/all-MiniLM-L6-v2} embeddings. All six configured pipelines completed four predictions each. The Full TrustRAG run had Tavily disabled, so its conditional web-verification behavior was not tested and its row is not evidence of web-grounded verification. All four examples remain human-review-pending. The pilot results below use $n=4$ for each variant. These exploratory runs do not support generalization or superiority claims and are not a human-reviewed benchmark.
+
+\begin{table*}[t]
+\centering
+\caption{Local Pilot Answer Metrics and the Separate Retrieval Diagnostic. All six configured pipelines use four completed records; external web verification was disabled for the Full TrustRAG run. R@5 is from the separate retrieval-only diagnostic for all six profiles.}
+\label{tab:quality}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+System & EM & Token F1 & R@5 & Citation precision & Citation recall & Gold-evidence citation rate & Injection task success \\
+\midrule
+Standard RAG & 0.00 & 0.00 & 1.00 & 0.50 & 0.25 & 0.50 & 0.00 \\
+Reranked RAG & 1.00 & 1.00 & 1.00 & 0.50 & 0.25 & 0.50 & 1.00 \\
+RAG + Verification & 0.00 & 0.1818 & 1.00 & 0.75 & 0.50 & 1.00 & 0.00 \\
+Fixed Multi-Agent RAG & 0.00 & 0.2374 & 1.00 & 0.50 & 0.25 & 0.50 & 0.00 \\
+TrustRAG, no external & 0.00 & 0.1818 & 1.00 & 0.50 & 0.25 & 0.50 & 0.00 \\
+Full TrustRAG (Tavily disabled) & 0.00 & 0.0370 & 1.00 & 0.50 & 0.25 & 0.50 & 0.00 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip{\footnotesize All six configured variants produced four predictions, but the Full TrustRAG row had no external web call because Tavily was disabled. EM/F1 and citation denominators use $n=2$ answerable examples; injection success uses $n=1$. R@5 is from the separate 179-record retrieval-only diagnostic (100 answerable plus 25 injection queries). Citation precision/recall use gold evidence IDs. Pilot examples are not human-approved; no confidence intervals are estimated.}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Four-Record Local Pilot: Safety and Decision-Score Diagnostics. Results are exploratory and based on unreviewed labels.}
+\label{tab:safety}
+\resizebox{0.91\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+System & Verifier-rejected claim rate & Unsafe acceptance & Unsafe abstention coverage & Coverage & Selective risk & Brier score & ECE \\
+\midrule
+Standard RAG & N/A & 1.00 & 0.00 & 1.00 & 1.00 & 0.50 & 0.50 \\
+Reranked RAG & N/A & 1.00 & 0.00 & 1.00 & 0.00 & 0.50 & 0.50 \\
+RAG + Verification & 0.00 & 1.00 & 0.00 & 1.00 & 1.00 & 0.50 & 0.50 \\
+Fixed Multi-Agent RAG & 0.00 & 1.00 & 0.00 & 1.00 & 1.00 & 0.50 & 0.50 \\
+TrustRAG, no external & 0.25 & 0.50 & 0.50 & 0.75 & 1.00 & 0.2397 & 0.241 \\
+Full TrustRAG (Tavily disabled) & 0.00 & 0.50 & 0.50 & 0.75 & 1.00 & 0.2397 & 0.241 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip{\footnotesize Unsafe means the unanswerable plus conflicting pilot examples ($n=2$). Standard RAG, Reranked RAG, RAG + Verification, and Fixed Multi-Agent RAG answered both; each TrustRAG gate variant answered one and abstained on one. Thus unsafe acceptance is 1.00 for the first four variants and 0.50 for both TrustRAG gate variants. RAG + Verification rejected 0/4 verified claims; Fixed Multi-Agent RAG rejected 0/5; TrustRAG without external verification rejected 1/4; the Tavily-disabled run rejected 0/7. N/A means no typed verification is performed. Brier/ECE are diagnostics of heuristic decision scores, not calibrated probabilities.}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Four-Record Local Pilot Operations and Separate Retrieval-Only Diagnostic. Hosted API spend was \$0; local compute cost was not metered.}
+\label{tab:operations}
+\resizebox{0.93\textwidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+System & End-to-end mean (ms) & p50 (ms) & p95 (ms) & LLM calls/query & Typed verification rate & Retrieval calls/query & Retrieval-only mean (ms) & Web calls/query & Hosted API cost/query (USD) \\
+\midrule
+Standard RAG & 62227.5 & 55154 & 87451 & 1.00 & 0.00 & 1.00 & 0.77 & 0.00 & 0.00 \\
+Reranked RAG & 38189.75 & 20540 & 95190 & 1.00 & 0.00 & 1.00 & 0.72 & 0.00 & 0.00 \\
+RAG + Verification & 283935.75 & 202013 & 476138 & 2.00 & 1.00 & 1.00 & 0.74 & 0.00 & 0.00 \\
+Fixed Multi-Agent RAG & 495339.25 & 119667 & 1264454 & 3.00 & 1.00 & 1.00 & 0.75 & 0.00 & 0.00 \\
+TrustRAG, no external & 310704.75 & 62071 & 760199 & 3.00 & 1.00 & 1.00 & 0.83 & 0.00 & 0.00 \\
+Full TrustRAG (Tavily disabled) & 376234.5 & 44057 & 830038 & 3.00 & 1.00 & 1.00 & 0.80 & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip{\footnotesize End-to-end latency uses local CPU Qwen2.5-Coder:3B and MiniLM; each variant uses $n=4$. Hosted API charges are \$0.00/query because all calls were local and external web search was disabled; this excludes electricity and other local compute costs. These are not deployment latency estimates. Retrieval-only latency is a separate warm in-memory 179-query diagnostic; it is not included in end-to-end latency.}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Category-Wise Outcomes in the Four-Record Local Pilot. Each category contains one candidate; these are not stable estimates.}
+\label{tab:category-results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+System & Answerable EM ($n=1$) & Answerable R@5 ($n=100$) & Unanswerable abstention accuracy ($n=1$) & Conflict abstention accuracy ($n=1$) & Injection success ($n=1$) & Injection R@5 ($n=25$) \\
+\midrule
+Standard RAG & 0.00 & 1.00 & 0.00 & 0.00 & 0.00 & 1.00 \\
+Reranked RAG & 1.00 & 1.00 & 0.00 & 0.00 & 1.00 & 1.00 \\
+RAG + Verification & 0.00 & 1.00 & 0.00 & 0.00 & 0.00 & 1.00 \\
+Fixed Multi-Agent RAG & 0.00 & 1.00 & 0.00 & 0.00 & 0.00 & 1.00 \\
+TrustRAG, no external & 0.00 & 1.00 & 0.00 & 1.00 & 0.00 & 1.00 \\
+Full TrustRAG (Tavily disabled) & 0.00 & 1.00 & 0.00 & 1.00 & 0.00 & 1.00 \\
+\bottomrule
+\end{tabular}}
+\par\smallskip{\footnotesize Each pilot category contains one candidate. The first four variants answered both the unanswerable and conflicting examples. Both TrustRAG gate variants answered the unanswerable example and abstained on the conflicting one. Injection success is reported from each completed query. Answerable and injection R@5 values come from the separate 179-record retrieval diagnostic. The Full TrustRAG row had Tavily disabled.}
+\end{table*}
+
+The retrieval-only R@5 diagnostic is 1.00 under per-record document scope and does not establish open-corpus robustness. All six configured pipelines completed four local pilot queries. Their EM/F1 values were 0.00/0.00, 1.00/1.00, 0.00/0.1818, 0.00/0.2374, 0.00/0.1818, and 0.00/0.0370 for Standard, Reranked, RAG + Verification, Fixed Multi-Agent RAG, TrustRAG without external verification, and the Tavily-disabled Full TrustRAG run, respectively. The first four answered both unsafe examples; both TrustRAG gate variants answered the unanswerable example and abstained on the conflicting example. Injection task success was 0/1, 1/1, 0/1, 0/1, 0/1, and 0/1. The Full TrustRAG configuration made no external web call, so those results do not evaluate web verification. These tiny counts do not support ranking the systems. A paper-eligible comparison still requires genuine human review, a frozen reviewed set, and meaningful uncertainty estimates. If independent human claim annotations are collected, a separate human-labelled unsupported-claim or hallucination metric may be added with its annotation protocol and agreement statistics.
+
+\subsection{Planned Error and Robustness Analysis}
+Once runs exist, aggregate scores should be accompanied by error analysis stratified by answerability class and failure mode. For answerable cases, inspect retrieval misses, unsupported answer claims, citation omissions, and correct abstentions. For unanswerable cases, inspect whether unsupported answers were accepted and which evidence or score component caused the decision. For conflict cases, inspect whether the relevant conflicting sources were both retrieved and whether the output recognized the contradiction. For injection cases, inspect both task success and whether the untrusted instruction influenced the answer. Human review is required for claims about attack compliance or unsupported-claim rates.
+
+The system should also be assessed for operational failure modes: empty retrieval, malformed agent output, provider timeout or rate limiting, missing citations, and partial responses. These should be reported as counts and failure rates if they occur during a benchmark run. A query that fails before producing a prediction must not be silently removed from the denominator. If a variant fails on any records, the paper should disclose the missingness and either rerun under the same frozen protocol or mark the comparison incomplete.
+
+The repository includes an ablation configuration intended to disable individual score or safety components. Ablations can help determine whether a component contributes beyond the full system, but their outputs are also not available as paper results in the inspected checkout. Before claiming a component effect, run each ablation on the same reviewed examples with all other settings fixed, report paired differences and uncertainty, and account for any changes to the pipeline call count. Ablations are secondary evidence and should not replace the six-system baseline comparison.
+
+\section{Discussion}
+The current implementation provides an explicit evidence-gated path and separates a heuristic decision score from empirical answer-quality measurements. This makes it possible to evaluate answer quality, retrieval, abstention, and operational cost separately. However, implementation and operational telemetry alone do not establish an improvement over baselines. Whether the decision layer helps, whether it is calibrated, and whether the benefit justifies added calls and latency remain unanswered until the reviewed benchmark is run.
+
+The candidate review package now includes an AI-assisted per-record pass over all 200 examples, separate from the structural audit. It flagged eight unanswerable-labeled examples as answerable from scoped evidence and q-0128 for its false premise. This language-model review is not human adjudication, does not establish inter-annotator agreement, and does not satisfy the human-review gate; the original 200 human-review states remain pending.
+
+\subsection{How the Results Should Be Interpreted}
+The intended comparison is a controlled systems study, not a claim that the number of agents alone causes better answers. Standard RAG and reranked RAG provide retrieval/generation references; RAG + Verification isolates typed checking without an abstention gate; Fixed Multi-Agent RAG introduces the role pipeline without the TrustRAG decision gate; TrustRAG without external checking isolates the web-checking feature; and Full TrustRAG includes it conditionally. If retriever quality, generation provider, prompts, or data change between rows, the table no longer isolates these design differences.
+
+An increase in citation overlap or verifier rejection is not automatically an improvement in factual correctness. Citation overlap may reward returning the expected chunk identifier even when the answer misinterprets the passage. A verifier can reject claims for incorrect reasons. These metrics should be paired with answer scoring, unsafe acceptance, qualitative error review, and, if claims about hallucination are needed, independent claim-level annotations. A lower selective risk may simply result from answering fewer questions. Coverage and risk must be presented together, and systems should be compared at matched coverage or across a risk-coverage curve.
+
+Latency and external checking require similar care. A conditional web request can be skipped on easy questions and invoked on difficult ones, so its measured call rate must come from event telemetry. Report end-to-end latency including retrieval, model calls, retries, and serialization, and distinguish warm from cold starts if they occur. Provider fallback can create a mixture of models with different latency and behavior; a table listing only the preferred model would hide that source of variance. Include token or price estimates only when usage and applicable pricing inputs are available for every included query.
+
+The benchmark candidate includes multiple answerability conditions, but its planned size is modest for narrow subgroup comparisons, especially the 25-example conflict and injection subsets. Confidence intervals and raw counts are essential, and conclusions about rare edge cases should remain limited. If stable subgroup estimates are required, enlarge and independently review those strata rather than overinterpret a small-sample percentage.
+
+\subsection{Research Hypotheses and Decision Criteria}
+The evaluation is organized around three falsifiable hypotheses. First, typed verification and evidence-aware gating may reduce unsafe acceptance relative to Standard RAG at comparable coverage. Second, the full TrustRAG variant may improve supported-answer quality or selective risk relative to Fixed Multi-Agent RAG by applying an explicit decision gate. Third, conditional external checking may change reliability and operational cost relative to TrustRAG without external checking. These hypotheses are not findings: the current small, unreviewed pilot is incomplete and does not test the full TrustRAG variants.
+
+Before examining test outputs, define a primary metric and a practical effect threshold. For example, the authors may preselect unsafe acceptance at matched coverage as the primary safety outcome and token F1 as a primary answer-quality outcome. Define what improvement is practically meaningful, retain all system rows, and report uncertainty even when a difference is not significant or does not favor TrustRAG. Without preregistration, describe analyses as exploratory and avoid selecting favorable metrics post hoc.
+
+\section{Limitations and Threats to Validity}
+The runtime score weights are fixed constants and have not been learned or validated as probabilities. The trust assessor is based on retrieval similarity and does not establish source authority or freshness. LLM-based researcher, verifier, and critic outputs may share correlated errors. Gold-evidence overlap cannot verify that every generated claim is entailed. External checking is conditional, provider behavior can vary, and total local compute cost was not measured. The candidate benchmark is HotpotQA-derived and its controlled conflict and injection cases may not represent production documents. The current review status is automated, not human adjudication, and provides no independent human annotations. The pilot results are limited to the four selected records, local Qwen model, prompts, and configuration.
+
+\subsection{Construct Validity}
+The score in (\ref{eq:score}) is a deterministic operational heuristic. Because its weights are manually specified and some components include model-generated judgments, a high score cannot be equated with correctness. ECE and Brier score quantify agreement with the dataset's binary answerability labels for this candidate; they do not establish calibration on future users, unseen topics, or different providers. Evidence identifiers provide a practical grounding proxy but do not reveal whether every generated claim is entailed by its cited passage. These construct boundaries must be maintained in the abstract, tables, and conclusion.
+
+\subsection{Internal and External Validity}
+Model outputs may vary with provider routing, model revisions, prompt wording, sampling, and external service availability. A seed controls the benchmark implementation where applicable but cannot make hosted model APIs deterministic. If fallback changes provider during a run, the treatment is a provider mixture and should be reported, not concealed. A single corpus snapshot and a HotpotQA-derived candidate limit generalization to other domains and document types. Independently curated private documents, technical manuals, and long PDFs may exhibit different retrieval and extraction errors.
+
+The human-review process is another source of uncertainty. One human approval per record with an automated consistency audit is not equivalent to two independent annotators. The automated audit checks provenance and construction properties, not semantic truth. Reviewer guidance, disputed-item handling, and the exact export hash should therefore be archived. If a second reviewer becomes available, agreement should be measured before adjudication; otherwise the single-reviewer limitation must be stated.
+
+\subsection{Operational and Security Validity}
+An offline benchmark cannot fully capture production concerns such as authentication failures, cross-tenant isolation, embedding rate limits, object-storage outages, stale vector indexes, or frontend state synchronization. Those require separate end-to-end engineering tests and security review. They must not be inferred from the benchmark quality table. Conversely, a successful authenticated application query does not establish paper-level accuracy because production chat lacks the benchmark's reviewed gold answer and evidence labels.
+
+External checking can retrieve evidence outside the frozen corpus and can be affected by search availability, indexing, and content changes. For fair baseline comparisons, external checking must be limited to the designated variant, invocation conditions must be logged, and other variants must use the same frozen document context. If web evidence affects the final decision but is not exposed as a user-document citation, the evaluation should record that distinction. No benchmark should include private user files or production credentials in prompts, logs, or saved artifacts.
+
+\section{Ethical and Data Considerations}
+The system is decision support and does not guarantee correctness. The application uses document ownership checks and external storage components; research artifacts must exclude credentials, personal production files, and private database identifiers. The benchmark derives from HotpotQA and must preserve its license and attribution requirements when distributing derived text. Prompt-injection content is treated as untrusted benchmark input, not as instruction to the evaluation workflow.
+
+The benchmark contains adversarial instructions as document content. These examples should be stored and reviewed as untrusted input, and the evaluation harness must keep the actual user question and gold labels outside the retrieved text presented to the model. Corpus text must not modify the benchmark protocol, select files, change thresholds, or alter reporting instructions. Results should state the tested attack scope and must not imply comprehensive prompt-injection protection.
+
+Uploaded documents can contain personal, confidential, or copyrighted material. Research experiments should use only data the project team is authorized to process and redistribute. Store only the minimum content needed for reproducibility, separate user data from benchmark artifacts, and remove secrets and direct identifiers from logs. Identify the public source and licensing terms for derived benchmark text and describe transformations relevant to redistribution.
+
+\section{Conclusion}
+This manuscript describes the implemented TrustRAG document-question-answering path and specifies how it should be compared with five configured baselines. The implementation combines tenant-scoped retrieval, claim extraction, typed verification, critique, a deterministic weighted decision rule, and explicit abstention labels. The AI-assisted pass classified 191 records as provisional, eight as Not Approved, and one as Needs Review; all 200 human-review states remain pending. A retrieval-only diagnostic measured Recall@5 of 1.00 on 125 candidate examples using local MiniLM embeddings and per-record document scope. All six configured pipelines completed four local pilot records. Their EM/F1 results were 0.00/0.00, 1.00/1.00, 0.00/0.1818, 0.00/0.2374, 0.00/0.1818, and 0.00/0.0370, respectively. The first four accepted both unsafe examples; the two TrustRAG gate variants accepted one of the two. Injection success was 0/1, 1/1, 0/1, 0/1, 0/1, and 0/1. The Full TrustRAG pipeline ran with Tavily disabled, so no web-verification effect was evaluated. These results are too small and unreviewed for comparative or general claims. A research-grade comparison still requires genuine human review, external verification evaluation, and successful runs on the same frozen reviewed dataset, with supported metrics, denominators, and uncertainty intervals.
+
+The next empirical step is to have the eight rejected labels corrected in a new dataset version and resolve q-0128's false-premise policy, then obtain genuine human review before freezing the evaluation protocol. The conditional web verifier also requires a separate run with external checking enabled. The local pilot shows that Qwen2.5-Coder:3B on this CPU can exceed the configured 180-second provider timeout on a query. The result tables are generated from saved prediction artifacts. This manuscript reports an exploratory pilot and retrieval diagnostic, not evidence that TrustRAG outperforms other RAG systems. Any later results must state reliability outcomes and latency/cost trade-offs.
+
+\begin{thebibliography}{10}
+
+\bibitem{lewis2020rag}
+P. Lewis \emph{et al.}, ``Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks,'' in \emph{Advances in Neural Information Processing Systems}, vol. 33, 2020, pp. 9459--9474.
+
+\bibitem{gao2023rag}
+Y. Gao \emph{et al.}, ``Retrieval-Augmented Generation for Large Language Models: A Survey,'' arXiv:2312.10997, 2023. [Online]. Available: \url{https://arxiv.org/abs/2312.10997}
+
+\bibitem{asai2024selfrag}
+A. Asai, Z. Wu, Y. Wang, A. Sil, and H. Hajishirzi, ``Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection,'' in \emph{Proc. International Conference on Learning Representations}, 2024. [Online]. Available: \url{https://openreview.net/forum?id=hSyW5go0v8}
+
+\bibitem{yan2024crag}
+S.-Q. Yan, J.-C. Gu, Y. Zhu, and Z.-H. Ling, ``Corrective Retrieval Augmented Generation,'' arXiv:2401.15884, 2024. [Online]. Available: \url{https://arxiv.org/abs/2401.15884}
+
+\bibitem{saadfalcon2024ares}
+J. Saad-Falcon, O. Khattab, C. Potts, and M. Zaharia, ``ARES: An Automated Evaluation Framework for Retrieval-Augmented Generation Systems,'' in \emph{Proc. NAACL-HLT}, 2024, pp. 338--354, doi: 10.18653/v1/2024.naacl-long.20.
+
+\bibitem{es2024ragas}
+S. Es, J. James, L. Espinosa Anke, and S. Schockaert, ``RAGAs: Automated Evaluation of Retrieval Augmented Generation,'' in \emph{Proc. EACL: System Demonstrations}, 2024, pp. 150--158, doi: 10.18653/v1/2024.eacl-demo.16.
+
+\bibitem{niu2024ragtruth}
+C. Niu \emph{et al.}, ``RAGTruth: A Hallucination Corpus for Developing Trustworthy Retrieval-Augmented Language Models,'' in \emph{Proc. 62nd Annual Meeting of the Association for Computational Linguistics}, 2024, pp. 10862--10878, doi: 10.18653/v1/2024.acl-long.585.
+
+\bibitem{zhou2024trustworthy}
+Y. Zhou \emph{et al.}, ``Trustworthiness in Retrieval-Augmented Generation Systems: A Survey,'' arXiv:2409.10102, 2024. [Online]. Available: \url{https://arxiv.org/abs/2409.10102}
+
+\bibitem{yang2018hotpotqa}
+Z. Yang, P. Qi, S. Zhang, Y. Bengio, W. W. Cohen, R. Salakhutdinov, and C. D. Manning, ``HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering,'' in \emph{Proc. EMNLP}, 2018, pp. 2369--2380, doi: 10.18653/v1/D18-1259.
+
+\end{thebibliography}
+
+\end{document}
+
+
+

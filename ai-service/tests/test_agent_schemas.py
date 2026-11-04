@@ -52,6 +52,8 @@ def test_critic_result_uses_structured_risk_and_confidence():
     assert result.unsupported_claim_ids == ["claim-2"]
 
 
+
+
 def test_verification_ids_must_reference_known_claims():
     claims = [Claim(claim_id="claim-1", text="Supported claim.", evidence_ids=["chunk-1"])]
     verifications = [

@@ -81,6 +81,30 @@ def test_calculate_metrics_reports_groundedness_retrieval_calibration_and_latenc
     }
 
 
+def test_selective_risk_is_unavailable_when_no_answerable_prediction_is_accepted():
+    record = {
+        "id": "q1",
+        "answer_type": "answerable",
+        "gold_answer": "Paris",
+        "gold_evidence_ids": ["c1"],
+        "predicted_answer": "",
+        "retrieved_evidence_ids": [],
+        "predicted_evidence_ids": [],
+        "status": "abstain",
+        "decision_score": 0.1,
+        "claims": [],
+        "latency_ms": 10,
+        "llm_calls": 0,
+        "verification_calls": 0,
+        "retrieval_calls": 1,
+    }
+
+    metrics = calculate_metrics([record])
+
+    assert metrics["selective_risk"] is None
+    assert metrics["denominators"]["accepted_answerable"] == 0
+
+
 def test_calculate_metrics_rejects_missing_ground_truth_fields():
     try:
         calculate_metrics([{"id": "q1", "status": "answer"}])

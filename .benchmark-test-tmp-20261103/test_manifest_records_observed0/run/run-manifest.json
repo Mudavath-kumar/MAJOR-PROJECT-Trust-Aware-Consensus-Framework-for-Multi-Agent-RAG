@@ -1,0 +1,18 @@
+{
+  "corpus_manifest_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "llm_failed_attempts": 1,
+  "llm_model_attempts": {
+    "gemini-test": 1,
+    "openai/test": 1
+  },
+  "llm_provider_attempts": {
+    "gemini": 1,
+    "openrouter": 1
+  },
+  "llm_successful_provider_models": {
+    "openrouter/openai/test": 1
+  },
+  "paper_eligible": false,
+  "raw_outputs_retained": false,
+  "run_mode": "smoke"
+}

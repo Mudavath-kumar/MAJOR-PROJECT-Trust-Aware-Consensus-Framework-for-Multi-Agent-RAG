@@ -1,0 +1,12 @@
+{
+  "completed_prediction_count": 1,
+  "error_message": "simulated provider failure",
+  "error_type": "RuntimeError",
+  "failed_llm_attempts": [],
+  "failed_prediction": null,
+  "failed_record_id": "q-0002",
+  "paper_eligible": false,
+  "partial_predictions_file": "predictions-input.partial.jsonl",
+  "run_mode": "smoke",
+  "status": "error"
+}

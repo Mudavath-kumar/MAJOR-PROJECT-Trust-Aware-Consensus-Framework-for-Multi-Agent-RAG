@@ -1,0 +1,23 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "run_critic() got an unexpected keyword argument 'fact_checker_output'",
+  "error_type": "TypeError",
+  "failed_llm_attempts": [
+    {
+      "model": "gemini-3.6-flash",
+      "provider": "gemini",
+      "succeeded": true
+    },
+    {
+      "model": "gemini-3.6-flash",
+      "provider": "gemini",
+      "succeeded": true
+    }
+  ],
+  "failed_prediction": null,
+  "failed_record_id": "q-0001",
+  "paper_eligible": false,
+  "partial_predictions_file": "predictions-input.partial.jsonl",
+  "run_mode": "smoke",
+  "status": "error"
+}

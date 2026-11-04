@@ -26,6 +26,11 @@ if (!rawBase.endsWith("/api/v1") && !rawBase.endsWith("/v1")) {
   rawBase += "/api/v1";
 }
 const API_BASE_URL = rawBase;
+// Local CPU inference can take several minutes for sequential multi-agent
+// requests. Keep production deadlines bounded while allowing local Ollama runs
+// to complete instead of aborting the browser request midway.
+const API_REQUEST_TIMEOUT_MS = isLocalApiUrl(API_BASE_URL) ? 600_000 : 130_000;
+const DOCUMENT_UPLOAD_TIMEOUT_MS = 300_000;
 
 type AuthTokenProvider = () => Promise<string | null>;
 
@@ -132,10 +137,9 @@ export class ApiClient {
   private static async getToken(): Promise<string | null> {
     if (this.tokenProvider) {
       const token = await this.tokenProvider();
-      if (token) {
-        this.setToken(token);
-        return token;
-      }
+      // Clerk tokens are refreshed on demand. Persisting each fresh token here
+      // emits cross-tab storage events on every API request.
+      if (token) return token;
     }
     return this.readStoredToken();
   }
@@ -188,10 +192,14 @@ export class ApiClient {
     };
 
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetchWithRetry(url, {
-      ...options,
-      headers,
-    });
+    const response = await fetchWithRetry(
+      url,
+      {
+        ...options,
+        headers,
+      },
+      { timeoutMs: API_REQUEST_TIMEOUT_MS },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -236,11 +244,15 @@ export class ApiClient {
       ...(userName ? { "x-user-name": userName } : {}),
     };
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/documents/upload`, {
-      method: "POST",
-      headers,
-      body: formData,
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/documents/upload`,
+      {
+        method: "POST",
+        headers,
+        body: formData,
+      },
+      { timeoutMs: DOCUMENT_UPLOAD_TIMEOUT_MS },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -264,11 +276,15 @@ export class ApiClient {
       ...(userName ? { "x-user-name": userName } : {}),
     };
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/documents/upload-batch`, {
-      method: "POST",
-      headers,
-      body: formData,
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/documents/upload-batch`,
+      {
+        method: "POST",
+        headers,
+        body: formData,
+      },
+      { timeoutMs: DOCUMENT_UPLOAD_TIMEOUT_MS },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -349,9 +365,13 @@ export class ApiClient {
 
   static async downloadResearchBenchmarkExport() {
     const token = await this.getToken();
-    const response = await fetchWithRetry(`${API_BASE_URL}/research/benchmark/export`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/research/benchmark/export`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      },
+      { timeoutMs: API_REQUEST_TIMEOUT_MS },
+    );
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || errorData.message || `Export failed (${response.status})`);
@@ -428,7 +448,7 @@ export class ApiClient {
   // Health check — hits /health directly, not under /api/v1
   static async checkHealth() {
     const baseWithoutV1 = API_BASE_URL.replace(/\/api\/v1$/, "").replace(/\/v1$/, "");
-    const response = await fetchWithRetry(`${baseWithoutV1}/health`);
+    const response = await fetchWithRetry(`${baseWithoutV1}/health`, {}, { timeoutMs: 15_000 });
     if (!response.ok) throw new Error(`Health check failed (${response.status})`);
     return response.json() as Promise<{ status: string; backend: string; ai_service?: any }>;
   }

@@ -61,6 +61,58 @@ def test_compute_embeddings_splits_large_inputs_without_reordering(monkeypatch):
     assert len(result) == 33
 
 
+def test_compute_embeddings_retries_rate_limit_with_backoff(monkeypatch):
+    import time
+    import httpx
+
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-secret")
+    monkeypatch.setattr(settings, "EMBEDDING_MODEL_NAME", "gemini-embedding-2")
+    attempts = []
+    delays = []
+
+    def post(_url, *, json, **_kwargs):
+        attempts.append(len(json["requests"]))
+        if len(attempts) == 1:
+            request = httpx.Request("POST", "https://generativelanguage.googleapis.com/test")
+            response = httpx.Response(429, request=request, headers={"Retry-After": "1"})
+            raise httpx.HTTPStatusError("rate limited", request=request, response=response)
+        return FakeResponse(len(json["requests"]))
+
+    monkeypatch.setattr("httpx.post", post)
+    monkeypatch.setattr(time, "sleep", delays.append)
+
+    result = embeddings.compute_embeddings(["chunk"])
+
+    assert len(result) == 1
+    assert attempts == [1, 1]
+    assert delays == [1.0]
+
+
+def test_compute_embeddings_retries_transient_connection_drop(monkeypatch):
+    import httpx
+    import time
+
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-secret")
+    monkeypatch.setattr(settings, "EMBEDDING_MODEL_NAME", "gemini-embedding-2")
+    calls = []
+    delays = []
+
+    def post(_url, *, json, **_kwargs):
+        calls.append(len(json["requests"]))
+        if len(calls) == 1:
+            raise httpx.RemoteProtocolError("connection dropped")
+        return FakeResponse(len(json["requests"]))
+
+    monkeypatch.setattr("httpx.post", post)
+    monkeypatch.setattr(time, "sleep", delays.append)
+
+    result = embeddings.compute_embeddings(["chunk"])
+
+    assert len(result) == 1
+    assert calls == [1, 1]
+    assert delays == [1.0]
+
+
 def test_compute_embeddings_rejects_incomplete_or_wrong_dimension_response(monkeypatch):
     monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-secret")
     monkeypatch.setattr(settings, "EMBEDDING_MODEL_NAME", "gemini-embedding-2")
@@ -71,6 +123,7 @@ def test_compute_embeddings_rejects_incomplete_or_wrong_dimension_response(monke
 
 
 def test_compute_embeddings_reports_provider_status_without_logging_secret(monkeypatch, caplog):
+    import json
     import httpx
 
     monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-secret")
@@ -78,6 +131,7 @@ def test_compute_embeddings_reports_provider_status_without_logging_secret(monke
     response = httpx.Response(
         429,
         request=httpx.Request("POST", "https://generativelanguage.googleapis.com/test"),
+        content=json.dumps({"error": {"status": "RESOURCE_EXHAUSTED", "message": "quota exhausted for unit-test-secret"}}),
     )
 
     def reject_request(*_args, **_kwargs):
@@ -90,3 +144,5 @@ def test_compute_embeddings_reports_provider_status_without_logging_secret(monke
         embeddings.compute_embeddings(["chunk"])
 
     assert "unit-test-secret" not in caplog.text
+    assert "RESOURCE_EXHAUSTED" in caplog.text
+    assert "quota exhausted" in caplog.text

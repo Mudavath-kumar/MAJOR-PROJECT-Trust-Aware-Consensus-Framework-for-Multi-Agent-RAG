@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +7,7 @@ from .core.config import settings
 from .core.llm_router import get_llm_status
 from .api.rag import router as rag_router
 from .rag.embeddings import is_embedding_model_ready
+from .rag.vectorstore import is_vector_store_ready
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +31,10 @@ app = FastAPI(
 _ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
     "https://major-project-trust-aware-consensus.vercel.app",
 ]
 # Allow the Render backend service URL if set
@@ -40,7 +46,7 @@ app.add_middleware(
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-TrustRAG-Service-Token"],
 )
 
 app.include_router(rag_router)
@@ -48,7 +54,12 @@ app.include_router(rag_router)
 @app.get("/health")
 async def health():
     llm_status = get_llm_status()
-    ready = is_embedding_model_ready() and llm_status["provider"] != "unavailable"
+    vector_store_ready = await asyncio.to_thread(is_vector_store_ready)
+    ready = (
+        is_embedding_model_ready()
+        and llm_status["provider"] != "unavailable"
+        and vector_store_ready
+    )
     gemini_embeddings = bool(settings.GEMINI_API_KEY)
     return {
         "status": "healthy" if ready else "offline",
@@ -57,6 +68,7 @@ async def health():
         "embedding_model": settings.EMBEDDING_MODEL_NAME if gemini_embeddings else None,
         "embedding_source": "gemini_api" if gemini_embeddings else None,
         "vector_store": "MongoDB Atlas Vector Search",
+        "vector_store_ready": vector_store_ready,
         "ready": ready,
     }
 

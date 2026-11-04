@@ -52,7 +52,7 @@ async def _verify_externally(query: str, tavily_key: str) -> List[Dict[str, str]
 async def run_fact_checker(
     query: str,
     researcher_output: Dict[str, Any],
-    model: str = "llama-3.1-8b-instant",
+    model: str = "gemini-3.5-flash",
     api_key: str = "",
     tavily_key: str = "",
     context_chunks: List[Dict[str, Any]] | None = None,
@@ -88,7 +88,7 @@ Verify every claim using its claim ID and the retrieved evidence references prov
         model=model,
         api_key_override=api_key,
         temperature=0.1,
-        max_output_tokens=768,
+        max_output_tokens=384,
     )
 
     latency_ms = int((time.time() - start_time) * 1000)

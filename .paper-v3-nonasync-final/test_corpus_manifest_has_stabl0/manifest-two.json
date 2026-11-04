@@ -1,0 +1,39 @@
+{
+  "chunking": {
+    "chunk_overlap": 80,
+    "chunk_size": 400
+  },
+  "dataset_version": "test-v1",
+  "manifest_version": "trustrag-corpus-v1",
+  "sources": [
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-policy-fd68d2fac2b9:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "87c7762d67749023b1a33f95c40b389e4bae511a1f09de7e4de944a8823eed05",
+          "word_count": 400
+        },
+        {
+          "chunk_index": 1,
+          "evidence_id": "doc-policy-fd68d2fac2b9:chunk_2_320",
+          "start_word": 320,
+          "text_sha256": "786082d2058e736f612d7fad78c65e13eb074891de289fa71d49d4fdabb92c8e",
+          "word_count": 400
+        },
+        {
+          "chunk_index": 2,
+          "evidence_id": "doc-policy-fd68d2fac2b9:chunk_3_640",
+          "start_word": 640,
+          "text_sha256": "8e6f6f83a2a93630f8e03e012e31fe5f040ee26873f4ee096c9e5d7b6ef4cd34",
+          "word_count": 110
+        }
+      ],
+      "document_id": "doc-policy-fd68d2fac2b9",
+      "path": ".paper-v3-nonasync-final/test_corpus_manifest_has_stabl0/policy.md",
+      "snapshot_sha256": "fd68d2fac2b9200cd3dd3c4dc83e47afbe840340452a08f7a62ca874af48e1a5",
+      "word_count": 750
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "completed_prediction_count": 1,
+  "error_message": "single-pass output must contain a JSON object",
+  "error_type": "ValueError",
+  "failed_at": "2026-11-03T20:36:15.583125+00:00",
+  "model": "gemini-3.6-flash",
+  "paper_eligible": false,
+  "run_mode": "exploratory",
+  "status": "error",
+  "variant": "baseline-rag"
+}

@@ -12,10 +12,13 @@ export const Route = createFileRoute("/app/knowledge")({
       {
         name: "description",
         content:
-          "Search, filter, preview and inspect the chunks and metadata behind every indexed document.",
+          "Search, filter, preview and inspect the chunks, processing status and metadata for every indexed document.",
       },
       { property: "og:title", content: "TrustRAG Knowledge Base" },
-      { property: "og:description", content: "Every chunk, its metadata and its trust level." },
+      {
+        property: "og:description",
+        content: "Every chunk, its metadata and its processing status.",
+      },
     ],
   }),
   component: KnowledgeBase,
@@ -135,7 +138,7 @@ function KnowledgeBase() {
       <PageHeader
         eyebrow="Corpus"
         title="Know what the model knows."
-        description="Inspect indexed documents down to individual chunks — with similarity, trust level and provenance metadata."
+        description="Inspect indexed documents down to individual chunks, with retrieval similarity and stored metadata."
         action={
           <Link
             to="/app/upload"
@@ -240,7 +243,8 @@ function KnowledgeBase() {
                     </span>
                   </div>
                   <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                    {d.chunkCount} chunks · {d.status ?? "unknown"} · {d.trust}% trust
+                    {d.chunkCount} chunks · {d.status ?? "unknown"} ·{" "}
+                    {d.trust !== undefined ? `${d.trust}% trust` : "trust not assessed"}
                   </p>
                 </div>
                 <span
@@ -297,13 +301,19 @@ function KnowledgeBase() {
               <div className="mt-4 rounded-xl border border-border/70 bg-muted/20 p-3">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Source trust index
+                    Source trust
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-emerald-400">
-                    {selected.trust !== undefined ? `${selected.trust}%` : "—"}
+                  <span className="font-mono text-xs font-semibold tabular-nums text-muted-foreground">
+                    {selected.trust !== undefined ? `${selected.trust}%` : "Not assessed"}
                   </span>
                 </div>
-                <Meter value={selected.trust ?? 0} className="mt-2" />
+                {selected.trust !== undefined ? (
+                  <Meter value={selected.trust} className="mt-2" />
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    No source provenance score is recorded for this document.
+                  </p>
+                )}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-1.5">

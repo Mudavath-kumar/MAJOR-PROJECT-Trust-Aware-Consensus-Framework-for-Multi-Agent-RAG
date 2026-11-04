@@ -164,7 +164,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         aiSettings = {
           gemini_api_key:      decryptSecret((saved as any).gemini_api_key) || undefined,
           tavily_api_key:      decryptSecret((saved as any).tavily_api_key) || undefined,
-          preferred_model:     (saved as any).preferred_model     ?? undefined,
+          preferred_model:     (saved as any).preferred_model?.startsWith("gemini-2.") ? "gemini-3.5-flash" : (saved as any).preferred_model ?? "gemini-3.5-flash",
           consensus_threshold: (saved as any).consensus_threshold ?? undefined,
           similarity_top_k:    (saved as any).similarity_top_k    ?? undefined,
         };

@@ -6,6 +6,29 @@ from .relevance import filter_vector_results, rank_rows
 logger = logging.getLogger("trustrag.vectorstore")
 
 _col = None  # pymongo Collection
+_client = None  # shared PyMongo client for both retrieval and readiness checks
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        from pymongo import MongoClient
+
+        _client = MongoClient(
+            settings.MONGODB_URI,
+            serverSelectionTimeoutMS=10000,
+        )
+    return _client
+
+
+def is_vector_store_ready() -> bool:
+    """Check Mongo connectivity without creating indexes or changing data."""
+    try:
+        _get_client().admin.command("ping", maxTimeMS=2000)
+        return True
+    except Exception as exc:
+        logger.warning("Vector store readiness check failed (%s)", type(exc).__name__)
+        return False
 
 
 def build_scope_filter(document_ids: Optional[List[str]], user_id: str) -> Dict[str, Any]:
@@ -28,10 +51,9 @@ def _get_collection():
     global _col
     if _col is not None:
         return _col
-    from pymongo import MongoClient
     from pymongo.operations import SearchIndexModel
 
-    client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=10000)
+    client = _get_client()
     try:
         db = client.get_default_database()
     except Exception:
@@ -90,20 +112,20 @@ def add_document_chunks(
     col.bulk_write(ops, ordered=False)
 
 
-def delete_document_chunks(document_id: str, user_id: Optional[str] = None) -> int:
+def delete_document_chunks(document_id: str, user_id: str) -> int:
+    if not user_id:
+        raise ValueError("user_id is required for vector deletion")
     col = _get_collection()
-    filt: Dict[str, Any] = {"document_id": document_id}
-    if user_id:
-        filt["user_id"] = user_id
+    filt: Dict[str, Any] = {"document_id": document_id, "user_id": user_id}
     result = col.delete_many(filt)
     return result.deleted_count
 
 
-def get_document_chunks(document_id: str, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+def get_document_chunks(document_id: str, user_id: str) -> List[Dict[str, Any]]:
+    if not user_id:
+        raise ValueError("user_id is required for vector inspection")
     col = _get_collection()
-    filt: Dict[str, Any] = {"document_id": document_id}
-    if user_id:
-        filt["user_id"] = user_id
+    filt: Dict[str, Any] = {"document_id": document_id, "user_id": user_id}
     rows = col.find(filt, {"embedding": 0})
     return [
         {"chunk_id": str(r["_id"]), "text": r["text"], "metadata": r.get("metadata", {})}
@@ -130,50 +152,52 @@ def query_vector_store(
         for key, value in scope_filter.items()
     }
 
-    # Try Atlas Vector Search first
-    try:
-        vs_stage: Dict[str, Any] = {
-            "index": "embedding_index",
-            "path": "embedding",
-            "queryVector": query_embedding,
-            "numCandidates": top_k * 10,
-            "limit": top_k,
-        }
-        if pre_filter:
-            vs_stage["filter"] = pre_filter
+    # An empty query vector means the embedding provider is unavailable. Skip
+    # Atlas vector search and use lexical ranking over the same scoped rows.
+    if query_embedding:
+        try:
+            vs_stage: Dict[str, Any] = {
+                "index": "embedding_index",
+                "path": "embedding",
+                "queryVector": query_embedding,
+                "numCandidates": top_k * 10,
+                "limit": top_k,
+            }
+            if pre_filter:
+                vs_stage["filter"] = pre_filter
 
-        results = list(col.aggregate([
-            {"$vectorSearch": vs_stage},
-            {"$project": {"_id": 1, "text": 1, "metadata": 1, "score": {"$meta": "vectorSearchScore"}}},
-        ]))
-        if results:
-            logger.info("Atlas vectorSearch returned %d chunks", len(results))
-            vector_results = [
-                {
-                    "chunk_id": str(r["_id"]),
-                    "text": r["text"],
-                    "metadata": r.get("metadata", {}),
-                    "similarity_score": round(float(r.get("score", 0.8)), 4),
-                }
-                for r in results
-            ]
-            filtered_results = filter_vector_results(vector_results, query_text, top_k)
-            logger.info(
-                "Atlas relevance gate kept %d/%d chunks for query",
-                len(filtered_results),
-                len(vector_results),
-            )
-            return filtered_results
-        logger.warning("Atlas vectorSearch returned 0 results — falling back")
-    except Exception as e:
-        logger.warning("Atlas $vectorSearch failed: %s — falling back to keyword search", e)
+            results = list(col.aggregate([
+                {"$vectorSearch": vs_stage},
+                {"$project": {"_id": 1, "text": 1, "metadata": 1, "score": {"$meta": "vectorSearchScore"}}},
+            ]))
+            if results:
+                logger.info("Atlas vectorSearch returned %d chunks", len(results))
+                vector_results = [
+                    {
+                        "chunk_id": str(r["_id"]),
+                        "text": r["text"],
+                        "metadata": r.get("metadata", {}),
+                        "similarity_score": round(float(r.get("score", 0.8)), 4),
+                    }
+                    for r in results
+                ]
+                filtered_results = filter_vector_results(vector_results, query_text, top_k)
+                logger.info(
+                    "Atlas relevance gate kept %d/%d chunks for query",
+                    len(filtered_results),
+                    len(vector_results),
+                )
+                return filtered_results
+            logger.warning("Atlas vectorSearch returned 0 results — falling back")
+        except Exception as e:
+            logger.warning("Atlas $vectorSearch failed: %s — falling back to keyword search", e)
+    else:
+        logger.warning("Query embedding unavailable; using scoped lexical search")
 
     # Fallback must use the exact same tenant and document scope.
     filt = scope_filter
 
-    # Keep embeddings in this bounded fallback projection. It allows the
-    # service to remain semantically useful during an Atlas index outage while
-    # retaining the exact tenant/document filter above.
+    # Retain stored embeddings for semantic hybrid ranking when available.
     rows = list(col.find(filt, {"text": 1, "embedding": 1, "metadata": 1}))
     results = rank_rows(rows, query_embedding, query_text, top_k)
     filtered_results = filter_vector_results(results, query_text, top_k)

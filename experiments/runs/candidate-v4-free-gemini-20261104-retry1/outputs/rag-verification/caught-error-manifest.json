@@ -1,0 +1,11 @@
+{
+  "completed_prediction_count": 1,
+  "error_message": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+  "error_type": "ServerError",
+  "failed_at": "2026-11-03T20:30:27.561227+00:00",
+  "model": "gemini-3.6-flash",
+  "paper_eligible": false,
+  "run_mode": "exploratory",
+  "status": "error",
+  "variant": "rag-verification"
+}

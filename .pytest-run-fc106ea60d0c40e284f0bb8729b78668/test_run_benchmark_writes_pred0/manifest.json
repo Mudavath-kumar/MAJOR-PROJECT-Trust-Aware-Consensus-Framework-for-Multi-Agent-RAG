@@ -1,0 +1,25 @@
+{
+  "chunking": {
+    "chunk_overlap": 80,
+    "chunk_size": 400
+  },
+  "dataset_version": "test-v1",
+  "manifest_version": "trustrag-corpus-v1",
+  "sources": [
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-policy-fbf5d955e921:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "fbf5d955e921f9b830040ec0204904a1d8fac050a35d1116c8e1ac07a1aaf972",
+          "word_count": 8
+        }
+      ],
+      "document_id": "doc-policy-fbf5d955e921",
+      "path": ".pytest-run-fc106ea60d0c40e284f0bb8729b78668/test_run_benchmark_writes_pred0/policy.md",
+      "snapshot_sha256": "fbf5d955e921f9b830040ec0204904a1d8fac050a35d1116c8e1ac07a1aaf972",
+      "word_count": 8
+    }
+  ]
+}

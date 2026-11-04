@@ -1,0 +1,997 @@
+[
+  {
+    "id": "q-0101",
+    "question": "Which  princess of French origin did Conrad IV of Germany married to",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Conrad IV of Germany",
+        "sentence_index": 0,
+        "text": "Conrad (25 April 1228 – 21 May 1254), a member of the Hohenstaufen dynasty, was the only son of Emperor Frederick II from his second marriage with Queen Isabella II of Jerusalem."
+      },
+      {
+        "source_title": "Isabella II of Jerusalem",
+        "sentence_index": 0,
+        "text": "Isabella II (121225 April 1228) also known as Yolande of Brienne, was a princess of French origin who became monarch of Jerusalem."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0101-5ae234e85542994d89d5b395-6e435dc29235",
+        "source_document_name": "q-0101-5ae234e85542994d89d5b395.md",
+        "source_title": "Henry Raspe, Landgrave of Thuringia",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0101-5ae234e85542994d89d5b395.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0102",
+    "question": "Who has written more than 300 papers, Semyon Aranovich Gershgorin or Pavel Alexandrov?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Semyon Aranovich Gershgorin",
+        "sentence_index": 2,
+        "text": " His contributions include the Gershgorin circle theorem."
+      },
+      {
+        "source_title": "Pavel Alexandrov",
+        "sentence_index": 0,
+        "text": "Pavel Sergeyevich Alexandrov (Russian: Па́вел Серге́евич Алекса́ндров ), sometimes romanized Paul Alexandroff or Aleksandrov (7 May 1896 – 16 November 1982), was a Soviet mathematician."
+      },
+      {
+        "source_title": "Pavel Alexandrov",
+        "sentence_index": 1,
+        "text": " He wrote about three hundred papers, making important contributions to set theory and topology."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0102-5a717d4c5542994082a3e854-3cc348d5ff03",
+        "source_document_name": "q-0102-5a717d4c5542994082a3e854.md",
+        "source_title": "Nerve of a covering",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0102-5a717d4c5542994082a3e854.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0103",
+    "question": "Which tennis player is younger, John Newcombe or Květa Peschke?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "John Newcombe",
+        "sentence_index": 0,
+        "text": "John David Newcombe, AO, OBE (born 23 May 1944) is a former tennis player from Australia who is one of the few men to have attained a world No. 1 ranking in both singles and doubles."
+      },
+      {
+        "source_title": "Květa Peschke",
+        "sentence_index": 0,
+        "text": "Květoslava Peschkeová, (née Hrdličková; born 9 July 1975) better known as Květa Peschke, is a professional tennis player from the Czech Republic."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0103-5a7e5ec25542991319bc947a-d80864e46bca",
+        "source_document_name": "q-0103-5a7e5ec25542991319bc947a.md",
+        "source_title": "Newcombe Medal",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0103-5a7e5ec25542991319bc947a.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0104",
+    "question": "What is the occupation of the Miami Dolphins owner's wife?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Kara Ross",
+        "sentence_index": 0,
+        "text": "Kara Ross (née Gaffney; born 1966/1967) is an American jewelry designer."
+      },
+      {
+        "source_title": "Kara Ross",
+        "sentence_index": 1,
+        "text": " She is the wife of American billionaire Stephen M. Ross."
+      },
+      {
+        "source_title": "Stephen M. Ross",
+        "sentence_index": 4,
+        "text": " Ross is also the principal owner of the Miami Dolphins and Hard Rock Stadium."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0104-5ae76d185542997ec2727641-730e6b2f677c",
+        "source_document_name": "q-0104-5ae76d185542997ec2727641.md",
+        "source_title": "Steve Clark (American football)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0104-5ae76d185542997ec2727641.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0105",
+    "question": "Who was the original female founder of the brewery that was purchased in 2006 by the largest brewery in the state of Maryland?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Frederick Brewing Company",
+        "sentence_index": 1,
+        "text": " It was founded sometime between 1992 and 1993 by Marjorie McGinnis, Kevin Brannon, and Steve Nordahl and had its grand opening on 12 February 1997."
+      },
+      {
+        "source_title": "Frederick Brewing Company",
+        "sentence_index": 3,
+        "text": " In early 2002 or 2003 the company was placed into receivership and in 2006 was purchased by Flying Dog Brewery and renamed Wild Goose Brewery."
+      },
+      {
+        "source_title": "Flying Dog Brewery",
+        "sentence_index": 1,
+        "text": " Founded in 1990 by George Stranahan and Richard McIntyre, it is the largest brewery in Maryland."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0105-5a84a1c85542992a431d1a7c-b85670edbc98",
+        "source_document_name": "q-0105-5a84a1c85542992a431d1a7c.md",
+        "source_title": "Flying Dog Brewery",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0105-5a84a1c85542992a431d1a7c.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0106",
+    "question": "What is the name of the genocidal mass slaughter of Tutsi Rwanda, in which Cyprian and Daphrose Rugamba were assassinated?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Cyprian and Daphrose Rugamba",
+        "sentence_index": 0,
+        "text": "Cyprian (ca. 1935–1994) and Daphrose Rugamba (ca. 1944–1994) are a married couple from Rwanda, who introduced the Catholic Charismatic Renewal and the Emmanuel Community to their country in 1990, and were assassinated in the Rwandan genocide of 1994."
+      },
+      {
+        "source_title": "Rwandan genocide",
+        "sentence_index": 0,
+        "text": "The Rwandan genocide, also known as the genocide against the Tutsi, was a genocidal mass slaughter of Tutsi in Rwanda by members of the Hutu majority government."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0106-5ade8bd955429975fa854f04-9d25ec4cb120",
+        "source_document_name": "q-0106-5ade8bd955429975fa854f04.md",
+        "source_title": "Jacqueline Mukansonera",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0106-5ade8bd955429975fa854f04.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0107",
+    "question": "Meomi Design works include The Octonauts book series, how did the adaptations of the series continue?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Meomi Design",
+        "sentence_index": 0,
+        "text": "Meomi Design Inc is a Canadian/American design studio based in Vancouver and Los Angeles founded by Vicki Wong and Michael C. Murphy."
+      },
+      {
+        "source_title": "Meomi Design",
+        "sentence_index": 1,
+        "text": " Their works include the Vancouver 2010 Winter Olympics mascots Miga, Quatchi, Sumi and Mukmuk, and The Octonauts, a series of books which were made into a TV series for the BBC channel CBeebies by Brown Bag Films and subsequently broadcast internationally."
+      },
+      {
+        "source_title": "The Octonauts",
+        "sentence_index": 0,
+        "text": "The Octonauts is a British children's television series, produced by Silvergate Media for the BBC channel CBeebies."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0107-5ae684fe5542991bbc97610e-02f12628da2a",
+        "source_document_name": "q-0107-5ae684fe5542991bbc97610e.md",
+        "source_title": "Charles Phu",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0107-5ae684fe5542991bbc97610e.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0108",
+    "question": "literary magazine Okyeame was inspired by this first prime Minister of Ghana whom led Ghana to independence from what country?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Okyeame",
+        "sentence_index": 2,
+        "text": " Inspired by Kwame Nkrumah, the first Prime Minister of Ghana, the publication sought to explore the experiences of Africa from a new intellectual framework."
+      },
+      {
+        "source_title": "Kwame Nkrumah",
+        "sentence_index": 0,
+        "text": "Kwame Nkrumah PC (21 September 1909 – 27 April 1972) was the first prime minister and president of Ghana, having led it to independence from Britain in 1957."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0108-5a7b6e1d5542997c3ec9716e-1cb38cafe42f",
+        "source_document_name": "q-0108-5a7b6e1d5542997c3ec9716e.md",
+        "source_title": "List of Prime Ministers of the United Kingdom",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0108-5a7b6e1d5542997c3ec9716e.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0109",
+    "question": "Rimo I and Passu Sar are both part of which mountain range?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Rimo I",
+        "sentence_index": 1,
+        "text": " It lies in the northern part of the remote Rimo Muztagh, a subrange of the Karakoram range."
+      },
+      {
+        "source_title": "Passu Sar",
+        "sentence_index": 0,
+        "text": "Passu Sar (Urdu: ‎ ; or Passu Sar, Passu I) is a mountain peak in the Batura Muztagh, a sub-range of the Karakoram mountain range, located in the Gilgit District of Gilgit-Baltistan, Pakistan, west of the Hunza Valley."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0109-5a79fc8b5542994f819ef114-9c0f2de1cc6d",
+        "source_document_name": "q-0109-5a79fc8b5542994f819ef114.md",
+        "source_title": "Krucze Mountains",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0109-5a79fc8b5542994f819ef114.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0110",
+    "question": "Which star of the 1986 movie \"Castaway\" was an owner of a Panther De Ville?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Panther De Ville",
+        "sentence_index": 1,
+        "text": " The De Ville was conceived by Robert Jankel to appeal to the taste of nouveau riche customers, including singer Elton John and actor Oliver Reed."
+      },
+      {
+        "source_title": "Oliver Reed",
+        "sentence_index": 0,
+        "text": "Robert Oliver Reed (13 February 1938 – 2 May 1999) was an English actor known for his upper-middle class, macho image, hellraiser lifestyle, and \"tough guy\" roles."
+      },
+      {
+        "source_title": "Oliver Reed",
+        "sentence_index": 2,
+        "text": "\" (1968), \"Women in Love\" (1969), \"Hannibal Brooks\" (1969), \"The Devils\" (1971), \"The Three Musketeers\" (1973), \"Tommy\" (1975), \"Lion of the Desert\" (1981), \"Castaway\" (1986), \"The Adventures of Baron Munchausen\" (1988) and \"Funny Bones\" (1995)."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0110-5a74bfa55542996c70cfadcf-a89815b6e5b6",
+        "source_document_name": "q-0110-5a74bfa55542996c70cfadcf.md",
+        "source_title": "Oliver Reed",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0110-5a74bfa55542996c70cfadcf.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0111",
+    "question": "What concert hall is located on the northern edge or South Kensington, London, and had songs chosen from a number of concerts there?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Live Wood",
+        "sentence_index": 1,
+        "text": " Songs were chosen from a number of the concerts, including the Royal Albert Hall, London (22 November 1993 - incorrectly listed as December), Wolverhampton Civic Hall (9 March 1994), the Paradiso in Amsterdam (16 April 1994) and La Luna, Brussels (17 April 1994)."
+      },
+      {
+        "source_title": "Royal Albert Hall",
+        "sentence_index": 0,
+        "text": "The Royal Albert Hall is a concert hall on the northern edge of South Kensington, London, which holds the Proms concerts annually each summer since 1941."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0111-5a7d2b2b5542995ed0d1661b-2f752c257ec6",
+        "source_document_name": "q-0111-5a7d2b2b5542995ed0d1661b.md",
+        "source_title": "Earl's Court",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0111-5a7d2b2b5542995ed0d1661b.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0112",
+    "question": "Between Greyia and Calibanus, which genus contains more species?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Greyia",
+        "sentence_index": 0,
+        "text": "Greyia is a genus of plant in family Melianthaceae."
+      },
+      {
+        "source_title": "Greyia",
+        "sentence_index": 1,
+        "text": " It contains three species:"
+      },
+      {
+        "source_title": "Calibanus",
+        "sentence_index": 0,
+        "text": "Calibanus is a genus of two species of flowering plants, both evergreen succulents from dry areas of northeastern Mexico."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0112-5ab985eb554299131ca42360-6a388322322d",
+        "source_document_name": "q-0112-5ab985eb554299131ca42360.md",
+        "source_title": "List of Amanita species",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0112-5ab985eb554299131ca42360.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0113",
+    "question": "Who died first, Bryce Courtenay or Juan Carlos Onetti?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Bryce Courtenay",
+        "sentence_index": 0,
+        "text": "Bryce Courtenay, AM (14 August 193322 November 2012) was a South African/Australian advertising director and novelist."
+      },
+      {
+        "source_title": "Juan Carlos Onetti",
+        "sentence_index": 0,
+        "text": "Juan Carlos Onetti Borges (July 1, 1909, Montevideo – May 30, 1994, Madrid) was an Uruguayan novelist and author of short stories."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0113-5a79332555429907847277e7-e8f54207b84e",
+        "source_document_name": "q-0113-5a79332555429907847277e7.md",
+        "source_title": "Concurso Literario Juan Carlos Onetti",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0113-5a79332555429907847277e7.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0114",
+    "question": "What year did Christopher Nolan's magic-themed drama come out?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Hugh Jackman",
+        "sentence_index": 2,
+        "text": " He is known for his long-running role as Wolverine in the \"X-Men\" film series, as well as for his lead roles in films such as the romantic-comedy fantasy \"Kate & Leopold\" (2001), the action-horror film \"Van Helsing\" (2004), the magic-themed drama \"The Prestige\" (2006), the epic fantasy drama \"The Fountain\" (2006), the epic historical romantic drama \"Australia\" (2008), the film version of \"Les Misérables\" (2012), and the thriller \"Prisoners\" (2013)."
+      },
+      {
+        "source_title": "The Prestige (film)",
+        "sentence_index": 0,
+        "text": "The Prestige is a 2006 British-American mystery thriller film directed by Christopher Nolan, from a screenplay adapted by Nolan and his brother Jonathan from Christopher Priest's 1995 novel of the same name."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0114-5a77a41a5542997042120ab9-76f04824cfdf",
+        "source_document_name": "q-0114-5a77a41a5542997042120ab9.md",
+        "source_title": "Insomnia (2002 film)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0114-5a77a41a5542997042120ab9.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0115",
+    "question": "What Author reflected on the contrast between Ethiopian Airlines and other African Airlines?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Ethiopian Airlines accidents and incidents",
+        "sentence_index": 0,
+        "text": "Ethiopian Airlines, the national airline of Ethiopia, has a good safety record, by contrast to other African airlines."
+      },
+      {
+        "source_title": "Airlines of Africa",
+        "sentence_index": 1,
+        "text": " Ben R. Guttery, author of \"Encyclopedia of African Airlines\", said \"Although most of the carriers have never been large by European or American standards, they have had tremendous impact on the economy and the people.\""
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0115-5ab6a78b554299710c8d1f28-ff9b26a8fb9b",
+        "source_document_name": "q-0115-5ab6a78b554299710c8d1f28.md",
+        "source_title": "African Airlines Association",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0115-5ab6a78b554299710c8d1f28.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0116",
+    "question": "Who was born first, Adrian McLaren or Ryan McLaren?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Adrian McLaren",
+        "sentence_index": 0,
+        "text": "Adrian Peter McLaren (born 21 April 1980 in Kimberley, Northern Cape) is a South African first class cricketer who plays for Griqualand West."
+      },
+      {
+        "source_title": "Ryan McLaren",
+        "sentence_index": 0,
+        "text": "Ryan McLaren (born 9 February 1983, Kimberley, Cape Province, South Africa) is a South African cricketer, who plays for all formats in international level."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0116-5a7f732d5542992e7d278d02-cd023059684d",
+        "source_document_name": "q-0116-5a7f732d5542992e7d278d02.md",
+        "source_title": "Despoina",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0116-5a7f732d5542992e7d278d02.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0117",
+    "question": "HK Express is one of how many founding members of the world's first alliance of low cost carriers?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "U-FLY Alliance",
+        "sentence_index": 0,
+        "text": "U-FLY Alliance () is the world's first alliance of low-cost carriers, formed in January 2016 between founding members HK Express, Lucky Air , Urumqi Air, and West Air."
+      },
+      {
+        "source_title": "HK Express",
+        "sentence_index": 2,
+        "text": " The airline is one of the four founding members of the U-FLY Alliance."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0117-5ac033495542996f0d89cb59-c9f7240a006c",
+        "source_document_name": "q-0117-5ac033495542996f0d89cb59.md",
+        "source_title": "Come Fly with Me (2010 TV series)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0117-5ac033495542996f0d89cb59.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0118",
+    "question": "When was the only long-term psychiatric hospital operated founded in a county in the USA with a population of 9,298 in 2010?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Warm Springs, Montana",
+        "sentence_index": 2,
+        "text": " The hospital was founded by the Territorial Government of Montana in 1877."
+      },
+      {
+        "source_title": "Deer Lodge County, Montana",
+        "sentence_index": 1,
+        "text": " As of the 2010 census, the population was 9,298."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0118-5ab2958c554299449642c912-bc9cdbbc39fc",
+        "source_document_name": "q-0118-5ab2958c554299449642c912.md",
+        "source_title": "John George Psychiatric Pavilion",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0118-5ab2958c554299449642c912.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0119",
+    "question": "Kiskiack is a building that still stands at what York County, Virginia naval base?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Kiskiack (Lee House)",
+        "sentence_index": 0,
+        "text": "Kiskiack (Lee House) is the name of an early 17th-century brick building, originally built as a private residence, which still stands at the Naval Weapons Station Yorktown in York County, Virginia."
+      },
+      {
+        "source_title": "Naval Weapons Station Yorktown",
+        "sentence_index": 0,
+        "text": "Naval Weapons Station Yorktown is a United States Navy base in York County, James City County, and Newport News in the Hampton Roads region of Virginia."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0119-5a89da93554299669944a5cc-a1575529c263",
+        "source_document_name": "q-0119-5a89da93554299669944a5cc.md",
+        "source_title": "Huguenot Memorial Chapel and Monument",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0119-5a89da93554299669944a5cc.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0120",
+    "question": "Which American car rental company is also a member of the Association of Car Rental Industry Sytems Standards?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "ACRISS Car Classification Code",
+        "sentence_index": 0,
+        "text": "The ACRISS Car Classification Code developed and maintained by ACRISS (the Association of Car Rental Industry Systems Standards) and is designed to enable customers and travel professionals to make an informed choice when booking car rental in Europe, Middle East and Africa."
+      },
+      {
+        "source_title": "ACRISS Car Classification Code",
+        "sentence_index": 1,
+        "text": " ACRISS Members include Avis, Budget, Alamo, National, Enterprise, Europcar, Hertz and Maggiore"
+      },
+      {
+        "source_title": "Budget Rent a Car",
+        "sentence_index": 0,
+        "text": "Budget Rent a Car System, Inc. is an American car rental company that was founded in 1958 in Los Angeles, California by Morris Mirkin."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0120-5ab2b8fe5542991669774070-dd81c35cdf22",
+        "source_document_name": "q-0120-5ab2b8fe5542991669774070.md",
+        "source_title": "American Car Rental Association",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0120-5ab2b8fe5542991669774070.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0121",
+    "question": "What psychosis shares a name with an enemy fought by the protagonists in an animated show by Hasbro?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Equestria",
+        "sentence_index": 0,
+        "text": "The Kingdom of Equestria, or simply, Equestria, is the primary setting for Hasbro's animated show, \"\", and its feature film \"\"."
+      },
+      {
+        "source_title": "Equestria",
+        "sentence_index": 4,
+        "text": " The nation was founded when the three pony tribes, unicorns, pegasi, and earth ponies, came together to in harmony, to fight the Wendigos, and to stop an eternal blizzard."
+      },
+      {
+        "source_title": "Wendigo",
+        "sentence_index": 0,
+        "text": "The legend lends its name to the controversial modern medical term Wendigo psychosis, described by psychiatrists as a culture-bound syndrome with symptoms such as an intense craving for human flesh and a fear of becoming a cannibal."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0121-5a7553a95542996c70cfaedf-9db733e40a40",
+        "source_document_name": "q-0121-5a7553a95542996c70cfaedf.md",
+        "source_title": "Inhumanoids",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0121-5a7553a95542996c70cfaedf.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0122",
+    "question": "Kang Sung-yeon played Prince Yeonsan in a film that runs for how many minutes ?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Kang Sung-yeon",
+        "sentence_index": 3,
+        "text": " Then in 2005, Kang rose to fame when she played Prince Yeonsan's concubine Jang Nok-su in \"King and the Clown\", a period film that drew 12.3 admissions, making it (at the time) the highest-grossing domestic film in Korean cinema history."
+      },
+      {
+        "source_title": "King and the Clown",
+        "sentence_index": 3,
+        "text": " It was released on 29 December 2005, runs for 119 minutes; and distributed domestically by Cinema Service and internationally by CJ Entertainment."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0122-5a7a9a2255429941d65f26eb-eecf1d8a7178",
+        "source_document_name": "q-0122-5a7a9a2255429941d65f26eb.md",
+        "source_title": "Yeonsangun of Joseon",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0122-5a7a9a2255429941d65f26eb.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0123",
+    "question": "Is the Pakistan fast bowler who joined the Kent County Cricket Club in June, 2011 a left-hand or right-hand batsmans?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Kent County Cricket Club in 2011",
+        "sentence_index": 4,
+        "text": " Pakistan fast bowler Wahab Riaz joined Kent as their overseas player in June, and another fast bowler, South African Charl Langeveldt, signed as Kent's second overseas player for the Friends Life t20 competition only."
+      },
+      {
+        "source_title": "Wahab Riaz",
+        "sentence_index": 1,
+        "text": " He is a left-arm fast bowler and a right-hand batsman."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0123-5ab41d855542996a3a969f4b-c80b40718afb",
+        "source_document_name": "q-0123-5ab41d855542996a3a969f4b.md",
+        "source_title": "Jack Mason",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0123-5ab41d855542996a3a969f4b.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0124",
+    "question": "What was the birth name of the ex-slave abolitionist featured in the art installation The Dinner Party?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "The Dinner Party",
+        "sentence_index": 3,
+        "text": " Sacajawea, Sojourner Truth, Eleanor of Aquitaine, Empress Theodora of Byzantium, Virginia Woolf, Susan B. Anthony, and Georgia O'Keeffe are among the guests."
+      },
+      {
+        "source_title": "Sojourner Truth",
+        "sentence_index": 0,
+        "text": "Sojourner Truth ( ; born Isabella (Belle) Baumfree;  1797 – November 26, 1883) was an African-American abolitionist and women's rights activist."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0124-5adc035c554299438c868d04-89455dc5e684",
+        "source_document_name": "q-0124-5adc035c554299438c868d04.md",
+        "source_title": "Judy Chicago",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0124-5adc035c554299438c868d04.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0125",
+    "question": "what is the english name of Émile Verdets editorial?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Émile Verdet",
+        "sentence_index": 0,
+        "text": "Marcel Émile Verdet (13 March 1824 – 3 June 1866) was a French physicist."
+      },
+      {
+        "source_title": "Émile Verdet",
+        "sentence_index": 2,
+        "text": " Verdet did much to champion the early theory of the conservation of energy in France through his editorial supervision of the \"Annales de chimie et de physique\"."
+      },
+      {
+        "source_title": "Annales de chimie et de physique",
+        "sentence_index": 0,
+        "text": "Annales de chimie et de physique (French for \"Annals of Chemistry and of Physics\") is a scientific journal that was founded in Paris, France, in 1789 under the title \"Annales de chimie\"."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0125-5ade7fa3554299728e26c727-d13257ff5ccc",
+        "source_document_name": "q-0125-5ade7fa3554299728e26c727.md",
+        "source_title": "Black tern",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0125-5ade7fa3554299728e26c727.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  }
+]

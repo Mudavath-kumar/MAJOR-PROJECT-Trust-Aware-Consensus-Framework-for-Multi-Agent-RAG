@@ -1,0 +1,24 @@
+{
+  "dataset_version": "smoke-v1",
+  "embedding_model": "test-embedding",
+  "model": "test-model",
+  "name": "smoke",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "prompt_version": "test-prompt-v1",
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 2
+  },
+  "seed": 42,
+  "system": "trustrag",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "none"
+  }
+}

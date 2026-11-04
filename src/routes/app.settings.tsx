@@ -49,7 +49,7 @@ function SettingsPage() {
   const [tavilyKey, setTavilyKey] = useState("");
   const [geminiConfigured, setGeminiConfigured] = useState(false);
   const [tavilyConfigured, setTavilyConfigured] = useState(false);
-  const [model, setModel] = useState("gemini-3.8-flash");
+  const [model, setModel] = useState("gemini-3.5-flash");
   const [topK, setTopK] = useState(5);
   const [threshold, setThreshold] = useState(80);
   const [extSearch, setExtSearch] = useState(true);
@@ -65,7 +65,8 @@ function SettingsPage() {
         setTavilyKey("");
         setGeminiConfigured(Boolean(settings.gemini_api_key_configured));
         setTavilyConfigured(Boolean(settings.tavily_api_key_configured));
-        setModel(settings.preferred_model || "gemini-3.8-flash");
+        const rawModel = settings.preferred_model || "gemini-3.5-flash";
+        setModel(rawModel.startsWith("gemini-2.") ? "gemini-3.5-flash" : rawModel);
         setTopK(settings.similarity_top_k ?? 5);
         setThreshold(settings.consensus_threshold ?? 80);
         setExtSearch(settings.enable_external_search ?? true);
@@ -124,7 +125,7 @@ function SettingsPage() {
     setTopK(5);
     setThreshold(80);
     setExtSearch(true);
-    setModel("gemini-3.8-flash");
+    setModel("gemini-3.5-flash");
   };
 
   if (loading) {
@@ -183,9 +184,9 @@ function SettingsPage() {
           hint="Inference is routed through the configured Gemini/OpenRouter AI service."
         >
           <select value={model} onChange={(e) => setModel(e.target.value)} className={selectCls}>
-            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Current)</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended)</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Fast)</option>
             <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
-            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite</option>
           </select>
         </Row>
       </Panel>

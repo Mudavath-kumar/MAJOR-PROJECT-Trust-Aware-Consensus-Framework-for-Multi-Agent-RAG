@@ -53,6 +53,21 @@ def test_consensus_only_answers_with_retrieved_verified_evidence():
 
     assert result["decision_status"] == "abstain"
     assert result["score_components"]["claim_support"] == 0
+    assert "The policy requires" not in result["synthesis"]
+
+
+def test_abstention_never_displays_unverified_researcher_claims():
+    inputs = _consensus_inputs(
+        [
+            {"claim_id": "claim-1", "label": "insufficient", "evidence_ids": ["chunk-1"]},
+            {"claim_id": "claim-2", "label": "insufficient", "evidence_ids": ["chunk-1"]},
+        ]
+    )
+
+    result = compute_multi_agent_consensus(**inputs)
+
+    assert result["decision_status"] == "abstain"
+    assert result["synthesis"] == "I cannot answer reliably: No supporting evidence was retrieved."
 
 
 def test_consensus_synthesis_contains_only_supported_claims():
@@ -105,3 +120,17 @@ def test_critic_unsupported_claim_is_not_rendered_as_an_answer():
     assert result["decision_status"] == "partial"
     assert result["synthesis"] == "The policy requires MFA."
     assert result["score_components"]["critic_safety"] == 0
+
+
+def test_citation_coverage_counts_claims_with_retrieved_ids_independent_of_verification():
+    inputs = _consensus_inputs(
+        [
+            {"claim_id": "claim-1", "label": "supported", "evidence_ids": ["chunk-1"]},
+            {"claim_id": "claim-2", "label": "insufficient", "evidence_ids": ["chunk-1"]},
+        ]
+    )
+    inputs["researcher"]["claims"][1]["evidence_ids"] = ["outside-scope"]
+
+    result = compute_multi_agent_consensus(**inputs)
+
+    assert result["score_components"]["citation_coverage"] == 0.5

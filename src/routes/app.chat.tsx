@@ -27,7 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { parseAnswerBlocks } from "@/lib/answer-format";
+import { normalizeAnswerText, parseAnswerBlocks } from "@/lib/answer-format";
 import {
   formatSourcePage,
   getChatErrorMessage,
@@ -111,12 +111,20 @@ function formatMetric(value: number | null): string {
   return value === null ? "Not measured" : `${value.toFixed(1)}%`;
 }
 
-function ChatMessage({ from, children }: { from: "user" | "assistant"; children: ReactNode }) {
+function ChatMessage({
+  from,
+  children,
+  className,
+}: {
+  from: "user" | "assistant";
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div
       className={`group flex w-full max-w-[95%] flex-col gap-2 ${
         from === "user" ? "is-user ml-auto justify-end" : "is-assistant"
-      }`}
+      } ${className ?? ""}`}
     >
       {children}
     </div>
@@ -286,7 +294,7 @@ function EvidenceCard({
       type="button"
       onClick={onClick}
       aria-pressed={Boolean(isSelected)}
-      className={`group w-full cursor-pointer rounded-xl border p-3.5 text-left transition-all duration-300 hover:border-accent/40 hover:bg-muted/40 ${
+      className={`chat-evidence-card group w-full cursor-pointer rounded-xl border p-3.5 text-left transition-all duration-300 hover:border-accent/40 hover:bg-muted/40 ${
         isSelected
           ? "border-accent bg-accent/10 shadow-[0_0_16px_rgba(var(--color-accent)/0.2)] ring-1 ring-accent"
           : "border-border bg-card"
@@ -386,7 +394,7 @@ function ChatPage() {
           loadedTurns.push({
             id: ++turnIdRef.current,
             question: msgs[i].content,
-            answer: asst.content,
+            answer: normalizeAnswerText(asst.content),
             hits: historyHits,
             scores: mapChatScores({
               confidenceScore: asst.confidence_score,
@@ -512,8 +520,9 @@ function ChatPage() {
   }, [conversations, searchQuery]);
 
   // Active documents in scope (if scope is empty, all documents are searched)
+  const readyDocs = docs.filter((doc) => doc.parsed);
   const activeDocIds = scope.length
-    ? docs.filter((doc) => scope.includes(doc.id)).map((doc) => doc.id)
+    ? readyDocs.filter((doc) => scope.includes(doc.id)).map((doc) => doc.id)
     : null;
   const hasUnavailableScope = scope.length > 0 && activeDocIds?.length === 0;
   const hasMissingSelectedDocuments =
@@ -591,7 +600,7 @@ function ChatPage() {
         const updatedTurn: Turn = {
           id: ++turnIdRef.current,
           question: prompt,
-          answer: asst.content,
+          answer: normalizeAnswerText(asst.content),
           hits: liveHits,
           scores: mapChatScores({
             confidenceScore: asst.confidence_score,
@@ -675,67 +684,71 @@ function ChatPage() {
   }
 
   return (
-    <>
-      <PageHeader
-        eyebrow="Multi-Agent RAG Pipeline"
-        title="Chat with your documents."
-        description="Ask a question in your own words. Answers and citations come from the selected documents and the TrustRAG response."
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant={sidebarOpen ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => setSidebarOpen((prev) => !prev)}
-              className="rounded-full gap-1.5"
-            >
-              <PanelLeft size={13} />
-              <span>History ({conversations.length})</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleNewChat}
-              className="rounded-full gap-1.5 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15"
-            >
-              <Plus size={13} />
-              <span>New Chat</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exportTranscript}
-              disabled={!turns.length}
-              className="rounded-full gap-1.5"
-            >
-              <Download size={13} /> Export Log
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setTurns([]);
-                setVotes({});
-              }}
-              disabled={!turns.length}
-              className="rounded-full gap-1.5"
-            >
-              <Trash2 size={13} /> Clear
-            </Button>
-          </div>
-        }
-      />
+    <div className="trustrag-chat-page">
+      <div className="chat-intro">
+        <PageHeader
+          eyebrow="TrustRAG · Grounded chat"
+          title="Ask your knowledge base."
+          description="Choose your sources, ask naturally, and inspect the passages behind every answer."
+          action={
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant={sidebarOpen ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setSidebarOpen((prev) => !prev)}
+                className="rounded-full gap-1.5"
+              >
+                <PanelLeft size={13} />
+                <span>History ({conversations.length})</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleNewChat}
+                className="rounded-full gap-1.5 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15"
+              >
+                <Plus size={13} />
+                <span>New Chat</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={exportTranscript}
+                disabled={!turns.length}
+                className="rounded-full gap-1.5"
+              >
+                <Download size={13} /> Export Log
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTurns([]);
+                  setVotes({});
+                }}
+                disabled={!turns.length}
+                className="rounded-full gap-1.5"
+              >
+                <Trash2 size={13} /> Clear
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
-      <div className="flex flex-col lg:flex-row gap-5 items-start mt-2">
+      <div
+        className={`chat-layout flex flex-col items-start gap-5 lg:flex-row ${sidebarOpen ? "has-history" : "no-history"}`}
+      >
         {/* ========================================================================= */}
         {/* 💬 CHAT HISTORY SIDEBAR */}
         {/* ========================================================================= */}
         {sidebarOpen && (
-          <aside className="w-full lg:w-72 shrink-0 animate-fade-in">
-            <Panel className="p-3.5 sticky top-24">
+          <aside className="chat-history-rail w-full shrink-0 animate-fade-in lg:w-72">
+            <Panel className="chat-history-panel sticky top-24 p-3.5">
               <div className="flex items-center justify-between pb-3 border-b border-border/70">
                 <div className="flex items-center gap-2">
                   <MessageSquare size={15} className="text-accent" />
@@ -871,9 +884,9 @@ function ChatPage() {
         {/* ========================================================================= */}
         {/* 🚀 MAIN CHAT COLUMN */}
         {/* ========================================================================= */}
-        <div className="min-w-0 flex-1 w-full">
+        <div className="chat-main min-w-0 w-full flex-1">
           {/* 📁 INTERACTIVE SOURCE DOCUMENT SELECTOR HUB (NEW MODERN DESIGN) */}
-          <div className="mb-5 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm backdrop-blur-md">
+          <div className="chat-sources mb-5 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
@@ -885,7 +898,7 @@ function ChatPage() {
                       Source Documents
                     </span>
                     <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
-                      {docs.length} Available
+                      {readyDocs.length} Ready
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
@@ -906,7 +919,7 @@ function ChatPage() {
                       : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
                 >
-                  All Sources ({docs.length})
+                  All Sources ({readyDocs.length})
                 </button>
                 {scope.length > 0 && (
                   <button
@@ -944,15 +957,17 @@ function ChatPage() {
             {/* Horizontal Document Pills with Badges */}
             <div className="mt-3 flex flex-wrap gap-2 pt-1 max-h-40 overflow-y-auto pr-1">
               {docs.map((doc) => {
-                const isSelected = scope.length === 0 || scope.includes(doc.id);
-                const isExplicit = scope.includes(doc.id);
+                const isSelected = doc.parsed && (scope.length === 0 || scope.includes(doc.id));
+                const isExplicit = doc.parsed && scope.includes(doc.id);
 
                 return (
                   <button
                     key={doc.id}
                     type="button"
-                    aria-pressed={scope.length === 0 || isExplicit}
+                    aria-pressed={isSelected || isExplicit}
+                    disabled={!doc.parsed}
                     onClick={() => {
+                      if (!doc.parsed) return;
                       setScope((prev) => {
                         if (prev.includes(doc.id)) {
                           return prev.filter((id) => id !== doc.id);
@@ -961,7 +976,7 @@ function ChatPage() {
                         }
                       });
                     }}
-                    className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all duration-200 ${
+                    className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${
                       isExplicit
                         ? "border-accent bg-accent/15 text-foreground shadow-[0_0_12px_rgba(var(--color-accent)/0.18)]"
                         : isSelected && scope.length === 0
@@ -983,11 +998,19 @@ function ChatPage() {
                       </p>
                     </div>
 
-                    {doc.isUserUploaded && (
-                      <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
-                        Uploaded
-                      </span>
-                    )}
+                    <span
+                      className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${
+                        doc.parsed
+                          ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                      }`}
+                    >
+                      {doc.parsed
+                        ? "Ready"
+                        : doc.status === "chunking"
+                          ? "Indexing"
+                          : "Not indexed"}
+                    </span>
 
                     <div
                       className={`ml-1 flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
@@ -1041,11 +1064,13 @@ function ChatPage() {
                 <span>
                   Active Grounding:{" "}
                   <strong className="text-foreground">
-                    {scope.length === 0 ? "All Documents" : `${scope.length} Selected File(s)`}
+                    {scope.length === 0
+                      ? "All Ready Documents"
+                      : `${scope.length} Selected File(s)`}
                   </strong>{" "}
                   (
                   {scope.length === 0
-                    ? docs.reduce((acc, d) => acc + d.chunkCount, 0)
+                    ? readyDocs.reduce((acc, d) => acc + d.chunkCount, 0)
                     : docs
                         .filter((d) => scope.includes(d.id))
                         .reduce((acc, d) => acc + d.chunkCount, 0)}{" "}
@@ -1059,9 +1084,9 @@ function ChatPage() {
           {/* ========================================================================= */}
           {/* 💬 CHAT & EVIDENCE WORKSPACE */}
           {/* ========================================================================= */}
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)]">
+          <div className="chat-workspace-grid grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)]">
             {/* Left Column: Conversation */}
-            <div className="mx-auto flex min-h-[72vh] w-full max-w-4xl flex-col">
+            <div className="chat-transcript-column mx-auto flex min-h-[72vh] w-full max-w-4xl flex-col">
               {!sidebarOpen && (conversationError || historyActionError) && (
                 <div
                   role="alert"
@@ -1088,25 +1113,31 @@ function ChatPage() {
                   )}
                 </div>
               )}
-              <Conversation className="h-[clamp(460px,60vh,700px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
+              <Conversation className="chat-transcript h-[clamp(460px,60vh,700px)] flex-none rounded-2xl border border-border bg-card shadow-[0_10px_32px_rgba(15,23,42,0.04)]">
                 <ConversationContent className="gap-5 px-0 py-0 pr-1">
                   {turns.map((t) => (
                     <div key={t.id} className="space-y-4">
                       {/* User message */}
                       <ChatMessage from="user">
-                        <ChatMessageContent className="bg-primary text-primary-foreground shadow-sm">
+                        <ChatMessageContent className="chat-user-message bg-primary text-primary-foreground shadow-sm">
                           {t.question}
                         </ChatMessageContent>
                       </ChatMessage>
 
                       {/* Assistant response card */}
-                      <ChatMessage from="assistant">
-                        <Panel className="animate-rise w-full p-5 shadow-sm">
-                          {/* Meta header */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
-                            <div className="flex items-center gap-2">
-                              <ShieldCheck size={16} className="text-accent" />
-                              <MonoLabel>Response and evidence</MonoLabel>
+                      <ChatMessage from="assistant" className="chat-answer-row">
+                        <Panel className="chat-answer chat-answer-card animate-rise w-full shadow-sm">
+                          <div className="chat-answer-header flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className="chat-answer-mark flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                                <ShieldCheck size={17} />
+                              </span>
+                              <div className="min-w-0">
+                                <MonoLabel>TrustRAG response</MonoLabel>
+                                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                                  Answer and verification
+                                </p>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <span
@@ -1131,255 +1162,266 @@ function ChatPage() {
                           </div>
 
                           {/* Scoped files pill */}
-                          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <div className="chat-answer-scope mt-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                             <Filter size={11} className="text-accent" />
-                            <span>Grounded in:</span>
+                            <span>Source scope:</span>
                             <span className="font-medium text-foreground truncate max-w-md">
-                              {t.scopeDocs.join(", ")}
+                              {t.scopeDocs.includes("Scope not recorded")
+                                ? "Not recorded for this saved answer"
+                                : t.scopeDocs.join(", ")}
                             </span>
                           </div>
 
-                          {/* Answer Content */}
-                          <div className="mt-4">
-                            {t.decisionStatus === "abstain" && (
-                              <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-300">
-                                {t.abstentionReason ||
-                                  "The selected documents did not provide enough verified evidence."}
-                              </div>
-                            )}
-                            <Markdown
-                              text={t.answer}
-                              evidenceCount={t.hits.length}
-                              onCitationClick={(citIdx) => {
-                                setSelectedEvidenceTurnId(t.id);
-                                setSelectedCitation(citIdx);
-                              }}
-                            />
-                          </div>
-
-                          <dl
-                            aria-label="Operational score signals"
-                            className="mt-5 grid grid-cols-3 divide-x divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-muted/20"
-                          >
-                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
-                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                Decision score
-                              </dt>
-                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
-                                {formatMetric(t.scores.decision)}
-                              </dd>
-                            </div>
-                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
-                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                Agent agreement
-                              </dt>
-                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
-                                {formatMetric(t.scores.agentAgreement)}
-                              </dd>
-                            </div>
-                            <div className="min-w-0 px-3 py-2.5 sm:px-4">
-                              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                Mean similarity
-                              </dt>
-                              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
-                                {formatMetric(t.scores.retrievalSimilarity)}
-                              </dd>
-                            </div>
-                          </dl>
-                          <p className="mt-1.5 text-[10px] text-muted-foreground">
-                            Operational heuristics only; these are not calibrated accuracy scores.
-                          </p>
-
-                          {/* 🤖 Expandable Multi-Agent Deliberation Breakdown */}
-                          <div className="mt-4 border-t border-border/70 pt-3">
-                            <button
-                              type="button"
-                              aria-expanded={Boolean(expandedDeliberation[t.id])}
-                              aria-controls={`agent-activity-${t.id}`}
-                              onClick={() =>
-                                setExpandedDeliberation((prev) => ({
-                                  ...prev,
-                                  [t.id]: !prev[t.id],
-                                }))
-                              }
-                              className="flex w-full items-center justify-between rounded-xl bg-secondary/40 px-3.5 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-secondary"
-                            >
-                              <span className="flex items-center gap-2">
-                                <BrainCircuit size={14} className="text-accent" />
-                                Agent activity
-                              </span>
-                              <ChevronDown
-                                size={14}
-                                className={`transition-transform duration-200 ${
-                                  expandedDeliberation[t.id] ? "rotate-180" : ""
-                                }`}
-                              />
-                            </button>
-
-                            {expandedDeliberation[t.id] && (
-                              <div
-                                id={`agent-activity-${t.id}`}
-                                role="region"
-                                aria-label="Recorded agent activity"
-                                className="mt-3 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in"
-                              >
-                                <p className="mb-3 text-[10px] text-muted-foreground">
-                                  Execution records show what ran; they do not independently prove a
-                                  claim is correct.
-                                </p>
-                                {t.agents.length === 0 ? (
-                                  <p className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
-                                    Per-agent details were not recorded for this answer.
-                                  </p>
-                                ) : (
-                                  <ol className="space-y-3">
-                                    {t.agents.map((agent, aIdx) => (
-                                      <li
-                                        key={`${agent.name}-${aIdx}`}
-                                        className="relative flex gap-3 border-l border-border/80 pb-3 pl-4 last:border-l-transparent last:pb-0"
-                                      >
-                                        <span className="absolute -left-[5px] top-0.5 h-2.5 w-2.5 rounded-full border-2 border-accent bg-background" />
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                            <div className="min-w-0">
-                                              <p className="text-xs font-semibold text-foreground">
-                                                {agent.name}
-                                              </p>
-                                              <p className="text-[10px] text-muted-foreground">
-                                                {agent.role}
-                                              </p>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
-                                              {agent.model && <span>{agent.model}</span>}
-                                              {agent.latencyMs !== null && (
-                                                <span>{agent.latencyMs} ms</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                          {agent.propositions.length > 0 && (
-                                            <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-muted-foreground marker:text-accent">
-                                              {agent.propositions.map((proposition, pIdx) => (
-                                                <li key={pIdx}>{proposition}</li>
-                                              ))}
-                                            </ul>
-                                          )}
-                                        </div>
-                                      </li>
-                                    ))}
-                                  </ol>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Supporting Source Citations Bar */}
-                          {t.hits.length > 0 && (
-                            <div className="mt-4 border-t border-border/70 pt-3">
-                              <MonoLabel>Retrieved supporting passages</MonoLabel>
-                              <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
-                                {t.hits.map((c, i) => (
-                                  <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedEvidenceTurnId(t.id);
-                                      setSelectedCitation(i + 1);
-                                    }}
-                                    className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all ${
-                                      selectedEvidenceTurnId === t.id && selectedCitation === i + 1
-                                        ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
-                                        : "border-border bg-muted/20 hover:bg-muted/50"
-                                    }`}
-                                  >
-                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/20 font-mono text-[10px] font-bold text-accent">
-                                      [{i + 1}]
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate font-semibold text-foreground">
-                                        {c.docName}
-                                      </p>
-                                      <p className="font-mono text-[10px] text-muted-foreground">
-                                        {formatSourcePage(c.page)} ·{" "}
-                                        {c.similarity === null
-                                          ? "Similarity not recorded"
-                                          : `${Math.round(c.similarity * 100)}% match`}
-                                      </p>
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action buttons */}
-                          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
-                            <button
-                              onClick={async () => {
-                                setCopyErrorId(null);
-                                try {
-                                  if (!navigator.clipboard?.writeText) {
-                                    throw new Error(
-                                      "Clipboard access is not available in this browser.",
-                                    );
-                                  }
-                                  await navigator.clipboard.writeText(t.answer);
-                                  setCopiedId(t.id);
-                                  window.setTimeout(() => setCopiedId(null), 1500);
-                                } catch {
-                                  setCopyErrorId(t.id);
-                                }
-                              }}
-                              type="button"
-                              aria-label="Copy answer"
-                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
-                            >
-                              {copiedId === t.id ? (
-                                <Check size={13} className="text-emerald-400" />
-                              ) : (
-                                <Copy size={13} />
+                          <div className="chat-answer-body">
+                            <div className="chat-answer-content">
+                              {t.decisionStatus === "abstain" && (
+                                <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-300">
+                                  {t.abstentionReason ||
+                                    "The selected documents did not provide enough verified evidence."}
+                                </div>
                               )}
-                              {copiedId === t.id ? "Copied" : "Copy Answer"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => ask(t.question)}
-                              disabled={pending !== null}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
-                            >
-                              <RefreshCw size={13} /> Re-verify
-                            </button>
-                            <div className="ml-auto flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
-                                className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
-                                  votes[t.id] === "up"
-                                    ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10"
-                                    : ""
-                                }`}
-                                aria-label="Helpful"
-                              >
-                                <ThumbsUp size={13} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setVotes((v) => ({ ...v, [t.id]: "down" }))}
-                                className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
-                                  votes[t.id] === "down"
-                                    ? "text-destructive border-destructive/50 bg-destructive/10"
-                                    : ""
-                                }`}
-                                aria-label="Not helpful"
-                              >
-                                <ThumbsDown size={13} />
-                              </button>
+                              <Markdown
+                                text={t.answer}
+                                evidenceCount={t.hits.length}
+                                onCitationClick={(citIdx) => {
+                                  setSelectedEvidenceTurnId(t.id);
+                                  setSelectedCitation(citIdx);
+                                }}
+                              />
                             </div>
+
+                            <div className="chat-score-heading mt-5 flex items-center justify-between gap-3">
+                              <MonoLabel>Operational signals</MonoLabel>
+                              <span className="text-[10px] text-muted-foreground">
+                                Runtime indicators, not calibrated accuracy
+                              </span>
+                            </div>
+                            <dl
+                              aria-label="Operational score signals"
+                              className="chat-score-grid mt-2 grid grid-cols-3 gap-2"
+                            >
+                              <div className="chat-score-item min-w-0 rounded-xl border border-border/70 bg-muted/30 px-3 py-3 sm:px-4">
+                                <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                  Decision score
+                                </dt>
+                                <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                  {formatMetric(t.scores.decision)}
+                                </dd>
+                              </div>
+                              <div className="chat-score-item min-w-0 rounded-xl border border-border/70 bg-muted/30 px-3 py-3 sm:px-4">
+                                <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                  Agent agreement
+                                </dt>
+                                <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                  {formatMetric(t.scores.agentAgreement)}
+                                </dd>
+                              </div>
+                              <div className="chat-score-item min-w-0 rounded-xl border border-border/70 bg-muted/30 px-3 py-3 sm:px-4">
+                                <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                  Mean similarity
+                                </dt>
+                                <dd className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
+                                  {formatMetric(t.scores.retrievalSimilarity)}
+                                </dd>
+                              </div>
+                            </dl>
+                            {/* 🤖 Expandable Multi-Agent Deliberation Breakdown */}
+                            <div className="chat-agent-section mt-4 border-t border-border/70 pt-3">
+                              <button
+                                type="button"
+                                aria-expanded={Boolean(expandedDeliberation[t.id])}
+                                aria-controls={`agent-activity-${t.id}`}
+                                onClick={() =>
+                                  setExpandedDeliberation((prev) => ({
+                                    ...prev,
+                                    [t.id]: !prev[t.id],
+                                  }))
+                                }
+                                className="chat-agent-toggle flex w-full items-center justify-between rounded-xl bg-secondary/40 px-3.5 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-secondary"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <BrainCircuit size={14} className="text-accent" />
+                                  Agent activity
+                                </span>
+                                <ChevronDown
+                                  size={14}
+                                  className={`transition-transform duration-200 ${
+                                    expandedDeliberation[t.id] ? "rotate-180" : ""
+                                  }`}
+                                />
+                              </button>
+
+                              {expandedDeliberation[t.id] && (
+                                <div
+                                  id={`agent-activity-${t.id}`}
+                                  role="region"
+                                  aria-label="Recorded agent activity"
+                                  className="mt-3 rounded-xl border border-border/80 bg-background/50 p-3.5 animate-fade-in"
+                                >
+                                  <p className="mb-3 text-[10px] text-muted-foreground">
+                                    Execution records show what ran; they do not independently prove
+                                    a claim is correct.
+                                  </p>
+                                  {t.agents.length === 0 ? (
+                                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
+                                      Per-agent details were not recorded for this answer.
+                                    </p>
+                                  ) : (
+                                    <ol className="space-y-3">
+                                      {t.agents.map((agent, aIdx) => (
+                                        <li
+                                          key={`${agent.name}-${aIdx}`}
+                                          className="relative flex gap-3 border-l border-border/80 pb-3 pl-4 last:border-l-transparent last:pb-0"
+                                        >
+                                          <span className="absolute -left-[5px] top-0.5 h-2.5 w-2.5 rounded-full border-2 border-accent bg-background" />
+                                          <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                              <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-foreground">
+                                                  {agent.name}
+                                                </p>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                  {agent.role}
+                                                </p>
+                                              </div>
+                                              <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                                                {agent.model && <span>{agent.model}</span>}
+                                                {agent.latencyMs !== null && (
+                                                  <span>{agent.latencyMs} ms</span>
+                                                )}
+                                              </div>
+                                            </div>
+                                            {agent.propositions.length > 0 && (
+                                              <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-muted-foreground marker:text-accent">
+                                                {agent.propositions.map((proposition, pIdx) => (
+                                                  <li key={pIdx}>{proposition}</li>
+                                                ))}
+                                              </ul>
+                                            )}
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ol>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Supporting Source Citations Bar */}
+                            {t.hits.length > 0 && (
+                              <div className="chat-citations-section mt-4 border-t border-border/70 pt-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <MonoLabel>Sources for this answer</MonoLabel>
+                                  <span className="font-mono text-[10px] text-muted-foreground">
+                                    {t.hits.length} {t.hits.length === 1 ? "passage" : "passages"}
+                                  </span>
+                                </div>
+                                <div className="chat-citation-list mt-2.5 grid gap-2 sm:grid-cols-2">
+                                  {t.hits.map((c, i) => (
+                                    <button
+                                      key={c.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedEvidenceTurnId(t.id);
+                                        setSelectedCitation(i + 1);
+                                      }}
+                                      className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all ${
+                                        selectedEvidenceTurnId === t.id &&
+                                        selectedCitation === i + 1
+                                          ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
+                                          : "border-border bg-muted/20 hover:bg-muted/50"
+                                      }`}
+                                    >
+                                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/20 font-mono text-[10px] font-bold text-accent">
+                                        [{i + 1}]
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate font-semibold text-foreground">
+                                          {c.docName}
+                                        </p>
+                                        <p className="font-mono text-[10px] text-muted-foreground">
+                                          {formatSourcePage(c.page)} ·{" "}
+                                          {c.similarity === null
+                                            ? "Similarity not recorded"
+                                            : `${Math.round(c.similarity * 100)}% match`}
+                                        </p>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="chat-answer-actions mt-4 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+                              <button
+                                onClick={async () => {
+                                  setCopyErrorId(null);
+                                  try {
+                                    if (!navigator.clipboard?.writeText) {
+                                      throw new Error(
+                                        "Clipboard access is not available in this browser.",
+                                      );
+                                    }
+                                    await navigator.clipboard.writeText(t.answer);
+                                    setCopiedId(t.id);
+                                    window.setTimeout(() => setCopiedId(null), 1500);
+                                  } catch {
+                                    setCopyErrorId(t.id);
+                                  }
+                                }}
+                                type="button"
+                                aria-label="Copy answer"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
+                              >
+                                {copiedId === t.id ? (
+                                  <Check size={13} className="text-emerald-400" />
+                                ) : (
+                                  <Copy size={13} />
+                                )}
+                                {copiedId === t.id ? "Copied" : "Copy Answer"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => ask(t.question)}
+                                disabled={pending !== null}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-secondary"
+                              >
+                                <RefreshCw size={13} /> Re-verify
+                              </button>
+                              <div className="ml-auto flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setVotes((v) => ({ ...v, [t.id]: "up" }))}
+                                  className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
+                                    votes[t.id] === "up"
+                                      ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10"
+                                      : ""
+                                  }`}
+                                  aria-label="Helpful"
+                                >
+                                  <ThumbsUp size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setVotes((v) => ({ ...v, [t.id]: "down" }))}
+                                  className={`rounded-full border border-border p-2 transition-colors hover:bg-secondary ${
+                                    votes[t.id] === "down"
+                                      ? "text-destructive border-destructive/50 bg-destructive/10"
+                                      : ""
+                                  }`}
+                                  aria-label="Not helpful"
+                                >
+                                  <ThumbsDown size={13} />
+                                </button>
+                              </div>
+                            </div>
+                            {copyErrorId === t.id && (
+                              <p role="status" className="mt-2 text-xs text-destructive">
+                                Clipboard access failed. Select and copy the answer manually.
+                              </p>
+                            )}
                           </div>
-                          {copyErrorId === t.id && (
-                            <p role="status" className="mt-2 text-xs text-destructive">
-                              Clipboard access failed. Select and copy the answer manually.
-                            </p>
-                          )}
                         </Panel>
                       </ChatMessage>
                     </div>
@@ -1412,13 +1454,13 @@ function ChatPage() {
                   {displayState === "pending" && pending && (
                     <>
                       <ChatMessage from="user">
-                        <ChatMessageContent className="bg-primary text-primary-foreground">
+                        <ChatMessageContent className="chat-user-message bg-primary text-primary-foreground">
                           {pending}
                         </ChatMessageContent>
                       </ChatMessage>
                       <ChatMessage from="assistant">
                         <div role="status" aria-live="polite" className="w-full">
-                          <Panel className="animate-rise w-full p-5 shadow-sm">
+                          <Panel className="chat-answer chat-pending-answer animate-rise w-full p-5 shadow-sm">
                             <div className="flex items-center gap-3">
                               <Loader2 size={17} className="shrink-0 animate-spin text-accent" />
                               <div>
@@ -1441,7 +1483,7 @@ function ChatPage() {
               </Conversation>
 
               {/* Dynamic Suggestion Chips */}
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="chat-suggestions mt-3 flex flex-wrap gap-2">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
@@ -1483,7 +1525,7 @@ function ChatPage() {
                   void ask(message.text.trim());
                   setQuestion("");
                 }}
-                className="sticky bottom-2 z-20 mt-3 rounded-2xl border-border bg-card/95 shadow-[0_10px_32px_rgba(15,23,42,0.14)] backdrop-blur-md"
+                className="chat-composer mt-4 rounded-2xl border-border bg-card/95 shadow-[0_10px_32px_rgba(15,23,42,0.14)] backdrop-blur-md"
               >
                 <PromptInputTextarea
                   value={question}
@@ -1515,7 +1557,7 @@ function ChatPage() {
             </div>
 
             {/* Right Column: Evidence Inspector Panel */}
-            <Panel className="animate-rise h-fit p-5 xl:sticky xl:top-24">
+            <Panel className="chat-evidence-panel animate-rise h-fit p-5 xl:sticky xl:top-24">
               <div className="flex items-center justify-between border-b border-border/60 pb-3">
                 <button
                   type="button"
@@ -1609,6 +1651,6 @@ function ChatPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

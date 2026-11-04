@@ -27,7 +27,7 @@ const SettingsSchema = new Schema<ISettingsRecord>(
     gemini_api_key:         { type: String },
     tavily_api_key:         { type: String },
     hf_token:               { type: String },
-  preferred_model:        { type: String, default: "gemini-3.8-flash" },
+    preferred_model:        { type: String, default: "gemini-3.5-flash" },
     similarity_top_k:       { type: Number, default: 5 },
     rerank_top_k:           { type: Number, default: 3 },
     consensus_threshold:    { type: Number, default: 80 },

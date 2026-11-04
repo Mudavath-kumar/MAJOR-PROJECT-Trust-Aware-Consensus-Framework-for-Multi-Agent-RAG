@@ -1,0 +1,1 @@
+{"id": "q1", "predicted_answer": "Paris", "retrieved_evidence_ids": ["c1"], "predicted_evidence_ids": ["c1"], "status": "answer", "decision_score": 0.9, "latency_ms": 100, "claims": [{"supported": true}], "estimated_cost_usd": 0.01, "llm_calls": 1, "verification_calls": 0, "retrieval_calls": 1}

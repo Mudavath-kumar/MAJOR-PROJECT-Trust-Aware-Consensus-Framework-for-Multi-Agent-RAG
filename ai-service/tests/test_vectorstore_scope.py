@@ -1,7 +1,12 @@
 import unittest
 from unittest.mock import patch
 
-from app.rag.vectorstore import build_scope_filter, query_vector_store
+from app.rag.vectorstore import (
+    build_scope_filter,
+    delete_document_chunks,
+    get_document_chunks,
+    query_vector_store,
+)
 
 
 class VectorStoreScopeTests(unittest.TestCase):
@@ -23,6 +28,16 @@ class VectorStoreScopeTests(unittest.TestCase):
     def test_empty_document_scope_returns_without_searching_the_vector_store(self):
         with patch("app.rag.vectorstore._get_collection", side_effect=AssertionError("must not query")):
             self.assertEqual(query_vector_store([], document_ids=[], user_id="user-1"), [])
+
+    def test_chunk_listing_requires_a_tenant_scope(self):
+        with patch("app.rag.vectorstore._get_collection", side_effect=AssertionError("must not query")):
+            with self.assertRaisesRegex(ValueError, "user_id is required"):
+                get_document_chunks("doc-1", user_id="")
+
+    def test_chunk_deletion_requires_a_tenant_scope(self):
+        with patch("app.rag.vectorstore._get_collection", side_effect=AssertionError("must not query")):
+            with self.assertRaisesRegex(ValueError, "user_id is required"):
+                delete_document_chunks("doc-1", user_id="")
 
 
 if __name__ == "__main__":

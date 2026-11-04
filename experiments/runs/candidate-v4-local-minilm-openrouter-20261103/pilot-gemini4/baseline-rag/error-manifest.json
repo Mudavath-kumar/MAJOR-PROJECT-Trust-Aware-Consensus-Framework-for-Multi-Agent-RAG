@@ -1,0 +1,23 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "No LLM provider responded. Gemini HTTP 504: provider deadline expired",
+  "error_type": "LLMProvidersUnavailable",
+  "failed_llm_attempts": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "provider": "gemini",
+      "succeeded": false
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "provider": "gemini",
+      "succeeded": false
+    }
+  ],
+  "failed_prediction": null,
+  "failed_record_id": "q-0001",
+  "paper_eligible": false,
+  "partial_predictions_file": "predictions-input.partial.jsonl",
+  "run_mode": "smoke",
+  "status": "error"
+}

@@ -1,0 +1,36 @@
+{
+  "config_sha256": "aac9cd0c2d684ab75f6066457f6304ca89f66ed1b3574312a163a257edfc982a",
+  "dataset_sha256": "fe6dee5c94801f99747ee39b0ed7235b21b2ad69b363b1908a4cb82e69a584f4",
+  "dataset_version": "smoke-v1",
+  "embedding_model": "test-embedding",
+  "generated_at": "2026-10-25T04:39:17.129486+00:00",
+  "git_revision": "0f3ae55ed3f2cc8346e137be68bc0d3a91ca6900",
+  "human_reviewer_count": 0,
+  "model": "test-model",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "predictions_sha256": "e99c2e394b13fc618de72bd2957b97aa9a24a51d7d7df18a40431f93fec54cce",
+  "prompt_version": "test-prompt-v1",
+  "python_version": "3.10.0",
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 2
+  },
+  "review_protocol": "unreviewed",
+  "runner_version": "trustrag-eval-1",
+  "sample_count": 1,
+  "seed": 42,
+  "status_counts": {
+    "answer": 1
+  },
+  "system": "trustrag",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "none"
+  }
+}

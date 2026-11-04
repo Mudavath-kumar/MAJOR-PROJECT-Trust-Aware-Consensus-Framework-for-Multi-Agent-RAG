@@ -1,0 +1,100 @@
+{
+  "chunking": {
+    "chunk_overlap": 80,
+    "chunk_size": 400
+  },
+  "dataset_version": "trustrag-v1",
+  "manifest_version": "trustrag-corpus-v1",
+  "sources": [
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0001-source-2-9d21bb275e43:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "0f95d4a24703992015556eb25e035e4b87a9d5d9b9fc229702f4a65d2e76dce5",
+          "word_count": 21
+        }
+      ],
+      "document_id": "doc-q-0001-source-2-9d21bb275e43",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0001-source-2.md",
+      "snapshot_sha256": "9d21bb275e43d4c242476043c7a1cd7db2df4430535bcc4268dd9e189c0f6011",
+      "word_count": 21
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0002-source-1-ce448e058b15:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "147ed8bab3d499ceae206c96d1c9bdb7370531a059d8fd8c3902a03e42d6ed5b",
+          "word_count": 14
+        }
+      ],
+      "document_id": "doc-q-0002-source-1-ce448e058b15",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0002-source-1.md",
+      "snapshot_sha256": "ce448e058b15f03f3af38b77b3cc4c1671c3a866fbc327e605ad9a6b89a7a33e",
+      "word_count": 14
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0003-source-3-synthetic-conflict-e3ae3356288d:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "29f85127ceccbea3981bd42e536a6bb9759a5611da3a293816240d6a8706828c",
+          "word_count": 33
+        }
+      ],
+      "document_id": "doc-q-0003-source-3-synthetic-conflict-e3ae3356288d",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0003-source-3-synthetic-conflict.md",
+      "snapshot_sha256": "e3ae3356288d5416380ff631b9dc86e615018ed93754e2241a5e42fa150261dc",
+      "word_count": 33
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0003-source-3-5db86bf629a4:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "349b738a43d9ad33a9cf6e25068c8a468eb800a841c2f0aa3ca36075b5217497",
+          "word_count": 21
+        }
+      ],
+      "document_id": "doc-q-0003-source-3-5db86bf629a4",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0003-source-3.md",
+      "snapshot_sha256": "5db86bf629a460cda157ce3738ffb8c61881fd21d8a5a945f580799728166638",
+      "word_count": 21
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0004-source-0-synthetic-injection-ad751a188bdc:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "8bd51a5de8ca25124d7045b6b279c801fe0f329aa7318da1263fa8274bca0ac8",
+          "word_count": 35
+        }
+      ],
+      "document_id": "doc-q-0004-source-0-synthetic-injection-ad751a188bdc",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0004-source-0-synthetic-injection.md",
+      "snapshot_sha256": "ad751a188bdc78063e314546b0495e29cd3db3e7fcb315fd57898cc7f8f30b91",
+      "word_count": 35
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0004-source-0-ece5deaca840:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "30e20f2450a7b416e93b4973bdb58ce866c6a619065aeaab932774420fcb87ca",
+          "word_count": 21
+        }
+      ],
+      "document_id": "doc-q-0004-source-0-ece5deaca840",
+      "path": ".pytest-run-benchmark-audit2/test_public_candidate_builder_0/corpus/q-0004-source-0.md",
+      "snapshot_sha256": "ece5deaca84055b7473a0286de4521143621801c1043a530d29eb7cf823e3b28",
+      "word_count": 21
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "abstention_coverage": 0.0,
+  "answer_exact_match": 0.5,
+  "answer_token_f1": 0.5,
+  "answerable_count": 2,
+  "brier_score": 0.5,
+  "citation_precision": 0.0,
+  "citation_recall": 0.0,
+  "cost_usd": null,
+  "coverage": 1.0,
+  "denominators": {
+    "accepted": 4,
+    "accepted_answerable": 2,
+    "answerable": 2,
+    "cited_evidence": 0,
+    "claims": 4,
+    "gold_evidence": 4,
+    "injection": 1,
+    "sample_count": 4,
+    "unsafe": 2,
+    "verified_claims": 0,
+    "verified_queries": 0
+  },
+  "expected_calibration_error": 0.5,
+  "grounded_answer_rate": 0.0,
+  "injection_count": 1,
+  "injection_task_success_rate": 0.0,
+  "latency_ms": {
+    "mean": 39585.0,
+    "p50": 14800.0,
+    "p95": 104024.0
+  },
+  "llm_calls_per_query": 1.0,
+  "retrieval_calls_per_query": 1.0,
+  "retrieval_recall_at_k": 1.0,
+  "sample_count": 4,
+  "selective_risk": 0.5,
+  "status_counts": {
+    "answer": 4
+  },
+  "unsafe_acceptance_rate": 1.0,
+  "unsafe_count": 2,
+  "verification_rate": 0.0,
+  "verifier_rejected_claim_rate": null
+}

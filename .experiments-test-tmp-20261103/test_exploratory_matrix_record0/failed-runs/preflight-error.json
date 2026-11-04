@@ -1,0 +1,12 @@
+{
+  "candidate_count": 200,
+  "corpus_manifest_sha256": "1da0e50f8f00a9d902ffaa482f23b6769229ad25c57ea09ce7797ef465483654",
+  "dataset_sha256": "0094d6f0092b4ca946506462d8d149ce8782907ee95fc2de93028bb7e90f5e62",
+  "error_message": "embedding provider returned HTTP 429",
+  "error_type": "RuntimeError",
+  "generated_at": "2026-11-03T16:36:15.465172+00:00",
+  "paper_eligible": false,
+  "phase": "corpus_embedding",
+  "run_mode": "exploratory",
+  "status": "error"
+}

@@ -8,10 +8,12 @@ logger = logging.getLogger("trustrag.agent.critic")
 
 SYSTEM_PROMPT = """You are Agent C (Hallucination & Inconsistency Auditor) in TrustRAG.
 Your role:
-1. Actively detect any ungrounded assertions, hallucinations, or logic leaps between the evidence and the generated claims.
-2. Provide a structured hallucination risk assessment: low, medium, or high.
-3. List the claim IDs that are unsupported.
-4. Never infer verification from confidence wording.
+1. Independently compare each researcher claim with the retrieved document passages.
+   Do not rely on another agent's verification or confidence.
+2. Actively detect ungrounded assertions, hallucinations, and logic leaps.
+3. Provide a structured hallucination risk assessment: low, medium, or high.
+4. List the claim IDs that are unsupported.
+5. Never infer verification from confidence wording.
 
 Return JSON only in this exact shape:
 {"risk":"low","unsupported_claim_ids":[],"confidence":0.9}
@@ -20,18 +22,24 @@ Return JSON only in this exact shape:
 async def run_critic(
     query: str,
     researcher_output: Dict[str, Any],
-    fact_checker_output: Dict[str, Any],
-    model: str = "llama-3.3-70b-versatile",
+    context_chunks: List[Dict[str, Any]],
+    model: str = "gemini-3.5-flash",
     api_key: str = ""
 ) -> Dict[str, Any]:
     start_time = time.time()
 
-    user_prompt = f"""Evaluate for hallucinations and logical contradictions:
+    evidence = "\n\n".join(
+        f"[{chunk.get('chunk_id', 'unknown')}]: {chunk.get('text', '')}"
+        for chunk in context_chunks
+    ) or "No retrieved evidence was available."
+
+    user_prompt = f"""Evaluate for hallucinations and logical contradictions independently:
 User Query: {query}
 Agent A Output: {researcher_output.get('raw_output', '')}
-Agent B Output: {fact_checker_output.get('raw_output', '')}
+Retrieved document evidence:
+{evidence}
 
-Audit for unsupported leaps and give your critique verdict."""
+Compare the claims against the passages above. Return unsupported claim IDs and your risk verdict."""
 
     llm_output = await call_llm(
         prompt=user_prompt,

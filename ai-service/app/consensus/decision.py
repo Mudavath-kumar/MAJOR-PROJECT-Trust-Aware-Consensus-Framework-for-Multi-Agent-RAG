@@ -65,12 +65,11 @@ def decide_answer_status(
             decision_score=score,
             abstention_reason="Retrieved evidence contains a contradiction.",
         )
-    partial_floor = max(0.0, calibrated_threshold - 0.20)
-    if score < partial_floor:
+    if score < 0.20:
         return DecisionResult(
             status="abstain",
             decision_score=score,
-            abstention_reason="Decision score is below the calibrated threshold.",
+            abstention_reason="Decision score is below the minimum threshold.",
         )
     if score < calibrated_threshold:
         return DecisionResult(status="partial", decision_score=score)

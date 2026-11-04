@@ -12,6 +12,12 @@ from .bootstrap import bootstrap_metrics_ci, paired_metrics_ci
 from .metrics import calculate_metrics
 
 
+REPORT_VERSION = "trustrag-report-v2"
+BOOTSTRAP_SAMPLES = 2000
+BOOTSTRAP_SEED = 42
+BOOTSTRAP_CONFIDENCE = 0.95
+
+
 TABLE_II_METRICS = {
     "ExactMatch": "answer_exact_match",
     "TokenF1": "answer_token_f1",
@@ -36,6 +42,45 @@ TABLE_III_METRICS = {
     "TypedVerificationRate": "verification_rate",
     "RetrievalCalls/Query": "retrieval_calls_per_query",
     "CostMeanUSD": "cost_usd.mean",
+}
+OPERATIONAL_CATEGORY_METRICS = (
+    ("LatencyMeanMs", "latency_ms.mean", "sample_count", "queries"),
+    ("LatencyP50Ms", "latency_ms.p50", "sample_count", "queries"),
+    ("LatencyP95Ms", "latency_ms.p95", "sample_count", "queries"),
+    ("LLMCalls/Query", "llm_calls_per_query", "sample_count", "queries"),
+    ("TypedVerificationRate", "verification_rate", "sample_count", "queries"),
+    ("RetrievalCalls/Query", "retrieval_calls_per_query", "sample_count", "queries"),
+    ("CostMeanUSD", "cost_usd.mean", "sample_count", "queries"),
+)
+CATEGORY_QUALITY_METRICS = {
+    "answerable": (
+        ("ExactMatch", "answer_exact_match", "answerable", "queries"),
+        ("TokenF1", "answer_token_f1", "answerable", "queries"),
+        ("Recall@5", "retrieval_recall_at_k", "answerable", "queries"),
+        ("CitationPrecision", "citation_precision", "answerable", "queries"),
+        ("CitationRecall", "citation_recall", "answerable", "queries"),
+        ("Coverage", "coverage", "sample_count", "queries"),
+        ("SelectiveRisk", "selective_risk", "accepted_answerable", "accepted queries"),
+    ),
+    "unanswerable": (
+        ("AbstentionAccuracy", "abstention_coverage", "unsafe", "queries"),
+        ("UnsafeAcceptanceRate", "unsafe_acceptance_rate", "unsafe", "queries"),
+        ("Coverage", "coverage", "sample_count", "queries"),
+    ),
+    "conflicting": (
+        ("AbstentionAccuracy", "abstention_coverage", "unsafe", "queries"),
+        ("UnsafeAcceptanceRate", "unsafe_acceptance_rate", "unsafe", "queries"),
+        ("Coverage", "coverage", "sample_count", "queries"),
+    ),
+    "prompt_injection": (
+        ("InjectionTaskSuccessRate", "injection_task_success_rate", "injection", "queries"),
+        ("ExactMatch", "answer_exact_match", "answerable", "queries"),
+        ("TokenF1", "answer_token_f1", "answerable", "queries"),
+        ("Recall@5", "retrieval_recall_at_k", "answerable", "queries"),
+        ("CitationPrecision", "citation_precision", "answerable", "queries"),
+        ("CitationRecall", "citation_recall", "answerable", "queries"),
+        ("Coverage", "coverage", "sample_count", "queries"),
+    ),
 }
 PAIR_METRICS = {
     **TABLE_II_METRICS,
@@ -96,10 +141,19 @@ def _label(config: dict[str, Any], manifest: dict[str, Any]) -> str:
     raise ValueError(f"run has no known paper variant: {config.get('name') or config.get('system')}")
 
 
-def _load_run(run_dir: Path) -> dict[str, Any]:
+def _load_run(run_dir: Path, *, allow_provisional: bool = False) -> dict[str, Any]:
     manifest = _read_json(run_dir / "run-manifest.json")
-    if manifest.get("status", "success") != "success" or manifest.get("paper_eligible") is not True:
-        raise ValueError(f"run {run_dir} is not paper-eligible")
+    paper_eligible = manifest.get("paper_eligible") is True
+    provisional = (
+        allow_provisional
+        and manifest.get("status", "success") == "success"
+        and manifest.get("run_mode") == "exploratory"
+        and manifest.get("raw_outputs_retained") is True
+        and not paper_eligible
+    )
+    if manifest.get("status", "success") != "success" or not (paper_eligible or provisional):
+        eligibility = "paper-eligible or explicitly allowed exploratory" if allow_provisional else "paper-eligible"
+        raise ValueError(f"run {run_dir} is not {eligibility}")
     config = _read_json(run_dir / "config.json")
     predictions_input_path = run_dir / "predictions-input.jsonl"
     expected_predictions_hash = manifest.get("predictions_sha256")
@@ -164,6 +218,17 @@ def _write_tex(path: Path, rows: list[dict[str, Any]], columns: list[str]) -> No
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _write_resized_tex(path: Path, rows: list[dict[str, Any]], columns: list[str]) -> None:
+    temporary = path.with_suffix(".table.tmp")
+    _write_tex(temporary, rows, columns)
+    body = temporary.read_text(encoding="utf-8")
+    temporary.unlink()
+    path.write_text(
+        "\\resizebox{\\textwidth}{!}{%\n" + body + "}\n",
+        encoding="utf-8",
+    )
+
+
 def _single_intervals(
     run: dict[str, Any], metric_map: dict[str, str]
 ) -> dict[str, tuple[float, float] | None]:
@@ -174,8 +239,14 @@ def _single_intervals(
     }
     if not available:
         return {column: None for column in metric_map}
+    top_k = int((run.get("config", {}).get("retrieval") or {}).get("top_k", 5))
     intervals = bootstrap_metrics_ci(
-        run["predictions"], list(available.values()), samples=2000, seed=42
+        run["predictions"],
+        list(available.values()),
+        k=top_k,
+        samples=BOOTSTRAP_SAMPLES,
+        seed=BOOTSTRAP_SEED,
+        confidence=BOOTSTRAP_CONFIDENCE,
     )
     return {column: intervals.get(metric) for column, metric in metric_map.items()}
 
@@ -188,14 +259,22 @@ def _format_metric(
 
 
 def render_comparison_report(
-    run_dirs: Sequence[str | Path], output_dir: str | Path, *, baseline: str
+    run_dirs: Sequence[str | Path],
+    output_dir: str | Path,
+    *,
+    baseline: str,
+    allow_provisional: bool = False,
 ) -> dict[str, Any]:
     if not run_dirs:
         raise ValueError("at least one run is required")
     output = Path(output_dir)
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
         raise FileExistsError(f"report output directory is not empty: {output}")
-    runs = [_load_run(Path(run_dir)) for run_dir in run_dirs]
+    runs = [_load_run(Path(run_dir), allow_provisional=allow_provisional) for run_dir in run_dirs]
+    paper_eligibility = {run["manifest"].get("paper_eligible") is True for run in runs}
+    if len(paper_eligibility) != 1:
+        raise ValueError("comparison cannot mix paper-eligible and exploratory runs")
+    paper_eligible = next(iter(paper_eligibility))
     labels = [run["label"] for run in runs]
     if len(labels) != len(set(labels)):
         raise ValueError("paper comparison cannot include duplicate variant labels")
@@ -244,6 +323,7 @@ def render_comparison_report(
     output.mkdir(parents=True, exist_ok=True)
     table_ii_rows: list[dict[str, Any]] = []
     table_iii_rows: list[dict[str, Any]] = []
+    category_rows: list[dict[str, Any]] = []
     interval_sidecar: dict[str, Any] = {}
     for run in runs:
         intervals_ii = _single_intervals(run, TABLE_II_METRICS)
@@ -292,6 +372,47 @@ def render_comparison_report(
                 },
             }
         )
+        for answer_type, metric_specs in CATEGORY_QUALITY_METRICS.items():
+            category_predictions = [
+                item for item in run["predictions"] if item["answer_type"] == answer_type
+            ]
+            if not category_predictions:
+                continue
+            top_k = int((run["config"].get("retrieval") or {}).get("top_k", 5))
+            category_metrics = calculate_metrics(category_predictions, k=top_k)
+            metric_specs = (*metric_specs, *OPERATIONAL_CATEGORY_METRICS)
+            interval_metrics = {
+                label: metric
+                for label, metric, _denominator, _unit in metric_specs
+                if _metric_value(category_metrics, metric) is not None
+            }
+            category_intervals = (
+                bootstrap_metrics_ci(
+                    category_predictions,
+                    list(interval_metrics.values()),
+                    k=top_k,
+                    seed=BOOTSTRAP_SEED,
+                    samples=BOOTSTRAP_SAMPLES,
+                    confidence=BOOTSTRAP_CONFIDENCE,
+                )
+                if interval_metrics
+                else {}
+            )
+            for label, metric, denominator_key, denominator_unit in metric_specs:
+                value = _metric_value(category_metrics, metric)
+                interval = category_intervals.get(metric)
+                denominator = category_metrics["denominators"].get(denominator_key)
+                category_rows.append(
+                    {
+                        "Model": run["label"],
+                        "AnswerType": answer_type,
+                        "N": len(category_predictions),
+                        "Metric": label,
+                        "Value": "N/A" if value is None else _format_value(value, interval),
+                        "MetricDenominator": denominator,
+                        "DenominatorUnit": denominator_unit,
+                    }
+                )
 
     paired: dict[str, Any] = {}
     baseline_records = baseline_run["predictions"]
@@ -308,8 +429,10 @@ def render_comparison_report(
             run["predictions"],
             baseline_records,
             list(comparable_metrics.values()),
-            samples=2000,
-            seed=42,
+            k=int((run["config"].get("retrieval") or {}).get("top_k", 5)),
+            samples=BOOTSTRAP_SAMPLES,
+            seed=BOOTSTRAP_SEED,
+            confidence=BOOTSTRAP_CONFIDENCE,
         )
         paired[run["label"]] = {
             metric_name: list(intervals[metric_path]) if intervals.get(metric_path) is not None else None
@@ -322,7 +445,30 @@ def render_comparison_report(
     _write_tex(output / "table-ii.tex", table_ii_rows, columns_ii)
     _write_csv(output / "table-iii.csv", table_iii_rows, columns_iii)
     _write_tex(output / "table-iii.tex", table_iii_rows, columns_iii)
+    category_columns = [
+        "Model",
+        "AnswerType",
+        "N",
+        "Metric",
+        "Value",
+        "MetricDenominator",
+        "DenominatorUnit",
+    ]
+    _write_csv(output / "category-results.csv", category_rows, category_columns)
+    _write_resized_tex(output / "category-results.tex", category_rows, category_columns)
+    (output / "category-results.json").write_text(
+        json.dumps(category_rows, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     report = {
+        "report_version": REPORT_VERSION,
+        "paper_eligible": paper_eligible,
+        "run_mode": "paper" if paper_eligible else "exploratory-provisional",
+        "bootstrap": {
+            "samples": BOOTSTRAP_SAMPLES,
+            "seed": BOOTSTRAP_SEED,
+            "confidence": BOOTSTRAP_CONFIDENCE,
+            "method": "answer-type-stratified record bootstrap",
+        },
         "run_count": len(runs),
         "baseline": baseline,
         "dataset_review": {
@@ -330,7 +476,12 @@ def render_comparison_report(
             "human_reviewer_count": human_reviewer_count,
             "automated_audit_sha256": review_audit_sha256,
         },
-        "tables": {"table_ii": table_ii_rows, "table_iii": table_iii_rows},
+        "tables": {
+            "table_ii": table_ii_rows,
+            "table_iii": table_iii_rows,
+            "category_results": category_rows,
+        },
+        "category_results": category_rows,
         "single_system_intervals": interval_sidecar,
         "paired_intervals": paired,
         "interpretation_notes": [
@@ -342,6 +493,10 @@ def render_comparison_report(
             "Table intervals are per-system stratified bootstrap 95% confidence intervals; paired system-minus-baseline intervals are in paired_intervals.",
         ],
     }
+    if not paper_eligible:
+        report["interpretation_notes"].append(
+            "These exploratory results use automated-only dataset review; human review is pending, so they are not paper-eligible findings."
+        )
     (output / "comparison.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

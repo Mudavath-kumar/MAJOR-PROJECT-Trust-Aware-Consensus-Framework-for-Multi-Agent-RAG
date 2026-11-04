@@ -1,0 +1,3 @@
+Model,ReviewProtocol,HumanReviewers,N,N_answerable,N_injection,N_unsafe,N_accepted_answerable,N_gold_evidence,N_cited_evidence,N_claims,N_verified_claims,LatencyMeanMs,LatencyP50Ms,LatencyP95Ms,LLMCalls/Query,TypedVerificationRate,RetrievalCalls/Query,CostMeanUSD
+StandardRAG,unspecified,0,2,2,0,0,2,2,2,2,0,"200.000 [200.000, 200.000]","200.000 [200.000, 200.000]","200.000 [200.000, 200.000]","4.000 [4.000, 4.000]","1.000 [1.000, 1.000]","1.000 [1.000, 1.000]",N/A
+Trust-AwareConsensusRAG,unspecified,0,2,2,0,0,2,2,2,2,0,"100.000 [100.000, 100.000]","100.000 [100.000, 100.000]","100.000 [100.000, 100.000]","1.000 [1.000, 1.000]","0.000 [0.000, 0.000]","1.000 [1.000, 1.000]",N/A

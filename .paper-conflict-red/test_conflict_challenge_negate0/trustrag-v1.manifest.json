@@ -1,0 +1,40 @@
+{
+  "chunking": {
+    "chunk_overlap": 80,
+    "chunk_size": 400
+  },
+  "dataset_version": "trustrag-v1",
+  "manifest_version": "trustrag-corpus-v1",
+  "sources": [
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0001-numeric-conflict-synthetic-conflict-575a3702bc3c:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "6af5d2f9e57b91120d3c5006ad2aaf531a1ac8c67623f56aacdc5b4349376979",
+          "word_count": 32
+        }
+      ],
+      "document_id": "doc-q-0001-numeric-conflict-synthetic-conflict-575a3702bc3c",
+      "path": ".paper-conflict-red/test_conflict_challenge_negate0/corpus/q-0001-numeric-conflict-synthetic-conflict.md",
+      "snapshot_sha256": "575a3702bc3c169bebec9b648f9d51b0cf7631ba1dfc43170d35716ee7a11a8a",
+      "word_count": 32
+    },
+    {
+      "chunks": [
+        {
+          "chunk_index": 0,
+          "evidence_id": "doc-q-0001-numeric-conflict-bed5a4a2ebb7:chunk_1_0",
+          "start_word": 0,
+          "text_sha256": "7efdc3f9d0bb12500a22f91ec27a98c3ac8991ca1d41b1fed5ffa41561941822",
+          "word_count": 21
+        }
+      ],
+      "document_id": "doc-q-0001-numeric-conflict-bed5a4a2ebb7",
+      "path": ".paper-conflict-red/test_conflict_challenge_negate0/corpus/q-0001-numeric-conflict.md",
+      "snapshot_sha256": "bed5a4a2ebb7ed27e13e6a8ea2052c0c28eb7692f44bfbf453f9551a0e42f0c2",
+      "word_count": 21
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "caught_failures": [
+    {
+      "completed_prediction_count": 0,
+      "error_message": "single-pass output must contain a JSON object",
+      "error_type": "ValueError",
+      "failed_at": "2026-11-03T20:27:05.349919+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "baseline-rag"
+    },
+    {
+      "completed_prediction_count": 0,
+      "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+      "error_type": "LLMProvidersUnavailable",
+      "failed_at": "2026-11-03T20:27:08.094576+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "reranked-rag"
+    },
+    {
+      "completed_prediction_count": 0,
+      "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+      "error_type": "LLMProvidersUnavailable",
+      "failed_at": "2026-11-03T20:27:14.744977+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "rag-verification"
+    },
+    {
+      "completed_prediction_count": 0,
+      "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+      "error_type": "LLMProvidersUnavailable",
+      "failed_at": "2026-11-03T20:27:21.752422+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "multi-agent-rag"
+    },
+    {
+      "completed_prediction_count": 0,
+      "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+      "error_type": "LLMProvidersUnavailable",
+      "failed_at": "2026-11-03T20:27:28.755735+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "trustrag-no-external"
+    },
+    {
+      "completed_prediction_count": 0,
+      "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+      "error_type": "LLMProvidersUnavailable",
+      "failed_at": "2026-11-03T20:27:35.775149+00:00",
+      "model": "gemini-3.6-flash",
+      "paper_eligible": false,
+      "run_mode": "exploratory",
+      "status": "error",
+      "variant": "trustrag"
+    }
+  ],
+  "corpus_manifest_sha256": "d1a973ddd6f3e7d715b20c796e4841fd6d350bf964ea5bbdcd569fa8f8dce71c",
+  "dataset": "experiments\\runs\\candidate-v4-local-minilm-openrouter-20261103\\pilot-4.jsonl",
+  "dataset_sha256": "57b199fe7c16409408e5c11bbc1bcf853b26be60ca95859f0bd71d6809f2ae82",
+  "finished_at": "2026-11-03T20:27:35.781695+00:00",
+  "human_review_status": "pending for every pilot record",
+  "model": "gemini-3.6-flash",
+  "openrouter_fallback_enabled": false,
+  "paper_eligible": false,
+  "provider": "gemini-free-tier",
+  "report_path": null,
+  "run_id": "candidate-v4-free-gemini-20261104",
+  "started_at": "2026-11-03T20:26:58.669323+00:00",
+  "tavily_free_plan_note": "Conditional Tavily calls use the configured key; no paid upgrade or paid provider is enabled.",
+  "tavily_key_configured": true,
+  "variants": [
+    {
+      "error_file": "outputs\\baseline-rag\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "baseline-rag"
+    },
+    {
+      "error_file": "outputs\\reranked-rag\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "reranked-rag"
+    },
+    {
+      "error_file": "outputs\\rag-verification\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "rag-verification"
+    },
+    {
+      "error_file": "outputs\\multi-agent-rag\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "multi-agent-rag"
+    },
+    {
+      "error_file": "outputs\\trustrag-no-external\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "trustrag-no-external"
+    },
+    {
+      "error_file": "outputs\\trustrag\\error-manifest.json",
+      "metrics_file": null,
+      "status": "error",
+      "variant": "trustrag"
+    }
+  ]
+}

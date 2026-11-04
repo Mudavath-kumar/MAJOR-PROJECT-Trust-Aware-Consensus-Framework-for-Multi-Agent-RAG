@@ -1,13 +1,16 @@
 export type FetchRetryOptions = {
   attempts?: number;
   delayMs?: number;
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
 };
 
 const RETRYABLE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 function isRetryableStatus(status: number) {
-  return status === 408 || status === 425 || status === 429 || status >= 500;
+  // Rate-limited responses carry a server-directed wait (often many minutes).
+  // Retrying immediately only adds load and consumes more of the same quota.
+  return status === 408 || status === 425 || status >= 500;
 }
 
 function wait(delayMs: number) {
@@ -24,20 +27,50 @@ export async function fetchWithRetry(
 ) {
   const attempts = Math.max(1, Math.floor(options.attempts ?? 3));
   const delayMs = Math.max(0, options.delayMs ?? 250);
+  const timeoutMs = Math.max(0, options.timeoutMs ?? 0);
   const fetchImpl = options.fetchImpl ?? fetch;
   const method = String(init.method ?? "GET").toUpperCase();
   const canRetry = RETRYABLE_METHODS.has(method);
   let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = timeoutMs > 0 ? new AbortController() : null;
+    const callerSignal = init.signal;
+    const forwardAbort = () => controller?.abort(callerSignal?.reason);
+    if (controller && callerSignal) {
+      if (callerSignal.aborted) forwardAbort();
+      else callerSignal.addEventListener("abort", forwardAbort, { once: true });
+    }
+    const timeout = controller
+      ? setTimeout(
+          () =>
+            controller.abort(
+              new DOMException(`Request timed out after ${timeoutMs} ms`, "TimeoutError"),
+            ),
+          timeoutMs,
+        )
+      : undefined;
+
     try {
-      const response = await fetchImpl(input, init);
+      const response = await fetchImpl(
+        input,
+        controller ? { ...init, signal: controller.signal } : init,
+      );
       if (!canRetry || !isRetryableStatus(response.status) || attempt === attempts - 1) {
         return response;
       }
     } catch (error) {
+      if (
+        controller?.signal.reason instanceof DOMException &&
+        controller.signal.reason.name === "TimeoutError"
+      ) {
+        throw new Error(`Request timed out after ${timeoutMs} ms`);
+      }
       lastError = error;
       if (!canRetry || attempt === attempts - 1) throw error;
+    } finally {
+      if (timeout !== undefined) clearTimeout(timeout);
+      callerSignal?.removeEventListener("abort", forwardAbort);
     }
 
     await wait(delayMs * 2 ** attempt);

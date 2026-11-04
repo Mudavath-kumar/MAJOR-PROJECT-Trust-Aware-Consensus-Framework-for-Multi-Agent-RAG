@@ -1,6 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseAnswerBlocks } from "../src/lib/answer-format";
+import { normalizeAnswerText, parseAnswerBlocks } from "../src/lib/answer-format";
+
+test("removes internal claim metadata from a malformed persisted answer", () => {
+  const raw =
+    '"claim_id": "claim-1", "text": "TrustRAG retrieves document evidence and can abstain.", "evidence_ids": ["chunk-2-page-1"]';
+
+  assert.equal(normalizeAnswerText(raw), "TrustRAG retrieves document evidence and can abstain.");
+});
+
+test("renders structured claim responses as answer prose", () => {
+  const raw = JSON.stringify({
+    claims: [
+      {
+        claim_id: "claim-1",
+        text: "TrustRAG retrieves evidence [1].",
+        evidence_ids: ["chunk-1"],
+      },
+    ],
+  });
+
+  assert.equal(normalizeAnswerText(raw), "TrustRAG retrieves evidence [1].");
+});
+
+test("keeps ordinary prose and numbered citations unchanged", () => {
+  const answer = "The report describes an evidence gate and abstention [1].";
+
+  assert.equal(normalizeAnswerText(answer), answer);
+});
 
 test("answer formatting removes markdown residue from headings and lists", () => {
   const blocks = parseAnswerBlocks(

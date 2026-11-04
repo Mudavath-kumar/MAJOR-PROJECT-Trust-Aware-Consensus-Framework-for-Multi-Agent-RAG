@@ -67,6 +67,47 @@ export function verifyClerkSignature(
   return crypto.verify(verifyAlgorithm, signingInput, key, signature);
 }
 
+/** Enforce the time and issuer claims that bind a Clerk token to this service. */
+export function hasValidClerkStandardClaims(
+  payload: Record<string, unknown>,
+  configuredIssuer: string,
+  nowSeconds = Math.floor(Date.now() / 1000),
+): boolean {
+  const exp = payload.exp;
+  if (typeof exp !== "number" || !Number.isFinite(exp) || exp <= nowSeconds) return false;
+
+  const nbf = payload.nbf;
+  if (nbf !== undefined && (typeof nbf !== "number" || !Number.isFinite(nbf) || nbf > nowSeconds + 60)) {
+    return false;
+  }
+
+  if (configuredIssuer) {
+    const issuer = typeof payload.iss === "string" ? payload.iss.replace(/\/+$/, "") : "";
+    if (!issuer || issuer !== configuredIssuer.replace(/\/+$/, "")) return false;
+  }
+
+  return true;
+}
+
+/** Recover when another concurrent request has already provisioned this Clerk subject. */
+export async function recoverClerkUserAfterDuplicate<T>(
+  error: unknown,
+  findByClerkId: () => Promise<T | null>,
+): Promise<T> {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("code" in error) ||
+    error.code !== 11000
+  ) {
+    throw error;
+  }
+
+  const existingUser = await findByClerkId();
+  if (!existingUser) throw error;
+  return existingUser;
+}
+
 /** Extract the frontend API host encoded in a Clerk publishable key. */
 function decodeClerkPublishableHost(key: string): string | null {
   const match = key.trim().match(/^pk_(?:test|live)_(.+)$/);
@@ -148,14 +189,7 @@ async function verifyClerkToken(token: string): Promise<ClerkClaims | null> {
   const signature = Buffer.from(signatureB64, "base64url");
   if (!verifyClerkSignature(alg, signingInput, signature, publicKey)) return null;
 
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  const exp = payload.exp;
-  const nbf = payload.nbf;
-  if (typeof exp === "number" && exp < nowSeconds) return null;
-  if (typeof nbf === "number" && nbf > nowSeconds + 60) return null;
-
-  const iss = typeof payload.iss === "string" ? payload.iss.replace(/\/+$/, "") : undefined;
-  if (env.CLERK_ISSUER && iss && iss !== env.CLERK_ISSUER) return null;
+  if (!hasValidClerkStandardClaims(payload, env.CLERK_ISSUER)) return null;
   if (!hasAuthorizedClerkParty(payload.azp, env.CLERK_AUTHORIZED_PARTIES)) return null;
 
   const sub = payload.sub;
@@ -176,13 +210,19 @@ async function provisionClerkUser(claims: ClerkClaims) {
 
   let user = await User.findOne({ $or: [{ clerk_user_id: claims.sub }, { email }] });
   if (!user) {
-    user = await User.create({
-      name: claims.name?.trim() || "TrustRAG User",
-      email,
-      password_hash: "clerk_managed_no_password",
-      clerk_user_id: claims.sub,
-      role: "user",
-    });
+    try {
+      user = await User.create({
+        name: claims.name?.trim() || "TrustRAG User",
+        email,
+        password_hash: "clerk_managed_no_password",
+        clerk_user_id: claims.sub,
+        role: "user",
+      });
+    } catch (error) {
+      user = await recoverClerkUserAfterDuplicate(error, () =>
+        User.findOne({ clerk_user_id: claims.sub }),
+      );
+    }
   } else if (!user.clerk_user_id) {
     // Link a pre-existing local account to its Clerk identity.
     user.clerk_user_id = claims.sub;

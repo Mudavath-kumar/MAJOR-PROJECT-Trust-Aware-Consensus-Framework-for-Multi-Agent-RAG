@@ -1,0 +1,11 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "run_critic() got an unexpected keyword argument 'fact_checker_output'",
+  "error_type": "TypeError",
+  "failed_at": "2026-11-03T20:30:43.582189+00:00",
+  "model": "gemini-3.6-flash",
+  "paper_eligible": false,
+  "run_mode": "exploratory",
+  "status": "error",
+  "variant": "multi-agent-rag"
+}

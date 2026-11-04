@@ -75,6 +75,13 @@ def test_report_renders_both_paper_tables_and_paired_intervals(tmp_path):
     report = render_comparison_report([baseline, trustrag], tmp_path / "report", baseline="vanilla-rag")
 
     assert report["run_count"] == 2
+    assert report["report_version"]
+    assert report["bootstrap"] == {
+        "samples": 2000,
+        "seed": 42,
+        "confidence": 0.95,
+        "method": "answer-type-stratified record bootstrap",
+    }
     assert (tmp_path / "report" / "table-ii.csv").exists()
     assert (tmp_path / "report" / "table-ii.tex").exists()
     assert (tmp_path / "report" / "table-iii.csv").exists()
@@ -98,6 +105,59 @@ def test_report_renders_both_paper_tables_and_paired_intervals(tmp_path):
     assert any("human-labelled hallucination" in note for note in report["interpretation_notes"])
     assert any("costmeanusd is n/a" in note.casefold() for note in report["interpretation_notes"])
     assert any("paired system-minus-baseline" in note for note in report["interpretation_notes"])
+
+
+def test_report_renders_answer_type_metrics_with_real_denominators(tmp_path):
+    answerable = _record("q1", "Paris", 0.9)
+    unanswerable = _record("q2", "", 0.1)
+    unanswerable.update(
+        answer_type="unanswerable",
+        gold_answer="",
+        gold_evidence_ids=[],
+        predicted_evidence_ids=[],
+        status="abstain",
+        claims=[],
+    )
+    conflicting = _record("q3", "Paris", 0.4)
+    conflicting.update(
+        answer_type="conflicting",
+        gold_answer="Paris",
+        status="abstain",
+        predicted_answer="",
+        predicted_evidence_ids=[],
+    )
+    injection = _record("q4", "Paris", 0.9)
+    injection["answer_type"] = "prompt_injection"
+    records = [answerable, unanswerable, conflicting, injection]
+    baseline = _write_run(tmp_path, "baseline", "vanilla-rag", records)
+    report = render_comparison_report([baseline], tmp_path / "report", baseline="vanilla-rag")
+
+    category_rows = report["category_results"]
+    answer_row = next(
+        row for row in category_rows
+        if row["AnswerType"] == "answerable" and row["Metric"] == "ExactMatch"
+    )
+    unanswerable_row = next(
+        row for row in category_rows
+        if row["AnswerType"] == "unanswerable" and row["Metric"] == "AbstentionAccuracy"
+    )
+    conflict_row = next(
+        row for row in category_rows
+        if row["AnswerType"] == "conflicting" and row["Metric"] == "AbstentionAccuracy"
+    )
+    injection_row = next(
+        row for row in category_rows
+        if row["AnswerType"] == "prompt_injection" and row["Metric"] == "InjectionTaskSuccessRate"
+    )
+
+    assert answer_row["N"] == 1 and answer_row["MetricDenominator"] == 1
+    assert answer_row["Value"].startswith("1.000")
+    assert unanswerable_row["Value"].startswith("1.000")
+    assert conflict_row["Value"].startswith("1.000")
+    assert injection_row["Value"].startswith("1.000")
+    assert (tmp_path / "report" / "category-results.csv").exists()
+    assert (tmp_path / "report" / "category-results.json").exists()
+    assert (tmp_path / "report" / "category-results.tex").exists()
 
 
 def test_report_rejects_runs_from_different_dataset_snapshots(tmp_path):
@@ -125,6 +185,25 @@ def test_report_rejects_smoke_runs(tmp_path):
 
     with pytest.raises(ValueError, match="paper-eligible"):
         render_comparison_report([smoke], tmp_path / "report", baseline="vanilla-rag")
+
+
+def test_report_can_label_exploratory_runs_as_provisional(tmp_path):
+    run = _write_run(
+        tmp_path,
+        "exploratory",
+        "vanilla-rag",
+        [_record("q1", "Paris", 0.9)],
+        paper_eligible=False,
+        manifest_extra={"run_mode": "exploratory", "raw_outputs_retained": True},
+    )
+
+    report = render_comparison_report(
+        [run], tmp_path / "provisional-report", baseline="vanilla-rag", allow_provisional=True
+    )
+
+    assert report["paper_eligible"] is False
+    assert report["run_mode"] == "exploratory-provisional"
+    assert any("human review is pending" in note.casefold() for note in report["interpretation_notes"])
 
 
 def test_report_rejects_metrics_that_do_not_match_predictions(tmp_path):

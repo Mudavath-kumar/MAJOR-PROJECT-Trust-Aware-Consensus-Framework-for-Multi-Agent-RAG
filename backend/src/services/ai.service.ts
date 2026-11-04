@@ -61,14 +61,22 @@ export interface AIRagQueryResult {
 
 type HealthResponse = { status: "healthy" | "offline"; service: string };
 
-function serviceError(operation: string, error: unknown): Error {
+export function serviceError(operation: string, error: unknown): Error & { statusCode?: number } {
   const axiosError = error as AxiosError<{ detail?: string; message?: string }>;
   const providerMessage = axiosError.response?.data?.detail || axiosError.response?.data?.message;
-  return new Error(
+  const serviceError = new Error(
     providerMessage
       ? `AI service ${operation} failed: ${providerMessage}`
       : `AI service ${operation} is unavailable`,
-  );
+  ) as Error & { statusCode?: number };
+  if (axiosError.response?.status) {
+    serviceError.statusCode = axiosError.response.status;
+  } else if (axiosError.code === "ECONNABORTED" || axiosError.code === "ETIMEDOUT") {
+    serviceError.statusCode = 504;
+  } else {
+    serviceError.statusCode = 503;
+  }
+  return serviceError;
 }
 
 export class AIService {

@@ -26,9 +26,12 @@ from ..rag.vectorstore import (
 from ..agents.researcher import run_researcher
 from ..agents.fact_checker import run_fact_checker
 from ..agents.critic import run_critic
+from ..agents.context import select_review_context_chunks
 from ..agents.trust_assessor import assess_trust
 from ..consensus.engine import compute_multi_agent_consensus
 from ..core.config import settings
+from ..core.llm_router import LLMProvidersUnavailable
+from ..core.verification_policy import should_trigger_external_verification
 
 logger = logging.getLogger("trustrag.api.rag")
 async def require_service_token(x_trustrag_service_token: Optional[str] = Header(default=None)) -> None:
@@ -61,6 +64,35 @@ class IngestRequest(BaseModel):
 
 class DeleteDocumentRequest(BaseModel):
     user_id: str
+
+
+async def run_review_agents(
+    *,
+    query: str,
+    researcher_output: Dict[str, Any],
+    context_chunks: List[Dict[str, Any]],
+    model: str,
+    api_key: str,
+    tavily_key: str,
+):
+    """Run independent evidence review and claim verification concurrently."""
+    return await asyncio.gather(
+        run_fact_checker(
+            query=query,
+            researcher_output=researcher_output,
+            model=model,
+            api_key=api_key,
+            tavily_key=tavily_key,
+            context_chunks=context_chunks,
+        ),
+        run_critic(
+            query=query,
+            researcher_output=researcher_output,
+            context_chunks=context_chunks,
+            model=model,
+            api_key=api_key,
+        ),
+    )
 
 @router.post("/ingest")
 async def ingest_document(req: IngestRequest):
@@ -165,13 +197,27 @@ async def query_pipeline(req: QueryRequest):
         user_settings = req.settings or {}
         gemini_key = user_settings.get("gemini_api_key") or settings.GEMINI_API_KEY
         tavily_key = user_settings.get("tavily_api_key") or settings.TAVILY_API_KEY
-        preferred_model = user_settings.get("preferred_model") or settings.GEMINI_MODEL
+        raw_preferred = user_settings.get("preferred_model") or ""
+        # Accept any gemini-3.x model from settings; fall back to configured default
+        # for empty, non-gemini, or legacy gemini-2.x values.
+        if raw_preferred.startswith("gemini-3.") or raw_preferred.startswith("gemini-3.5") or raw_preferred.startswith("gemini-3.7"):
+            preferred_model = raw_preferred
+        else:
+            preferred_model = settings.GEMINI_MODEL
         threshold = max(0.0, min(100.0, float(user_settings.get("consensus_threshold", 80.0))))
         top_k = max(1, min(20, int(user_settings.get("similarity_top_k", 5))))
 
-        # 1. Compute query embedding
-        q_embeddings = await asyncio.to_thread(compute_embeddings, [req.query])
-        q_emb = q_embeddings[0]
+        # 1. Prefer semantic retrieval; if the embedding provider is unavailable,
+        # use the vector store's tenant-scoped lexical fallback over stored text.
+        try:
+            q_embeddings = await asyncio.to_thread(compute_embeddings, [req.query])
+            q_emb = q_embeddings[0]
+        except RuntimeError as exc:
+            logger.warning(
+                "Query embedding unavailable; using scoped lexical retrieval (%s)",
+                type(exc).__name__,
+            )
+            q_emb = []
 
         # 2. Vector search retrieved chunks
         retrieved_chunks = await asyncio.to_thread(
@@ -227,10 +273,10 @@ async def query_pipeline(req: QueryRequest):
             }
 
         retrieval_quality = sum(float(chunk.get("similarity_score", 0)) for chunk in retrieved_chunks) / len(retrieved_chunks)
-        external_verification_enabled = bool(
-            settings.EXTERNAL_VERIFICATION_ENABLED
-            and tavily_key
-            and retrieval_quality < 0.75
+        external_verification_enabled = should_trigger_external_verification(
+            enabled=settings.EXTERNAL_VERIFICATION_ENABLED,
+            api_key_available=bool(tavily_key),
+            retrieval_quality=retrieval_quality,
         )
 
         researcher_res = await run_researcher(
@@ -239,22 +285,20 @@ async def query_pipeline(req: QueryRequest):
             model=preferred_model,
             api_key=gemini_key
         )
-        fact_checker_res = await run_fact_checker(
+        review_chunks = select_review_context_chunks(
+            researcher_res,
+            retrieved_chunks,
+            max_chunks=3,
+        )
+        # Independent reviewers share cited, top-ranked passages without
+        # repeatedly sending the full retrieval context to the same provider.
+        fact_checker_res, critic_res = await run_review_agents(
             query=req.query,
             researcher_output=researcher_res,
+            context_chunks=review_chunks,
             model=preferred_model,
             api_key=gemini_key,
             tavily_key=tavily_key if external_verification_enabled else "",
-            context_chunks=retrieved_chunks,
-        )
-
-        # 5. Agent 3: Critic
-        critic_res = await run_critic(
-            query=req.query,
-            researcher_output=researcher_res,
-            fact_checker_output=fact_checker_res,
-            model=preferred_model,
-            api_key=gemini_key
         )
 
         trust_res = assess_trust(retrieved_chunks)
@@ -282,15 +326,8 @@ async def query_pipeline(req: QueryRequest):
                     model=preferred_model,
                     api_key=gemini_key,
                     tavily_key=tavily_key,
-                    context_chunks=retrieved_chunks,
+                    context_chunks=review_chunks,
                 )
-            critic_res = await run_critic(
-                query=req.query,
-                researcher_output=researcher_res,
-                fact_checker_output=fact_checker_res,
-                model=preferred_model,
-                api_key=gemini_key,
-            )
             consensus = compute_multi_agent_consensus(
                 researcher=researcher_res,
                 fact_checker=fact_checker_res,
@@ -307,6 +344,20 @@ async def query_pipeline(req: QueryRequest):
             for source in researcher_res.get("sources_cited", [])
             if str(source.get("chunk_id", "")) in verified_evidence_ids
         ]
+        if not evidence_sources:
+            evidence_sources = researcher_res.get("sources_cited", [])
+        if not evidence_sources and retrieved_chunks:
+            evidence_sources = [
+                {
+                    "document_id": c.get("metadata", {}).get("document_id", ""),
+                    "document_name": c.get("metadata", {}).get("document_name", "Document"),
+                    "chunk_id": c.get("chunk_id", ""),
+                    "text": c.get("text", "")[:300],
+                    "similarity_score": c.get("similarity_score", 0.0),
+                    "page_number": c.get("metadata", {}).get("page"),
+                }
+                for c in retrieved_chunks[:5]
+            ]
         eval_matrix = consensus.get("evaluation_matrix", {})
 
         return {
@@ -329,6 +380,9 @@ async def query_pipeline(req: QueryRequest):
                 if source.get("source_type") == "tavily"
             ],
         }
+    except LLMProvidersUnavailable as e:
+        logger.warning("Query pipeline has no available LLM provider: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Query pipeline error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

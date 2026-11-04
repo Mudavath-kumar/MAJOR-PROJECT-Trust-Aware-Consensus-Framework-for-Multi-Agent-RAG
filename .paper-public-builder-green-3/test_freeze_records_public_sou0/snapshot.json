@@ -1,0 +1,94 @@
+{
+  "rows": [
+    {
+      "answer": "Alpha",
+      "context": {
+        "sentences": [
+          [
+            "Alpha is the supported answer for one.",
+            "Additional source detail."
+          ],
+          [
+            "This distractor contains unrelated information."
+          ]
+        ],
+        "title": [
+          "Alpha page",
+          "Distractor page"
+        ]
+      },
+      "id": "one",
+      "level": "medium",
+      "question": "Which entity answers one?",
+      "supporting_facts": {
+        "sent_id": [
+          0
+        ],
+        "title": [
+          "Alpha page"
+        ]
+      },
+      "type": "bridge"
+    },
+    {
+      "answer": "Alpha",
+      "context": {
+        "sentences": [
+          [
+            "Alpha is the supported answer for two.",
+            "Additional source detail."
+          ],
+          [
+            "This distractor contains unrelated information."
+          ]
+        ],
+        "title": [
+          "Alpha page",
+          "Distractor page"
+        ]
+      },
+      "id": "two",
+      "level": "medium",
+      "question": "Which entity answers two?",
+      "supporting_facts": {
+        "sent_id": [
+          0
+        ],
+        "title": [
+          "Alpha page"
+        ]
+      },
+      "type": "bridge"
+    }
+  ],
+  "source": {
+    "config": "distractor",
+    "dataset": "HotpotQA",
+    "dataset_url": "https://hotpotqa.github.io/index.html",
+    "license": "CC BY-SA 4.0",
+    "retrieved_on": "2026-10-24",
+    "source_responses": [
+      {
+        "config": "distractor",
+        "response_sha256": "b6dff2b34756d943f4a2edfecccdb356e4a965de35f0180083c7a27eb7f685d8",
+        "row_indexes": [
+          0
+        ],
+        "split": "validation",
+        "url": "https://datasets-server.huggingface.co/rows"
+      },
+      {
+        "config": "distractor",
+        "response_sha256": "c1f723537556cb54140b243d1a112f5d3705b1237cc0ca839b305d32625c0872",
+        "row_indexes": [
+          1
+        ],
+        "split": "validation",
+        "url": "https://datasets-server.huggingface.co/rows"
+      }
+    ],
+    "split": "validation",
+    "total_rows_in_split": 10,
+    "viewer_api": "https://datasets-server.huggingface.co/rows"
+  }
+}

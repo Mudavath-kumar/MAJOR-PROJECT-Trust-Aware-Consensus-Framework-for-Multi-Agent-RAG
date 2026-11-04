@@ -1,0 +1,44 @@
+{
+  "config_sha256": "da3506d503e3337920dbf1748b2435945334fd5326d65fb7b42dc5e1748edb74",
+  "corpus_manifest_sha256": "09cedbd246fd069c3212dc9fa04d722df6041965cd0555c33a8607f9a9b1f933",
+  "dataset_sha256": "8f0d68cc33e2a17d7cf87ab7c59f7cc64c0f110e4739245ba1110a38e6bf3404",
+  "dataset_version": "trustrag-v1",
+  "embedding_model": "gemini-embedding-2",
+  "generated_at": "2026-10-25T04:39:16.689297+00:00",
+  "git_revision": "0f3ae55ed3f2cc8346e137be68bc0d3a91ca6900",
+  "human_reviewer_count": 0,
+  "llm_failed_attempts": 0,
+  "llm_model_attempts": {},
+  "llm_provider_attempts": {},
+  "llm_successful_provider_models": {},
+  "model": "openai/gpt-4o-mini",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "paper_eligible": false,
+  "predictions_sha256": "00c648616c732da3f4144bd08ee83f17413ea8176b09d8163e13dc4cd48278e0",
+  "prompt_version": "baseline-v1",
+  "python_version": "3.10.0",
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 5
+  },
+  "review_protocol": "unreviewed",
+  "run_mode": "smoke",
+  "runner_version": "trustrag-eval-1",
+  "sample_count": 1,
+  "seed": 42,
+  "status_counts": {
+    "answer": 1
+  },
+  "system": "vanilla-rag",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "none"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "No LLM provider responded. Gemini request failed (RuntimeError); Gemini HTTP 404: request rejected",
+  "error_type": "LLMProvidersUnavailable",
+  "failed_at": "2026-11-03T20:27:08.094576+00:00",
+  "model": "gemini-3.6-flash",
+  "paper_eligible": false,
+  "run_mode": "exploratory",
+  "status": "error",
+  "variant": "reranked-rag"
+}

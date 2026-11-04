@@ -1,0 +1,31 @@
+{
+  "dataset_version": "trustrag-v1",
+  "decision": {
+    "abstention_gate": false,
+    "typed_verification": false
+  },
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "model": "qwen2.5-coder:3b",
+  "name": "reranked-rag",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "prompt_version": "reranked-v1",
+  "retrieval": {
+    "candidate_k": 20,
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": true,
+      "strategy": "hybrid-lexical-semantic-v1"
+    },
+    "top_k": 5
+  },
+  "seed": 42,
+  "system": "vanilla-rag-with-reranking",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "none"
+  }
+}

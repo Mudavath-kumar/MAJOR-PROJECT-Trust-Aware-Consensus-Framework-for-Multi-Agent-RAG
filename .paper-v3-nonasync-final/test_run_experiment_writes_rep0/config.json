@@ -1,0 +1,1 @@
+{"name": "smoke", "dataset_version": "smoke-v1", "system": "trustrag", "model": "test-model", "embedding_model": "test-embedding", "prompt_version": "test-prompt-v1", "temperature": 0.1, "retrieval": {"top_k": 2, "chunk_size": 400, "chunk_overlap": 80, "reranking": {"enabled": false}}, "orchestration": {"mode": "single-pass"}, "verification": {"mode": "none"}, "seed": 42}

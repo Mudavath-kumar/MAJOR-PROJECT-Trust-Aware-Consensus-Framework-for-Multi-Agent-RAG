@@ -1,0 +1,7 @@
+variant,sample_count,retrieval_recall_denominator,recall_at_5,mean_retrieval_latency_ms,retrieval_calls_per_query,reranking,category_counts
+baseline-rag,179,125,1.0,0.770197206679387,1,False,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"
+multi-agent-rag,179,125,1.0,0.7519245810630177,1,False,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"
+rag-verification,179,125,1.0,0.7379391062482814,1,False,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"
+reranked-rag,179,125,1.0,0.7150720671767514,1,True,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"
+trustrag-no-external,179,125,1.0,0.8315770949964482,1,False,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"
+trustrag,179,125,1.0,0.8006083797978877,1,False,"{'answerable': 100, 'unanswerable': 29, 'conflicting': 25, 'prompt_injection': 25}"

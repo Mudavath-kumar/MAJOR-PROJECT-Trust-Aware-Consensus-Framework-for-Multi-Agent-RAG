@@ -39,6 +39,17 @@ class TinyBackend:
         return {"decision_status": "answer", "decision_score": 0.9, "synthesis": "Paris"}
 
 
+class FailsOnSecondQuery(TinyBackend):
+    def __init__(self):
+        self.calls = 0
+
+    async def single_pass(self, query, context, profile):
+        self.calls += 1
+        if self.calls == 2:
+            raise RuntimeError("simulated provider failure")
+        return await super().single_pass(query, context, profile)
+
+
 def _dataset(manifest):
     source = manifest["sources"][0]
     return [
@@ -84,10 +95,83 @@ def test_run_benchmark_writes_predictions_metrics_and_manifest(tmp_path):
     )
 
     assert (output_dir / "predictions-input.jsonl").exists()
+    prediction = json.loads((output_dir / "predictions-input.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert "retrieved_evidence" not in prediction
+    assert "agent_outputs" not in prediction
     assert json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))["sample_count"] == 1
     run_manifest = json.loads((output_dir / "run-manifest.json").read_text(encoding="utf-8"))
     assert run_manifest["run_mode"] == "smoke"
     assert run_manifest["paper_eligible"] is False
+
+
+def test_exploratory_run_can_retain_raw_evidence_without_becoming_paper_eligible(tmp_path):
+    source = tmp_path / "policy.md"
+    source.write_text("Paris is the answer to this test question.", encoding="utf-8")
+    manifest = build_corpus_manifest([source], tmp_path / "manifest.json", "test-v1")
+    dataset_path = tmp_path / "dataset.jsonl"
+    dataset_path.write_text("\n".join(json.dumps(item) for item in _dataset(manifest)) + "\n", encoding="utf-8")
+    output_dir = tmp_path / "run"
+
+    run_benchmark(
+        "experiments/configs/baseline-rag.json",
+        dataset_path,
+        tmp_path / "manifest.json",
+        output_dir,
+        backend=TinyBackend(),
+        retain_raw_outputs=True,
+        context_provider=lambda record, profile: [
+            {
+                "chunk_id": manifest["sources"][0]["chunks"][0]["evidence_id"],
+                "text": "Paris is the answer.",
+                "similarity_score": 0.9,
+                "metadata": {"document_id": manifest["sources"][0]["document_id"]},
+            }
+        ],
+    )
+
+    prediction = json.loads((output_dir / "predictions-input.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    run_manifest = json.loads((output_dir / "run-manifest.json").read_text(encoding="utf-8"))
+    assert prediction["retrieved_evidence"][0]["text"] == "Paris is the answer."
+    assert prediction["agent_outputs"]
+    assert run_manifest["run_mode"] == "exploratory"
+    assert run_manifest["raw_outputs_retained"] is True
+    assert run_manifest["paper_eligible"] is False
+
+
+def test_failed_run_preserves_completed_predictions_and_failed_query_context(tmp_path):
+    source = tmp_path / "policy.md"
+    source.write_text("Paris is the answer to this test question.", encoding="utf-8")
+    manifest = build_corpus_manifest([source], tmp_path / "manifest.json", "test-v1")
+    records = _dataset(manifest)
+    records.append({**records[0], "id": "q-0002", "question": "A second question?"})
+    dataset_path = tmp_path / "dataset.jsonl"
+    dataset_path.write_text("\n".join(json.dumps(item) for item in records) + "\n", encoding="utf-8")
+    output_dir = tmp_path / "failed-run"
+
+    with pytest.raises(RuntimeError, match="simulated provider failure"):
+        run_benchmark(
+            "experiments/configs/baseline-rag.json",
+            dataset_path,
+            tmp_path / "manifest.json",
+            output_dir,
+            backend=FailsOnSecondQuery(),
+            context_provider=lambda record, profile: [
+                {
+                    "chunk_id": manifest["sources"][0]["chunks"][0]["evidence_id"],
+                    "text": "Paris is the answer.",
+                    "similarity_score": 0.9,
+                    "metadata": {"document_id": manifest["sources"][0]["document_id"]},
+                }
+            ],
+        )
+
+    partial_path = output_dir / "predictions-input.partial.jsonl"
+    partial_rows = [json.loads(line) for line in partial_path.read_text(encoding="utf-8").splitlines()]
+    error = json.loads((output_dir / "error-manifest.json").read_text(encoding="utf-8"))
+    assert [row["id"] for row in partial_rows] == ["q-0001"]
+    assert error["completed_prediction_count"] == 1
+    assert error["failed_record_id"] == "q-0002"
+    assert error["status"] == "error"
 
 
 def test_run_benchmark_paper_mode_rejects_unreviewed_dataset(tmp_path):

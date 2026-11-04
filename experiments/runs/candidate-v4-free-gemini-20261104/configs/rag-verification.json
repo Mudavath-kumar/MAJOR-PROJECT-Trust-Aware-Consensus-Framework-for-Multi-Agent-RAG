@@ -1,0 +1,29 @@
+{
+  "dataset_version": "trustrag-v1",
+  "decision": {
+    "abstention_gate": false,
+    "typed_verification": true
+  },
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "model": "gemini-3.6-flash",
+  "name": "rag-verification",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "prompt_version": "rag-verification-v1",
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 5
+  },
+  "seed": 42,
+  "system": "single-pass-rag-with-typed-verification",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "typed-claims"
+  }
+}

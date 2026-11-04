@@ -1,0 +1,12 @@
+{
+  "candidate_count": 179,
+  "corpus_manifest_sha256": "d1a973ddd6f3e7d715b20c796e4841fd6d350bf964ea5bbdcd569fa8f8dce71c",
+  "dataset_sha256": "29112cbb5fd04e2f3cbb1c504725352826dc59e4b0f3f54ff494745c70636d7d",
+  "error_message": "Gemini embedding service rejected the request (HTTP 429)",
+  "error_type": "RuntimeError",
+  "generated_at": "2026-11-03T16:04:08.480257+00:00",
+  "paper_eligible": false,
+  "phase": "corpus_embedding",
+  "run_mode": "exploratory",
+  "status": "error"
+}

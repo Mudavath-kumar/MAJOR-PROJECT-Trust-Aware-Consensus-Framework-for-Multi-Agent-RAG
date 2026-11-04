@@ -1,0 +1,97 @@
+{
+  "status": "retrieval-only exploratory measurement; no generation",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "dataset_count": 179,
+  "results": [
+    {
+      "variant": "baseline-rag",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.770197206679387,
+      "retrieval_calls_per_query": 1,
+      "reranking": false,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    },
+    {
+      "variant": "multi-agent-rag",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.7519245810630177,
+      "retrieval_calls_per_query": 1,
+      "reranking": false,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    },
+    {
+      "variant": "rag-verification",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.7379391062482814,
+      "retrieval_calls_per_query": 1,
+      "reranking": false,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    },
+    {
+      "variant": "reranked-rag",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.7150720671767514,
+      "retrieval_calls_per_query": 1,
+      "reranking": true,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    },
+    {
+      "variant": "trustrag-no-external",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.8315770949964482,
+      "retrieval_calls_per_query": 1,
+      "reranking": false,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    },
+    {
+      "variant": "trustrag",
+      "sample_count": 179,
+      "retrieval_recall_denominator": 125,
+      "recall_at_5": 1.0,
+      "mean_retrieval_latency_ms": 0.8006083797978877,
+      "retrieval_calls_per_query": 1,
+      "reranking": false,
+      "category_counts": {
+        "answerable": 100,
+        "unanswerable": 29,
+        "conflicting": 25,
+        "prompt_injection": 25
+      }
+    }
+  ]
+}

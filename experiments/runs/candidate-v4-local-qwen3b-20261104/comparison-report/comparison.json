@@ -1,0 +1,6425 @@
+{
+  "baseline": "baseline-rag",
+  "bootstrap": {
+    "confidence": 0.95,
+    "method": "answer-type-stratified record bootstrap",
+    "samples": 2000,
+    "seed": 42
+  },
+  "category_results": [
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "87451.000 [87451.000, 87451.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "87451.000 [87451.000, 87451.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "87451.000 [87451.000, 87451.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55589.000 [55589.000, 55589.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55589.000 [55589.000, 55589.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55589.000 [55589.000, 55589.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "50716.000 [50716.000, 50716.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "50716.000 [50716.000, 50716.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "50716.000 [50716.000, 50716.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55154.000 [55154.000, 55154.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55154.000 [55154.000, 55154.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "55154.000 [55154.000, 55154.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "StandardRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "95190.000 [95190.000, 95190.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "95190.000 [95190.000, 95190.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "95190.000 [95190.000, 95190.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20732.000 [20732.000, 20732.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20732.000 [20732.000, 20732.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20732.000 [20732.000, 20732.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "16297.000 [16297.000, 16297.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "16297.000 [16297.000, 16297.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "16297.000 [16297.000, 16297.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20540.000 [20540.000, 20540.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20540.000 [20540.000, 20540.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "20540.000 [20540.000, 20540.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RerankedRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "269347.000 [269347.000, 269347.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "269347.000 [269347.000, 269347.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "269347.000 [269347.000, 269347.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "2.000 [2.000, 2.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "202013.000 [202013.000, 202013.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "202013.000 [202013.000, 202013.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "202013.000 [202013.000, 202013.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "2.000 [2.000, 2.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "476138.000 [476138.000, 476138.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "476138.000 [476138.000, 476138.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "476138.000 [476138.000, 476138.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "2.000 [2.000, 2.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.364 [0.364, 0.364]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "188245.000 [188245.000, 188245.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "188245.000 [188245.000, 188245.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "188245.000 [188245.000, 188245.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "2.000 [2.000, 2.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "RAG+Verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.111 [0.111, 0.111]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1264454.000 [1264454.000, 1264454.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1264454.000 [1264454.000, 1264454.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1264454.000 [1264454.000, 1264454.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "480531.000 [480531.000, 480531.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "480531.000 [480531.000, 480531.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "480531.000 [480531.000, 480531.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "119667.000 [119667.000, 119667.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "119667.000 [119667.000, 119667.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "119667.000 [119667.000, 119667.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.364 [0.364, 0.364]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "116705.000 [116705.000, 116705.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "116705.000 [116705.000, 116705.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "116705.000 [116705.000, 116705.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "FixedMulti-AgentRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "760199.000 [760199.000, 760199.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "760199.000 [760199.000, 760199.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "760199.000 [760199.000, 760199.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "381355.000 [381355.000, 381355.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "381355.000 [381355.000, 381355.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "381355.000 [381355.000, 381355.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "62071.000 [62071.000, 62071.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "62071.000 [62071.000, 62071.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "62071.000 [62071.000, 62071.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.364 [0.364, 0.364]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "39194.000 [39194.000, 39194.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "39194.000 [39194.000, 39194.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "39194.000 [39194.000, 39194.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "TrustRAG without external verification",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "accepted queries",
+      "Metric": "SelectiveRisk",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "830038.000 [830038.000, 830038.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "830038.000 [830038.000, 830038.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "830038.000 [830038.000, 830038.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "answerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "44057.000 [44057.000, 44057.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "44057.000 [44057.000, 44057.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "44057.000 [44057.000, 44057.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "unanswerable",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "AbstentionAccuracy",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "UnsafeAcceptanceRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "41017.000 [41017.000, 41017.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "41017.000 [41017.000, 41017.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "41017.000 [41017.000, 41017.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "conflicting",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "N/A"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "InjectionTaskSuccessRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "ExactMatch",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.000 [0.000, 0.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TokenF1",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.074 [0.074, 0.074]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Recall@5",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationPrecision",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CitationRecall",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "0.500 [0.500, 0.500]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "Coverage",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyMeanMs",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "589826.000 [589826.000, 589826.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP50Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "589826.000 [589826.000, 589826.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LatencyP95Ms",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "589826.000 [589826.000, 589826.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "LLMCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "3.000 [3.000, 3.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "TypedVerificationRate",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "RetrievalCalls/Query",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "1.000 [1.000, 1.000]"
+    },
+    {
+      "AnswerType": "prompt_injection",
+      "DenominatorUnit": "queries",
+      "Metric": "CostMeanUSD",
+      "MetricDenominator": 1,
+      "Model": "Trust-AwareConsensusRAG",
+      "N": 1,
+      "Value": "N/A"
+    }
+  ],
+  "dataset_review": {
+    "automated_audit_sha256": null,
+    "human_reviewer_count": 0,
+    "protocol": "unreviewed"
+  },
+  "interpretation_notes": [
+    "TypedVerificationRate counts queries that invoked the typed claim verifier; it is not external-search coverage.",
+    "GoldEvidenceCitationRate measures citation overlap with reviewed gold evidence; it does not establish claim entailment.",
+    "Decision-score Brier/ECE compare an operational heuristic with answerability; the score is not a calibrated probability.",
+    "A human-labelled hallucination rate is not reported because independent claim-level annotations are absent.",
+    "CostMeanUSD is N/A because per-query token usage and provider pricing telemetry are absent.",
+    "Table intervals are per-system stratified bootstrap 95% confidence intervals; paired system-minus-baseline intervals are in paired_intervals.",
+    "These exploratory results use automated-only dataset review; human review is pending, so they are not paper-eligible findings."
+  ],
+  "paired_intervals": {
+    "FixedMulti-AgentRAG": {
+      "CitationPrecision": [
+        0.0,
+        0.0
+      ],
+      "CitationRecall": [
+        0.0,
+        0.0
+      ],
+      "Coverage": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreBrier": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreECE": [
+        0.0,
+        0.0
+      ],
+      "ExactMatch": [
+        0.0,
+        0.0
+      ],
+      "GoldEvidenceCitationRate": [
+        0.0,
+        0.0
+      ],
+      "InjectionTaskSuccessRate": [
+        0.0,
+        0.0
+      ],
+      "LLMCalls/Query": [
+        2.0,
+        2.0
+      ],
+      "LatencyMeanMs": [
+        433111.75,
+        433111.75
+      ],
+      "LatencyP50Ms": [
+        64513.0,
+        64513.0
+      ],
+      "LatencyP95Ms": [
+        1177003.0,
+        1177003.0
+      ],
+      "Recall@K": [
+        0.0,
+        0.0
+      ],
+      "RetrievalCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "SelectiveRisk": [
+        0.0,
+        0.0
+      ],
+      "TokenF1": [
+        0.237374,
+        0.237374
+      ],
+      "TypedVerificationRate": [
+        1.0,
+        1.0
+      ],
+      "UnsafeAbstentionRecall": [
+        0.0,
+        0.0
+      ],
+      "UnsafeAcceptanceRate": [
+        0.0,
+        0.0
+      ]
+    },
+    "RAG+Verification": {
+      "CitationPrecision": [
+        0.25,
+        0.25
+      ],
+      "CitationRecall": [
+        0.25,
+        0.25
+      ],
+      "Coverage": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreBrier": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreECE": [
+        0.0,
+        0.0
+      ],
+      "ExactMatch": [
+        0.0,
+        0.0
+      ],
+      "GoldEvidenceCitationRate": [
+        0.5,
+        0.5
+      ],
+      "InjectionTaskSuccessRate": [
+        0.0,
+        0.0
+      ],
+      "LLMCalls/Query": [
+        1.0,
+        1.0
+      ],
+      "LatencyMeanMs": [
+        221708.25,
+        221708.25
+      ],
+      "LatencyP50Ms": [
+        146859.0,
+        146859.0
+      ],
+      "LatencyP95Ms": [
+        388687.0,
+        388687.0
+      ],
+      "Recall@K": [
+        0.0,
+        0.0
+      ],
+      "RetrievalCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "SelectiveRisk": [
+        0.0,
+        0.0
+      ],
+      "TokenF1": [
+        0.181818,
+        0.181818
+      ],
+      "TypedVerificationRate": [
+        1.0,
+        1.0
+      ],
+      "UnsafeAbstentionRecall": [
+        0.0,
+        0.0
+      ],
+      "UnsafeAcceptanceRate": [
+        0.0,
+        0.0
+      ]
+    },
+    "RerankedRAG": {
+      "CitationPrecision": [
+        0.0,
+        0.0
+      ],
+      "CitationRecall": [
+        0.0,
+        0.0
+      ],
+      "Coverage": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreBrier": [
+        0.0,
+        0.0
+      ],
+      "DecisionScoreECE": [
+        0.0,
+        0.0
+      ],
+      "ExactMatch": [
+        1.0,
+        1.0
+      ],
+      "GoldEvidenceCitationRate": [
+        0.0,
+        0.0
+      ],
+      "InjectionTaskSuccessRate": [
+        1.0,
+        1.0
+      ],
+      "LLMCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "LatencyMeanMs": [
+        -24037.75,
+        -24037.75
+      ],
+      "LatencyP50Ms": [
+        -34614.0,
+        -34614.0
+      ],
+      "LatencyP95Ms": [
+        7739.0,
+        7739.0
+      ],
+      "Recall@K": [
+        0.0,
+        0.0
+      ],
+      "RetrievalCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "SelectiveRisk": [
+        -1.0,
+        -1.0
+      ],
+      "TokenF1": [
+        1.0,
+        1.0
+      ],
+      "TypedVerificationRate": [
+        0.0,
+        0.0
+      ],
+      "UnsafeAbstentionRecall": [
+        0.0,
+        0.0
+      ],
+      "UnsafeAcceptanceRate": [
+        0.0,
+        0.0
+      ]
+    },
+    "Trust-AwareConsensusRAG": {
+      "CitationPrecision": [
+        0.0,
+        0.0
+      ],
+      "CitationRecall": [
+        0.0,
+        0.0
+      ],
+      "Coverage": [
+        -0.25,
+        -0.25
+      ],
+      "DecisionScoreBrier": [
+        -0.260306,
+        -0.260306
+      ],
+      "DecisionScoreECE": [
+        -0.259,
+        -0.259
+      ],
+      "ExactMatch": [
+        0.0,
+        0.0
+      ],
+      "GoldEvidenceCitationRate": [
+        0.0,
+        0.0
+      ],
+      "InjectionTaskSuccessRate": [
+        0.0,
+        0.0
+      ],
+      "LLMCalls/Query": [
+        2.0,
+        2.0
+      ],
+      "LatencyMeanMs": [
+        314007.0,
+        314007.0
+      ],
+      "LatencyP50Ms": [
+        -11097.0,
+        -11097.0
+      ],
+      "LatencyP95Ms": [
+        742587.0,
+        742587.0
+      ],
+      "Recall@K": [
+        0.0,
+        0.0
+      ],
+      "RetrievalCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "SelectiveRisk": [
+        0.0,
+        0.0
+      ],
+      "TokenF1": [
+        0.037037,
+        0.037037
+      ],
+      "TypedVerificationRate": [
+        1.0,
+        1.0
+      ],
+      "UnsafeAbstentionRecall": [
+        0.5,
+        0.5
+      ],
+      "UnsafeAcceptanceRate": [
+        -0.5,
+        -0.5
+      ]
+    },
+    "TrustRAG without external verification": {
+      "CitationPrecision": [
+        0.0,
+        0.0
+      ],
+      "CitationRecall": [
+        0.0,
+        0.0
+      ],
+      "Coverage": [
+        -0.25,
+        -0.25
+      ],
+      "DecisionScoreBrier": [
+        -0.260306,
+        -0.260306
+      ],
+      "DecisionScoreECE": [
+        -0.259,
+        -0.259
+      ],
+      "ExactMatch": [
+        0.0,
+        0.0
+      ],
+      "GoldEvidenceCitationRate": [
+        0.0,
+        0.0
+      ],
+      "InjectionTaskSuccessRate": [
+        0.0,
+        0.0
+      ],
+      "LLMCalls/Query": [
+        2.0,
+        2.0
+      ],
+      "LatencyMeanMs": [
+        248477.25,
+        248477.25
+      ],
+      "LatencyP50Ms": [
+        6917.0,
+        6917.0
+      ],
+      "LatencyP95Ms": [
+        672748.0,
+        672748.0
+      ],
+      "Recall@K": [
+        0.0,
+        0.0
+      ],
+      "RetrievalCalls/Query": [
+        0.0,
+        0.0
+      ],
+      "SelectiveRisk": [
+        0.0,
+        0.0
+      ],
+      "TokenF1": [
+        0.181818,
+        0.181818
+      ],
+      "TypedVerificationRate": [
+        1.0,
+        1.0
+      ],
+      "UnsafeAbstentionRecall": [
+        0.5,
+        0.5
+      ],
+      "UnsafeAcceptanceRate": [
+        -0.5,
+        -0.5
+      ]
+    }
+  },
+  "paper_eligible": false,
+  "report_version": "trustrag-report-v2",
+  "run_count": 6,
+  "run_mode": "exploratory-provisional",
+  "single_system_intervals": {
+    "FixedMulti-AgentRAG": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.5,
+          0.5
+        ],
+        "CitationRecall": [
+          0.25,
+          0.25
+        ],
+        "Coverage": [
+          1.0,
+          1.0
+        ],
+        "DecisionScoreBrier": [
+          0.5,
+          0.5
+        ],
+        "DecisionScoreECE": [
+          0.5,
+          0.5
+        ],
+        "ExactMatch": [
+          0.0,
+          0.0
+        ],
+        "GoldEvidenceCitationRate": [
+          0.5,
+          0.5
+        ],
+        "InjectionTaskSuccessRate": [
+          0.0,
+          0.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          1.0,
+          1.0
+        ],
+        "TokenF1": [
+          0.237374,
+          0.237374
+        ],
+        "UnsafeAbstentionRecall": [
+          0.0,
+          0.0
+        ],
+        "UnsafeAcceptanceRate": [
+          1.0,
+          1.0
+        ],
+        "VerifierRejectedClaimRate": [
+          0.0,
+          0.0
+        ]
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          3.0,
+          3.0
+        ],
+        "LatencyMeanMs": [
+          495339.25,
+          495339.25
+        ],
+        "LatencyP50Ms": [
+          119667.0,
+          119667.0
+        ],
+        "LatencyP95Ms": [
+          1264454.0,
+          1264454.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "RAG+Verification": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.75,
+          0.75
+        ],
+        "CitationRecall": [
+          0.5,
+          0.5
+        ],
+        "Coverage": [
+          1.0,
+          1.0
+        ],
+        "DecisionScoreBrier": [
+          0.5,
+          0.5
+        ],
+        "DecisionScoreECE": [
+          0.5,
+          0.5
+        ],
+        "ExactMatch": [
+          0.0,
+          0.0
+        ],
+        "GoldEvidenceCitationRate": [
+          1.0,
+          1.0
+        ],
+        "InjectionTaskSuccessRate": [
+          0.0,
+          0.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          1.0,
+          1.0
+        ],
+        "TokenF1": [
+          0.181818,
+          0.181818
+        ],
+        "UnsafeAbstentionRecall": [
+          0.0,
+          0.0
+        ],
+        "UnsafeAcceptanceRate": [
+          1.0,
+          1.0
+        ],
+        "VerifierRejectedClaimRate": [
+          0.0,
+          0.0
+        ]
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          2.0,
+          2.0
+        ],
+        "LatencyMeanMs": [
+          283935.75,
+          283935.75
+        ],
+        "LatencyP50Ms": [
+          202013.0,
+          202013.0
+        ],
+        "LatencyP95Ms": [
+          476138.0,
+          476138.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "RerankedRAG": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.5,
+          0.5
+        ],
+        "CitationRecall": [
+          0.25,
+          0.25
+        ],
+        "Coverage": [
+          1.0,
+          1.0
+        ],
+        "DecisionScoreBrier": [
+          0.5,
+          0.5
+        ],
+        "DecisionScoreECE": [
+          0.5,
+          0.5
+        ],
+        "ExactMatch": [
+          1.0,
+          1.0
+        ],
+        "GoldEvidenceCitationRate": [
+          0.5,
+          0.5
+        ],
+        "InjectionTaskSuccessRate": [
+          1.0,
+          1.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          0.0,
+          0.0
+        ],
+        "TokenF1": [
+          1.0,
+          1.0
+        ],
+        "UnsafeAbstentionRecall": [
+          0.0,
+          0.0
+        ],
+        "UnsafeAcceptanceRate": [
+          1.0,
+          1.0
+        ],
+        "VerifierRejectedClaimRate": null
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "LatencyMeanMs": [
+          38189.75,
+          38189.75
+        ],
+        "LatencyP50Ms": [
+          20540.0,
+          20540.0
+        ],
+        "LatencyP95Ms": [
+          95190.0,
+          95190.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "StandardRAG": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.5,
+          0.5
+        ],
+        "CitationRecall": [
+          0.25,
+          0.25
+        ],
+        "Coverage": [
+          1.0,
+          1.0
+        ],
+        "DecisionScoreBrier": [
+          0.5,
+          0.5
+        ],
+        "DecisionScoreECE": [
+          0.5,
+          0.5
+        ],
+        "ExactMatch": [
+          0.0,
+          0.0
+        ],
+        "GoldEvidenceCitationRate": [
+          0.5,
+          0.5
+        ],
+        "InjectionTaskSuccessRate": [
+          0.0,
+          0.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          1.0,
+          1.0
+        ],
+        "TokenF1": [
+          0.0,
+          0.0
+        ],
+        "UnsafeAbstentionRecall": [
+          0.0,
+          0.0
+        ],
+        "UnsafeAcceptanceRate": [
+          1.0,
+          1.0
+        ],
+        "VerifierRejectedClaimRate": null
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "LatencyMeanMs": [
+          62227.5,
+          62227.5
+        ],
+        "LatencyP50Ms": [
+          55154.0,
+          55154.0
+        ],
+        "LatencyP95Ms": [
+          87451.0,
+          87451.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "Trust-AwareConsensusRAG": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.5,
+          0.5
+        ],
+        "CitationRecall": [
+          0.25,
+          0.25
+        ],
+        "Coverage": [
+          0.75,
+          0.75
+        ],
+        "DecisionScoreBrier": [
+          0.239694,
+          0.239694
+        ],
+        "DecisionScoreECE": [
+          0.241,
+          0.241
+        ],
+        "ExactMatch": [
+          0.0,
+          0.0
+        ],
+        "GoldEvidenceCitationRate": [
+          0.5,
+          0.5
+        ],
+        "InjectionTaskSuccessRate": [
+          0.0,
+          0.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          1.0,
+          1.0
+        ],
+        "TokenF1": [
+          0.037037,
+          0.037037
+        ],
+        "UnsafeAbstentionRecall": [
+          0.5,
+          0.5
+        ],
+        "UnsafeAcceptanceRate": [
+          0.5,
+          0.5
+        ],
+        "VerifierRejectedClaimRate": [
+          0.0,
+          0.0
+        ]
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          3.0,
+          3.0
+        ],
+        "LatencyMeanMs": [
+          376234.5,
+          376234.5
+        ],
+        "LatencyP50Ms": [
+          44057.0,
+          44057.0
+        ],
+        "LatencyP95Ms": [
+          830038.0,
+          830038.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "TrustRAG without external verification": {
+      "table_ii": {
+        "CitationPrecision": [
+          0.5,
+          0.5
+        ],
+        "CitationRecall": [
+          0.25,
+          0.25
+        ],
+        "Coverage": [
+          0.75,
+          0.75
+        ],
+        "DecisionScoreBrier": [
+          0.239694,
+          0.239694
+        ],
+        "DecisionScoreECE": [
+          0.241,
+          0.241
+        ],
+        "ExactMatch": [
+          0.0,
+          0.0
+        ],
+        "GoldEvidenceCitationRate": [
+          0.5,
+          0.5
+        ],
+        "InjectionTaskSuccessRate": [
+          0.0,
+          0.0
+        ],
+        "Recall@K": [
+          1.0,
+          1.0
+        ],
+        "SelectiveRisk": [
+          1.0,
+          1.0
+        ],
+        "TokenF1": [
+          0.181818,
+          0.181818
+        ],
+        "UnsafeAbstentionRecall": [
+          0.5,
+          0.5
+        ],
+        "UnsafeAcceptanceRate": [
+          0.5,
+          0.5
+        ],
+        "VerifierRejectedClaimRate": [
+          0.25,
+          0.25
+        ]
+      },
+      "table_iii": {
+        "CostMeanUSD": null,
+        "LLMCalls/Query": [
+          3.0,
+          3.0
+        ],
+        "LatencyMeanMs": [
+          310704.75,
+          310704.75
+        ],
+        "LatencyP50Ms": [
+          62071.0,
+          62071.0
+        ],
+        "LatencyP95Ms": [
+          760199.0,
+          760199.0
+        ],
+        "RetrievalCalls/Query": [
+          1.0,
+          1.0
+        ],
+        "TypedVerificationRate": [
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "tables": {
+    "category_results": [
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "87451.000 [87451.000, 87451.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "87451.000 [87451.000, 87451.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "87451.000 [87451.000, 87451.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55589.000 [55589.000, 55589.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55589.000 [55589.000, 55589.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55589.000 [55589.000, 55589.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "50716.000 [50716.000, 50716.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "50716.000 [50716.000, 50716.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "50716.000 [50716.000, 50716.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55154.000 [55154.000, 55154.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55154.000 [55154.000, 55154.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "55154.000 [55154.000, 55154.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "StandardRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "95190.000 [95190.000, 95190.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "95190.000 [95190.000, 95190.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "95190.000 [95190.000, 95190.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20732.000 [20732.000, 20732.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20732.000 [20732.000, 20732.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20732.000 [20732.000, 20732.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "16297.000 [16297.000, 16297.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "16297.000 [16297.000, 16297.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "16297.000 [16297.000, 16297.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20540.000 [20540.000, 20540.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20540.000 [20540.000, 20540.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "20540.000 [20540.000, 20540.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RerankedRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "269347.000 [269347.000, 269347.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "269347.000 [269347.000, 269347.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "269347.000 [269347.000, 269347.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "2.000 [2.000, 2.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "202013.000 [202013.000, 202013.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "202013.000 [202013.000, 202013.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "202013.000 [202013.000, 202013.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "2.000 [2.000, 2.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "476138.000 [476138.000, 476138.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "476138.000 [476138.000, 476138.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "476138.000 [476138.000, 476138.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "2.000 [2.000, 2.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.364 [0.364, 0.364]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "188245.000 [188245.000, 188245.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "188245.000 [188245.000, 188245.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "188245.000 [188245.000, 188245.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "2.000 [2.000, 2.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "RAG+Verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.111 [0.111, 0.111]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1264454.000 [1264454.000, 1264454.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1264454.000 [1264454.000, 1264454.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1264454.000 [1264454.000, 1264454.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "480531.000 [480531.000, 480531.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "480531.000 [480531.000, 480531.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "480531.000 [480531.000, 480531.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "119667.000 [119667.000, 119667.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "119667.000 [119667.000, 119667.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "119667.000 [119667.000, 119667.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.364 [0.364, 0.364]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "116705.000 [116705.000, 116705.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "116705.000 [116705.000, 116705.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "116705.000 [116705.000, 116705.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "FixedMulti-AgentRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "760199.000 [760199.000, 760199.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "760199.000 [760199.000, 760199.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "760199.000 [760199.000, 760199.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "381355.000 [381355.000, 381355.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "381355.000 [381355.000, 381355.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "381355.000 [381355.000, 381355.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "62071.000 [62071.000, 62071.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "62071.000 [62071.000, 62071.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "62071.000 [62071.000, 62071.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.364 [0.364, 0.364]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "39194.000 [39194.000, 39194.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "39194.000 [39194.000, 39194.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "39194.000 [39194.000, 39194.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "TrustRAG without external verification",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "accepted queries",
+        "Metric": "SelectiveRisk",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "830038.000 [830038.000, 830038.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "830038.000 [830038.000, 830038.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "830038.000 [830038.000, 830038.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "answerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "44057.000 [44057.000, 44057.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "44057.000 [44057.000, 44057.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "44057.000 [44057.000, 44057.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "unanswerable",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "AbstentionAccuracy",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "UnsafeAcceptanceRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "41017.000 [41017.000, 41017.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "41017.000 [41017.000, 41017.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "41017.000 [41017.000, 41017.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "conflicting",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "N/A"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "InjectionTaskSuccessRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "ExactMatch",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.000 [0.000, 0.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TokenF1",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.074 [0.074, 0.074]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Recall@5",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationPrecision",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CitationRecall",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "0.500 [0.500, 0.500]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "Coverage",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyMeanMs",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "589826.000 [589826.000, 589826.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP50Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "589826.000 [589826.000, 589826.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LatencyP95Ms",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "589826.000 [589826.000, 589826.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "LLMCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "3.000 [3.000, 3.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "TypedVerificationRate",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "RetrievalCalls/Query",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "1.000 [1.000, 1.000]"
+      },
+      {
+        "AnswerType": "prompt_injection",
+        "DenominatorUnit": "queries",
+        "Metric": "CostMeanUSD",
+        "MetricDenominator": 1,
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 1,
+        "Value": "N/A"
+      }
+    ],
+    "table_ii": [
+      {
+        "CitationPrecision": "0.500 [0.500, 0.500]",
+        "CitationRecall": "0.250 [0.250, 0.250]",
+        "Coverage": "1.000 [1.000, 1.000]",
+        "DecisionScoreBrier": "0.500 [0.500, 0.500]",
+        "DecisionScoreECE": "0.500 [0.500, 0.500]",
+        "ExactMatch": "0.000 [0.000, 0.000]",
+        "GoldEvidenceCitationRate": "0.500 [0.500, 0.500]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "0.000 [0.000, 0.000]",
+        "Model": "StandardRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 1,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 0,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "1.000 [1.000, 1.000]",
+        "TokenF1": "0.000 [0.000, 0.000]",
+        "UnsafeAbstentionRecall": "0.000 [0.000, 0.000]",
+        "UnsafeAcceptanceRate": "1.000 [1.000, 1.000]",
+        "VerifierRejectedClaimRate": "N/A"
+      },
+      {
+        "CitationPrecision": "0.500 [0.500, 0.500]",
+        "CitationRecall": "0.250 [0.250, 0.250]",
+        "Coverage": "1.000 [1.000, 1.000]",
+        "DecisionScoreBrier": "0.500 [0.500, 0.500]",
+        "DecisionScoreECE": "0.500 [0.500, 0.500]",
+        "ExactMatch": "1.000 [1.000, 1.000]",
+        "GoldEvidenceCitationRate": "0.500 [0.500, 0.500]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "1.000 [1.000, 1.000]",
+        "Model": "RerankedRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 1,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 0,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "0.000 [0.000, 0.000]",
+        "TokenF1": "1.000 [1.000, 1.000]",
+        "UnsafeAbstentionRecall": "0.000 [0.000, 0.000]",
+        "UnsafeAcceptanceRate": "1.000 [1.000, 1.000]",
+        "VerifierRejectedClaimRate": "N/A"
+      },
+      {
+        "CitationPrecision": "0.750 [0.750, 0.750]",
+        "CitationRecall": "0.500 [0.500, 0.500]",
+        "Coverage": "1.000 [1.000, 1.000]",
+        "DecisionScoreBrier": "0.500 [0.500, 0.500]",
+        "DecisionScoreECE": "0.500 [0.500, 0.500]",
+        "ExactMatch": "0.000 [0.000, 0.000]",
+        "GoldEvidenceCitationRate": "1.000 [1.000, 1.000]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "0.000 [0.000, 0.000]",
+        "Model": "RAG+Verification",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 3,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 4,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "1.000 [1.000, 1.000]",
+        "TokenF1": "0.182 [0.182, 0.182]",
+        "UnsafeAbstentionRecall": "0.000 [0.000, 0.000]",
+        "UnsafeAcceptanceRate": "1.000 [1.000, 1.000]",
+        "VerifierRejectedClaimRate": "0.000 [0.000, 0.000]"
+      },
+      {
+        "CitationPrecision": "0.500 [0.500, 0.500]",
+        "CitationRecall": "0.250 [0.250, 0.250]",
+        "Coverage": "1.000 [1.000, 1.000]",
+        "DecisionScoreBrier": "0.500 [0.500, 0.500]",
+        "DecisionScoreECE": "0.500 [0.500, 0.500]",
+        "ExactMatch": "0.000 [0.000, 0.000]",
+        "GoldEvidenceCitationRate": "0.500 [0.500, 0.500]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "0.000 [0.000, 0.000]",
+        "Model": "FixedMulti-AgentRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 5,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 5,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "1.000 [1.000, 1.000]",
+        "TokenF1": "0.237 [0.237, 0.237]",
+        "UnsafeAbstentionRecall": "0.000 [0.000, 0.000]",
+        "UnsafeAcceptanceRate": "1.000 [1.000, 1.000]",
+        "VerifierRejectedClaimRate": "0.000 [0.000, 0.000]"
+      },
+      {
+        "CitationPrecision": "0.500 [0.500, 0.500]",
+        "CitationRecall": "0.250 [0.250, 0.250]",
+        "Coverage": "0.750 [0.750, 0.750]",
+        "DecisionScoreBrier": "0.240 [0.240, 0.240]",
+        "DecisionScoreECE": "0.241 [0.241, 0.241]",
+        "ExactMatch": "0.000 [0.000, 0.000]",
+        "GoldEvidenceCitationRate": "0.500 [0.500, 0.500]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "0.000 [0.000, 0.000]",
+        "Model": "TrustRAG without external verification",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 4,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "1.000 [1.000, 1.000]",
+        "TokenF1": "0.182 [0.182, 0.182]",
+        "UnsafeAbstentionRecall": "0.500 [0.500, 0.500]",
+        "UnsafeAcceptanceRate": "0.500 [0.500, 0.500]",
+        "VerifierRejectedClaimRate": "0.250 [0.250, 0.250]"
+      },
+      {
+        "CitationPrecision": "0.500 [0.500, 0.500]",
+        "CitationRecall": "0.250 [0.250, 0.250]",
+        "Coverage": "0.750 [0.750, 0.750]",
+        "DecisionScoreBrier": "0.240 [0.240, 0.240]",
+        "DecisionScoreECE": "0.241 [0.241, 0.241]",
+        "ExactMatch": "0.000 [0.000, 0.000]",
+        "GoldEvidenceCitationRate": "0.500 [0.500, 0.500]",
+        "HumanReviewers": 0,
+        "InjectionTaskSuccessRate": "0.000 [0.000, 0.000]",
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 7,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 7,
+        "Recall@K": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "SelectiveRisk": "1.000 [1.000, 1.000]",
+        "TokenF1": "0.037 [0.037, 0.037]",
+        "UnsafeAbstentionRecall": "0.500 [0.500, 0.500]",
+        "UnsafeAcceptanceRate": "0.500 [0.500, 0.500]",
+        "VerifierRejectedClaimRate": "0.000 [0.000, 0.000]"
+      }
+    ],
+    "table_iii": [
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "1.000 [1.000, 1.000]",
+        "LatencyMeanMs": "62227.500 [62227.500, 62227.500]",
+        "LatencyP50Ms": "55154.000 [55154.000, 55154.000]",
+        "LatencyP95Ms": "87451.000 [87451.000, 87451.000]",
+        "Model": "StandardRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 1,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 0,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "0.000 [0.000, 0.000]"
+      },
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "1.000 [1.000, 1.000]",
+        "LatencyMeanMs": "38189.750 [38189.750, 38189.750]",
+        "LatencyP50Ms": "20540.000 [20540.000, 20540.000]",
+        "LatencyP95Ms": "95190.000 [95190.000, 95190.000]",
+        "Model": "RerankedRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 1,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 0,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "0.000 [0.000, 0.000]"
+      },
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "2.000 [2.000, 2.000]",
+        "LatencyMeanMs": "283935.750 [283935.750, 283935.750]",
+        "LatencyP50Ms": "202013.000 [202013.000, 202013.000]",
+        "LatencyP95Ms": "476138.000 [476138.000, 476138.000]",
+        "Model": "RAG+Verification",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 3,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 4,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "1.000 [1.000, 1.000]"
+      },
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "3.000 [3.000, 3.000]",
+        "LatencyMeanMs": "495339.250 [495339.250, 495339.250]",
+        "LatencyP50Ms": "119667.000 [119667.000, 119667.000]",
+        "LatencyP95Ms": "1264454.000 [1264454.000, 1264454.000]",
+        "Model": "FixedMulti-AgentRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 5,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 5,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "1.000 [1.000, 1.000]"
+      },
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "3.000 [3.000, 3.000]",
+        "LatencyMeanMs": "310704.750 [310704.750, 310704.750]",
+        "LatencyP50Ms": "62071.000 [62071.000, 62071.000]",
+        "LatencyP95Ms": "760199.000 [760199.000, 760199.000]",
+        "Model": "TrustRAG without external verification",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 4,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 4,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "1.000 [1.000, 1.000]"
+      },
+      {
+        "CostMeanUSD": "N/A",
+        "HumanReviewers": 0,
+        "LLMCalls/Query": "3.000 [3.000, 3.000]",
+        "LatencyMeanMs": "376234.500 [376234.500, 376234.500]",
+        "LatencyP50Ms": "44057.000 [44057.000, 44057.000]",
+        "LatencyP95Ms": "830038.000 [830038.000, 830038.000]",
+        "Model": "Trust-AwareConsensusRAG",
+        "N": 4,
+        "N_accepted_answerable": 2,
+        "N_answerable": 2,
+        "N_cited_evidence": 2,
+        "N_claims": 7,
+        "N_gold_evidence": 4,
+        "N_injection": 1,
+        "N_unsafe": 2,
+        "N_verified_claims": 7,
+        "RetrievalCalls/Query": "1.000 [1.000, 1.000]",
+        "ReviewProtocol": "unreviewed",
+        "TypedVerificationRate": "1.000 [1.000, 1.000]"
+      }
+    ]
+  }
+}

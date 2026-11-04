@@ -1,0 +1,18 @@
+{
+  "completed_prediction_count": 0,
+  "error_message": "All connection attempts failed",
+  "error_type": "ConnectError",
+  "failed_llm_attempts": [
+    {
+      "model": "qwen2.5-coder:3b",
+      "provider": "ollama",
+      "succeeded": false
+    }
+  ],
+  "failed_prediction": null,
+  "failed_record_id": "q-0001",
+  "paper_eligible": false,
+  "partial_predictions_file": "predictions-input.partial.jsonl",
+  "run_mode": "smoke",
+  "status": "error"
+}

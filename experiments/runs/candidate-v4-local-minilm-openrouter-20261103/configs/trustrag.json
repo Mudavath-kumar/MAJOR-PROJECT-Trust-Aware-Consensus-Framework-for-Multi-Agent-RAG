@@ -1,0 +1,30 @@
+{
+  "name": "trustrag",
+  "dataset_version": "trustrag-v1",
+  "system": "evidence-gated-multi-agent-rag",
+  "model": "gemini-3.5-flash-lite",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "prompt_version": "evidence-gated-v1",
+  "temperature": 0.1,
+  "retrieval": {
+    "top_k": 5,
+    "chunk_size": 400,
+    "chunk_overlap": 80,
+    "reranking": {
+      "enabled": false
+    },
+    "external_verification": true
+  },
+  "orchestration": {
+    "mode": "trust-aware-consensus"
+  },
+  "verification": {
+    "mode": "typed-claims"
+  },
+  "decision": {
+    "typed_verification": true,
+    "abstention_gate": true,
+    "threshold_calibration_split": "development"
+  },
+  "seed": 42
+}

@@ -1,0 +1,254 @@
+[
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "ExactMatch",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "0.000 [0.000, 0.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "TokenF1",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "0.000 [0.000, 0.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "Recall@5",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CitationPrecision",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CitationRecall",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "Coverage",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "accepted queries",
+    "Metric": "SelectiveRisk",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyMeanMs",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "200.000 [200.000, 200.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyP50Ms",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "200.000 [200.000, 200.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyP95Ms",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "200.000 [200.000, 200.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LLMCalls/Query",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "4.000 [4.000, 4.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "TypedVerificationRate",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "RetrievalCalls/Query",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CostMeanUSD",
+    "MetricDenominator": 2,
+    "Model": "StandardRAG",
+    "N": 2,
+    "Value": "N/A"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "ExactMatch",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "TokenF1",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "Recall@5",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CitationPrecision",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CitationRecall",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "Coverage",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "accepted queries",
+    "Metric": "SelectiveRisk",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "0.000 [0.000, 0.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyMeanMs",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "100.000 [100.000, 100.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyP50Ms",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "100.000 [100.000, 100.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LatencyP95Ms",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "100.000 [100.000, 100.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "LLMCalls/Query",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "TypedVerificationRate",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "0.000 [0.000, 0.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "RetrievalCalls/Query",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "1.000 [1.000, 1.000]"
+  },
+  {
+    "AnswerType": "answerable",
+    "DenominatorUnit": "queries",
+    "Metric": "CostMeanUSD",
+    "MetricDenominator": 2,
+    "Model": "Trust-AwareConsensusRAG",
+    "N": 2,
+    "Value": "N/A"
+  }
+]

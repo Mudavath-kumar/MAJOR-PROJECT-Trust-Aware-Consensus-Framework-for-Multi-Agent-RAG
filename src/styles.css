@@ -308,3 +308,364 @@ button[aria-label*="lovable" i] {
   pointer-events: none !important;
   visibility: hidden !important;
 }
+
+/* TrustRAG chat workspace: quiet, evidence-first surfaces with a soft bowl glow. */
+.trustrag-chat-page {
+  --background: #f7faff;
+  --foreground: #0b1d3a;
+  --card: #ffffff;
+  --card-foreground: #0b1d3a;
+  --primary: #0b1d3a;
+  --primary-foreground: #ffffff;
+  --secondary: #edf3fb;
+  --secondary-foreground: #1d2f4f;
+  --muted: #f1f5fa;
+  --muted-foreground: #64748b;
+  --accent: #5b7cf0;
+  --accent-foreground: #ffffff;
+  --border: rgb(11 29 58 / 10%);
+  --input: rgb(11 29 58 / 12%);
+  position: relative;
+  isolation: isolate;
+  color: var(--foreground);
+}
+
+.trustrag-chat-page::before {
+  position: absolute;
+  z-index: -1;
+  top: -1.5rem;
+  right: -2rem;
+  left: -2rem;
+  height: 25rem;
+  background:
+    radial-gradient(ellipse 62% 88% at 55% 0%, rgb(143 213 241 / 24%), transparent 72%),
+    radial-gradient(ellipse 44% 72% at 25% 8%, rgb(210 218 255 / 28%), transparent 75%);
+  content: "";
+  pointer-events: none;
+}
+
+.dark .trustrag-chat-page {
+  --background: #0e1f3d;
+  --foreground: #edf4ff;
+  --card: #132744;
+  --card-foreground: #edf4ff;
+  --primary: #dce8ff;
+  --primary-foreground: #0b1d3a;
+  --secondary: #1c3455;
+  --secondary-foreground: #edf4ff;
+  --muted: #162d4c;
+  --muted-foreground: #a3b4cc;
+  --accent: #8c9fff;
+  --accent-foreground: #0b1d3a;
+  --border: rgb(220 232 255 / 12%);
+  --input: rgb(220 232 255 / 16%);
+}
+
+.dark .trustrag-chat-page::before {
+  background:
+    radial-gradient(ellipse 62% 88% at 55% 0%, rgb(91 124 240 / 17%), transparent 72%),
+    radial-gradient(ellipse 44% 72% at 25% 8%, rgb(143 213 241 / 10%), transparent 75%);
+}
+
+.trustrag-chat-page .chat-intro {
+  position: relative;
+  z-index: 1;
+}
+
+.trustrag-chat-page .chat-intro h1 {
+  color: var(--foreground);
+  font-size: clamp(2rem, 3.1vw, 3rem);
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.trustrag-chat-page .chat-intro p {
+  max-width: 42rem;
+  color: var(--muted-foreground);
+}
+
+.trustrag-chat-page .chat-layout {
+  position: relative;
+  z-index: 1;
+  display: grid !important;
+  grid-template-columns: 15rem minmax(0, 1fr) !important;
+  align-items: start;
+  gap: 1.25rem !important;
+  margin-top: 0.5rem;
+}
+
+.trustrag-chat-page .chat-layout.no-history {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.trustrag-chat-page .chat-history-rail,
+.trustrag-chat-page .chat-main,
+.trustrag-chat-page .chat-transcript-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.trustrag-chat-page .chat-history-panel,
+.trustrag-chat-page .chat-sources,
+.trustrag-chat-page .chat-evidence-panel {
+  border: 1px solid var(--border) !important;
+  border-radius: 1.4rem !important;
+  background: color-mix(in oklab, var(--card) 88%, transparent) !important;
+  box-shadow: 0 14px 38px -30px rgb(11 29 58 / 32%) !important;
+  backdrop-filter: blur(16px);
+}
+
+.trustrag-chat-page .chat-history-panel,
+.trustrag-chat-page .chat-evidence-panel {
+  top: 1rem;
+}
+
+.trustrag-chat-page .chat-sources {
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.trustrag-chat-page .chat-workspace-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.85fr) !important;
+  align-items: start;
+  gap: 1.25rem !important;
+}
+
+.trustrag-chat-page .chat-transcript {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.trustrag-chat-page .chat-answer-row {
+  max-width: 100%;
+}
+
+.trustrag-chat-page .chat-answer,
+.trustrag-chat-page .chat-answer:hover {
+  overflow: hidden;
+  padding: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 1.4rem !important;
+  background: var(--card) !important;
+  box-shadow: 0 18px 48px -38px rgb(11 29 58 / 42%) !important;
+  transition: none !important;
+}
+
+.trustrag-chat-page .chat-answer-header {
+  min-height: 4.5rem;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    105deg,
+    color-mix(in oklab, var(--accent) 8%, var(--card)),
+    var(--card) 62%
+  );
+}
+
+.trustrag-chat-page .chat-answer-mark {
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.trustrag-chat-page .chat-answer-scope {
+  width: fit-content;
+  max-width: 100%;
+  margin: 1rem 1.2rem 0;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--background) 74%, var(--card));
+}
+
+.trustrag-chat-page .chat-answer-body {
+  padding: 1.15rem 1.2rem 1rem;
+}
+
+.trustrag-chat-page .chat-answer-content {
+  max-width: 78ch;
+  overflow-wrap: anywhere;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid color-mix(in oklab, var(--accent) 72%, var(--border));
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--background) 55%, var(--card));
+}
+
+.trustrag-chat-page .chat-answer-content > div {
+  font-size: 0.94rem;
+  line-height: 1.78;
+}
+
+.trustrag-chat-page .chat-answer-content h3 {
+  margin-top: 0.35rem;
+  color: var(--foreground);
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+}
+
+.trustrag-chat-page .chat-answer-content p,
+.trustrag-chat-page .chat-answer-content li {
+  color: color-mix(in oklab, var(--foreground) 88%, var(--muted-foreground));
+}
+
+.trustrag-chat-page .chat-score-grid {
+  align-items: stretch;
+}
+
+.trustrag-chat-page .chat-score-item {
+  background: color-mix(in oklab, var(--background) 68%, var(--card));
+}
+
+.trustrag-chat-page .chat-score-item dt {
+  overflow: visible;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.trustrag-chat-page .chat-score-item dd {
+  font-size: 1rem;
+}
+
+.trustrag-chat-page .chat-score-note {
+  padding-inline: 0.2rem;
+}
+
+.trustrag-chat-page .chat-agent-section,
+.trustrag-chat-page .chat-citations-section,
+.trustrag-chat-page .chat-answer-actions {
+  border-color: var(--border);
+}
+
+.trustrag-chat-page .chat-agent-toggle {
+  border: 1px solid transparent;
+}
+
+.trustrag-chat-page .chat-agent-toggle:hover {
+  border-color: color-mix(in oklab, var(--accent) 18%, var(--border));
+}
+
+.trustrag-chat-page .chat-citation-list button {
+  min-height: 3.5rem;
+  border-radius: 0.9rem;
+  background: color-mix(in oklab, var(--background) 60%, var(--card));
+}
+
+.trustrag-chat-page .chat-answer-actions button {
+  min-height: 2.25rem;
+}
+
+.trustrag-chat-page .chat-pending-answer {
+  padding: 1.15rem 1.2rem !important;
+}
+
+.trustrag-chat-page .chat-user-message {
+  border-radius: 1.2rem 1.2rem 0.3rem 1.2rem !important;
+  background: #0b1d3a !important;
+  padding: 0.85rem 1.1rem !important;
+  color: #ffffff !important;
+  line-height: 1.55;
+}
+
+.dark .trustrag-chat-page .chat-user-message {
+  background: #dce8ff !important;
+  color: #0b1d3a !important;
+}
+
+.trustrag-chat-page .chat-composer {
+  margin-top: 1rem;
+  scroll-margin-bottom: 1.5rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--border)) !important;
+  border-radius: 1.35rem !important;
+  background: color-mix(in oklab, var(--card) 94%, transparent) !important;
+  box-shadow: 0 16px 40px -26px rgb(11 29 58 / 36%) !important;
+  backdrop-filter: blur(18px);
+}
+
+.trustrag-chat-page .chat-evidence-card {
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--card) 82%, var(--background));
+}
+
+.trustrag-chat-page .chat-suggestions button {
+  border-color: color-mix(in oklab, var(--accent) 20%, var(--border));
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+}
+
+@media (max-width: 1399px) {
+  .trustrag-chat-page .chat-workspace-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .trustrag-chat-page .chat-evidence-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 1023px) {
+  .trustrag-chat-page .chat-layout,
+  .trustrag-chat-page .chat-layout.no-history {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .trustrag-chat-page .chat-history-panel {
+    position: static;
+    max-height: 20rem;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .trustrag-chat-page .chat-intro > div {
+    margin-bottom: 1.25rem;
+  }
+
+  .trustrag-chat-page .chat-intro h1 {
+    font-size: clamp(1.85rem, 8vw, 2.4rem);
+  }
+
+  .trustrag-chat-page .chat-intro [class*="grid-cols-1"] {
+    align-items: start;
+  }
+
+  .trustrag-chat-page .chat-sources {
+    padding: 0.9rem;
+  }
+
+  .trustrag-chat-page .chat-transcript {
+    height: min(68vh, 620px) !important;
+    min-height: 24rem;
+  }
+
+  .trustrag-chat-page .chat-answer {
+    border-radius: 1.15rem !important;
+  }
+
+  .trustrag-chat-page .chat-answer-header {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .trustrag-chat-page .chat-answer-scope {
+    margin: 0.85rem 0.9rem 0;
+  }
+
+  .trustrag-chat-page .chat-answer-body {
+    padding: 0.9rem;
+  }
+
+  .trustrag-chat-page .chat-score-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .trustrag-chat-page .chat-score-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .trustrag-chat-page .chat-score-item {
+    padding: 0.65rem;
+  }
+
+}

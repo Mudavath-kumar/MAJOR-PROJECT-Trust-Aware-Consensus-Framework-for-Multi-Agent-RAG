@@ -127,9 +127,15 @@ ai-service/.venv/Scripts/python.exe -m experiments.run_matrix `
 
 The command refuses an unreviewed/wrong-size dataset or a non-empty output
 directory. Outputs land in `runs/paper-v1/<variant>/`; tables are written to
-`runs/paper-v1/report/` as CSV, LaTeX, and JSON. If a provider call fails, that
-variant gets an error manifest and no paper comparison is generated; fix the
-provider/config issue and rerun into a new output directory.
+`runs/paper-v1/report/` as overall and answer-type-stratified CSV, LaTeX, and
+JSON. Paper-mode per-question artifacts retain retrieved passage text, evidence
+IDs, citations, structured stage decisions, raw outputs returned by model
+stages, latency, and observed provider/model attempts. Smoke runs omit passage
+text and raw stage outputs. If a provider call fails, that
+variant gets an error manifest with the failed record and observed attempts;
+completed predictions are preserved as `predictions-input.partial.jsonl`.
+Partial/error runs cannot produce a paper comparison. Fix the provider/config
+issue and rerun into a new output directory.
 
 ## Run an experiment
 
@@ -141,7 +147,9 @@ prediction JSONL record per dataset ID. A prediction must contain:
   "id": "q-0001",
   "predicted_answer": "...",
   "retrieved_evidence_ids": ["doc-1:chunk-3"],
+  "retrieved_evidence": [{"chunk_id": "doc-1:chunk-3", "text": "...", "similarity_score": 0.84}],
   "predicted_evidence_ids": ["doc-1:chunk-3"],
+  "agent_outputs": [{"stage": "researcher", "output": {"raw_output": "..."}}],
   "status": "answer",
   "decision_score": 0.84,
   "claims": [{"supported": true}],
@@ -210,10 +218,11 @@ TrustRAG variants use consensus gating. FixedMulti-Agent records critic
 diagnostics but does not use them to gate that baseline. A configuration
 passing validation is not evidence that a system has been run.
 
-The repository currently contains the scoring harness and these contracts, but
-the reviewed benchmark dataset and prediction runs still need to be created.
-Never fill the paper table from a dashboard screenshot or from these config
-files.
+The repository contains a 200-record v4 review candidate, but all candidate
+rows remain pending in the checked-in JSONL and no eligible prediction runs
+are present. A completed human-reviewed export and paper runs still need to be
+created. Never fill the paper table from a dashboard screenshot or from these
+config files.
 
 The full research matrix is:
 

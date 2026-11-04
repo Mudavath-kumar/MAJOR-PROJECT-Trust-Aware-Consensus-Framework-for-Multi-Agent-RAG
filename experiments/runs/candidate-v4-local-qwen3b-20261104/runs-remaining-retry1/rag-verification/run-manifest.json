@@ -1,0 +1,51 @@
+{
+  "config_sha256": "34a9acb065e30bbd82e23a224aaec11b962cde4b3ae3eecc78116368bb268315",
+  "corpus_manifest_sha256": "d1a973ddd6f3e7d715b20c796e4841fd6d350bf964ea5bbdcd569fa8f8dce71c",
+  "dataset_sha256": "57b199fe7c16409408e5c11bbc1bcf853b26be60ca95859f0bd71d6809f2ae82",
+  "dataset_version": "trustrag-v1",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "generated_at": "2026-11-04T03:44:42.011893+00:00",
+  "git_revision": "02503fb4e881974193dd20b43fd08a354a178aa5",
+  "human_reviewer_count": 0,
+  "llm_failed_attempts": 0,
+  "llm_model_attempts": {
+    "qwen2.5-coder:3b": 8
+  },
+  "llm_provider_attempts": {
+    "ollama": 8
+  },
+  "llm_successful_provider_models": {
+    "ollama/qwen2.5-coder:3b": 8
+  },
+  "model": "qwen2.5-coder:3b",
+  "orchestration": {
+    "mode": "single-pass"
+  },
+  "paper_eligible": false,
+  "predictions_sha256": "93cce9348cfe2ccbaf9e808b0b2839a9b9ef0820dca0198ed049c6ac5df0ad20",
+  "prompt_version": "rag-verification-v1",
+  "python_version": "3.12.14",
+  "raw_outputs_retained": true,
+  "retrieval": {
+    "chunk_overlap": 80,
+    "chunk_size": 400,
+    "external_verification": false,
+    "reranking": {
+      "enabled": false
+    },
+    "top_k": 5
+  },
+  "review_protocol": "unreviewed",
+  "run_mode": "exploratory",
+  "runner_version": "trustrag-eval-1",
+  "sample_count": 4,
+  "seed": 42,
+  "status_counts": {
+    "answer": 4
+  },
+  "system": "single-pass-rag-with-typed-verification",
+  "temperature": 0.1,
+  "verification": {
+    "mode": "typed-claims"
+  }
+}

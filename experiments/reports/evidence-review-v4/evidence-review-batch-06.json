@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "q-0126",
+    "question": "Edward C. Hugger and Alexander Acosta served at appointees for what job?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Edward C. Hugler",
+        "sentence_index": 2,
+        "text": " However, he served as Acting Secretary of Labor from February 2–24, 2009, when Hilda Solis's nomination by President Barack Obama became bogged down during Senate confirmation hearings."
+      },
+      {
+        "source_title": "Alexander Acosta",
+        "sentence_index": 0,
+        "text": "Rene Alexander Acosta (born January 16, 1969) is an American attorney, academic, and politician who is the 27th and current United States Secretary of Labor."
+      },
+      {
+        "source_title": "Alexander Acosta",
+        "sentence_index": 1,
+        "text": " A Republican, he was appointed by President George W. Bush to the National Labor Relations Board and later served as Assistant Attorney General for Civil Rights and federal prosecutor for the Southern District of Florida."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0126-5a7b3ec95542995eb53be8d3-ad0c5f9d5368",
+        "source_document_name": "q-0126-5a7b3ec95542995eb53be8d3.md",
+        "source_title": "Edward C. Hugler",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0126-5a7b3ec95542995eb53be8d3.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0127",
+    "question": "Who was this American Founding Father, a proponent of democracy, republicanism, and individual rights, examined Ice Age fossils of Kentucky's Big Bone Lick?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "History of paleontology in the United States",
+        "sentence_index": 5,
+        "text": " These fossils were studied by eminent intellectuals like France's George Cuvier and local statesmen and frontiersman like Daniel Boone, Benjamin Franklin, William Henry Harrison, Thomas Jefferson, and George Washington."
+      },
+      {
+        "source_title": "Thomas Jefferson",
+        "sentence_index": 0,
+        "text": "Thomas Jefferson (April 13 [O.S. April 2] 1743 – July 4, 1826) was an American Founding Father who was the principal author of the Declaration of Independence and later served as the third President of the United States from 1801 to 1809."
+      },
+      {
+        "source_title": "Thomas Jefferson",
+        "sentence_index": 2,
+        "text": " A proponent of democracy, republicanism, and individual rights motivating American colonists to break from Great Britain and form a new nation, he produced formative documents and decisions at both the state and national level."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0127-5ab4b7d15542996a3a969fbc-3629a878208d",
+        "source_document_name": "q-0127-5ab4b7d15542996a3a969fbc.md",
+        "source_title": "Jane's Saddlebag",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0127-5ab4b7d15542996a3a969fbc.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0128",
+    "question": "What season did a Spanish rally driver won the 2000 World Rally Championship?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "2000 World Rally Championship",
+        "sentence_index": 0,
+        "text": "The 2000 World Rally Championship was the 28th season of the FIA World Rally Championship."
+      },
+      {
+        "source_title": "Carlos Sainz",
+        "sentence_index": 0,
+        "text": "Carlos Sainz Cenamor (born 12 April 1962 in Madrid, Spain) is a Spanish rally driver."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0128-5ab94acd554299743d22eac6-82329f3d40de",
+        "source_document_name": "q-0128-5ab94acd554299743d22eac6.md",
+        "source_title": "2010 Rallye de France",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0128-5ab94acd554299743d22eac6.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0129",
+    "question": "Which genus has more species, Bactris and Epigaea?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Bactris",
+        "sentence_index": 0,
+        "text": "Bactris is a genus of spiny palms which is native to the Mexico, South and Central America and the Caribbean."
+      },
+      {
+        "source_title": "Bactris",
+        "sentence_index": 1,
+        "text": " Most species are small trees about 2 m tall, but some are large trees while others are shrubs with subterranean stems."
+      },
+      {
+        "source_title": "Epigaea",
+        "sentence_index": 0,
+        "text": "Epigaea is a genus comprising three species of flowering plants in the Ericaceae."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0129-5a87954f5542996e4f308856-1d70f2659ddc",
+        "source_document_name": "q-0129-5a87954f5542996e4f308856.md",
+        "source_title": "Epigaea",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0129-5a87954f5542996e4f308856.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0130",
+    "question": "Who was the director of the 2007 American fantasy comedy film in which the actor best known for playing Michael Scott on the the American version of \"The Office\" starred?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Evan Almighty",
+        "sentence_index": 0,
+        "text": "Evan Almighty is a 2007 American fantasy comedy film and the stand-alone sequel/spin-off to \"Bruce Almighty\" (2003)."
+      },
+      {
+        "source_title": "Evan Almighty",
+        "sentence_index": 1,
+        "text": " The film was directed by Tom Shadyac, written by Steve Oedekerk, based on the characters created by Steve Koren and Mark O'Keefe from the original film, and starring Steve Carell, Morgan Freeman, Lauren Graham and John Goodman."
+      },
+      {
+        "source_title": "Steve Carell",
+        "sentence_index": 1,
+        "text": " Carell is best known for playing Michael Scott on the American version of \"The Office\" (2005–2011), on which he also worked as an occasional writer, producer, and director."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0130-5add1aa65542990d50227de1-dc880929215b",
+        "source_document_name": "q-0130-5add1aa65542990d50227de1.md",
+        "source_title": "Fred Claus",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0130-5add1aa65542990d50227de1.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0131",
+    "question": "How many employees does the company that unveiled a deal to acquire IGATE have?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "IGATE",
+        "sentence_index": 4,
+        "text": " On April 27, 2015 French IT services group Capgemini unveiled a deal to acquire IGATE in a $4bn deal."
+      },
+      {
+        "source_title": "Capgemini",
+        "sentence_index": 1,
+        "text": " It provides IT services and is one of the world's largest IT consulting, outsourcing and professional services companies with almost 190,000 employees in over 40 countries."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0131-5ac313a0554299741d48a1b0-7d6765593271",
+        "source_document_name": "q-0131-5ac313a0554299741d48a1b0.md",
+        "source_title": "Al Khor (city)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0131-5ac313a0554299741d48a1b0.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0132",
+    "question": "Brian Olsen was the lst WEC heavyweight champion before the promotion company founded in what month purchased the organization?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Brian Olsen",
+        "sentence_index": 1,
+        "text": " He was the last WEC Heavyweight Champion before it was abolished when Zuffa purchased the organization."
+      },
+      {
+        "source_title": "Zuffa",
+        "sentence_index": 1,
+        "text": " It was founded in January 2001 in Las Vegas, Nevada, by Station Casinos executives Frank Fertitta III and Lorenzo Fertitta to be the parent entity of the Ultimate Fighting Championship (UFC) after they purchased it from the Semaphore Entertainment Group."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0132-5ae6914755429908198fa627-eae912697b31",
+        "source_document_name": "q-0132-5ae6914755429908198fa627.md",
+        "source_title": "Iron Mike Productions",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0132-5ae6914755429908198fa627.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0133",
+    "question": "What profession is shared by both Monty Banks and George Seaton?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Monty Banks",
+        "sentence_index": 0,
+        "text": "Montague (Monty) Banks (15 July 1897 [registered on 18 July 1897] – 7 January 1950 born Mario Bianchi) was an Italian comedian and film director who achieved success in the United States and in England."
+      },
+      {
+        "source_title": "George Seaton",
+        "sentence_index": 0,
+        "text": "George Seaton (April 17, 1911 – July 28, 1979) was an American screenwriter, playwright, film director and producer, and theatre director."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0133-5adce3b95542990d50227d56-9c3283b2866a",
+        "source_document_name": "q-0133-5adce3b95542990d50227d56.md",
+        "source_title": "The Black Hand Gang",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0133-5adce3b95542990d50227d56.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0134",
+    "question": "Suzanne Simone Baptiste Louverture is the wife of the leader of which revolution?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Suzanne Simone Baptiste Louverture",
+        "sentence_index": 0,
+        "text": "Suzanne Simone Baptiste Louverture (around 1742 – May 19, 1816 in Agen, France) was the wife of Toussaint Louverture and the \"Dame-Consort\" of the French colony of Saint-Domingue."
+      },
+      {
+        "source_title": "Toussaint Louverture",
+        "sentence_index": 0,
+        "text": "François-Dominique Toussaint Louverture (] 20 May 1743 – 7 April 1803), also known as Toussaint L'Ouverture or Toussaint Bréda, was the best-known leader of the Haitian Revolution."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0134-5ab7f3285542992aa3b8c88f-56f6af0cb529",
+        "source_document_name": "q-0134-5ab7f3285542992aa3b8c88f.md",
+        "source_title": "War of Knives",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0134-5ab7f3285542992aa3b8c88f.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0135",
+    "question": "\"This Ole House\" topped the UK chart in 1981 in a recording by a platinum-selling British rock and roll singer whose recording and performing career began when?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "This Ole House",
+        "sentence_index": 0,
+        "text": "\"This Ole House\" (sometimes written \"This Old House\") is a popular song written by Stuart Hamblen, and published in 1954."
+      },
+      {
+        "source_title": "This Ole House",
+        "sentence_index": 2,
+        "text": " The song again topped the UK chart in 1981 in a recording by Shakin' Stevens."
+      },
+      {
+        "source_title": "Shakin' Stevens",
+        "sentence_index": 0,
+        "text": "Michael Barratt (born 4 March 1948), known as Shakin' Stevens, is a platinum-selling British rock and roll singer and songwriter who was the UK's biggest-selling singles artist of the 1980s."
+      },
+      {
+        "source_title": "Shakin' Stevens",
+        "sentence_index": 1,
+        "text": " His recording and performing career began in the late 1960s, although it was not until 1980 that his commercial success began."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0135-5abc817c5542993a06baf8fd-28279e63c1f0",
+        "source_document_name": "q-0135-5abc817c5542993a06baf8fd.md",
+        "source_title": "This Ole House",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0135-5abc817c5542993a06baf8fd.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0136",
+    "question": "Harrison Newey made his ADAC Formula 4 debut with a partner who is the son of who?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Harrison Newey",
+        "sentence_index": 1,
+        "text": " He made his ADAC Formula 4 debut in 2015, partnering Mick Schumacher, son of world champion driver Michael Schumacher, at Van Amersfoort Racing."
+      },
+      {
+        "source_title": "Mick Schumacher",
+        "sentence_index": 2,
+        "text": " He is the son of Corinna and seven-time Formula One World Champion Michael Schumacher, nephew of former Formula One driver Ralf Schumacher, and stepnephew of Sebastian Stahl."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0136-5ab8627f5542990e739ec8da-f67b83aefc2f",
+        "source_document_name": "q-0136-5ab8627f5542990e739ec8da.md",
+        "source_title": "Sophia Flörsch",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0136-5ab8627f5542990e739ec8da.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0137",
+    "question": "What song written by Jimmy Webb inspired the name of a supergroup including Johnny Cash?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "The Highwaymen (country supergroup)",
+        "sentence_index": 0,
+        "text": "The Highwaymen was a country music supergroup composed of four of the genre's biggest artists well known for their pioneering influence on the outlaw country subgenre: Johnny Cash, Waylon Jennings, Willie Nelson, and Kris Kristofferson."
+      },
+      {
+        "source_title": "Highwayman (song)",
+        "sentence_index": 0,
+        "text": "\"Highwayman\" is a song written by American singer-songwriter Jimmy Webb, about a soul with incarnations in four different places in time and history: as a highwayman, a sailor, a construction worker on the Hoover Dam, and finally as a captain of a starship."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0137-5ae834e95542997ec272776a-3e6e534120f2",
+        "source_document_name": "q-0137-5ae834e95542997ec272776a.md",
+        "source_title": "The Highwaymen (country supergroup)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0137-5ae834e95542997ec272776a.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0138",
+    "question": "Ken Pruitt  was a Republican member of an upper house of the legislature with how many members ?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Ken Pruitt",
+        "sentence_index": 0,
+        "text": "Ken Pruitt (born January 24, 1957) was a Republican member of the Florida Senate, representing the 28th District from 2000 to 2009."
+      },
+      {
+        "source_title": "Florida Senate",
+        "sentence_index": 0,
+        "text": "The Florida Senate is the upper house of the legislature of the U.S. state of Florida."
+      },
+      {
+        "source_title": "Florida Senate",
+        "sentence_index": 2,
+        "text": " The Senate has 40 members, each elected from a single-member district with a population of about 470,000."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0138-5ae518655542993aec5ec139-58bf96d0dd28",
+        "source_document_name": "q-0138-5ae518655542993aec5ec139.md",
+        "source_title": "Florida Senate",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0138-5ae518655542993aec5ec139.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0139",
+    "question": "What is the name the French give to the war during which the Prussians occupied the Pavillon du Butard?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Pavillon du Butard",
+        "sentence_index": 5,
+        "text": " It was occupied by the Prussians during the Franco-Prussian War."
+      },
+      {
+        "source_title": "Franco-Prussian War",
+        "sentence_index": 0,
+        "text": "The Franco-Prussian War or Franco-German War (German: \"Deutsch-Französischer Krieg\" , French: \"Guerre franco-allemande\" ), often referred to in France as the War of 1870 (19 July 1870 – 10 May 1871), was a conflict between the Second French Empire of Napoleon III and the German states of the North German Confederation led by the Kingdom of Prussia."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0139-5ab327bc554299233954ff33-1d58ba582285",
+        "source_document_name": "q-0139-5ab327bc554299233954ff33.md",
+        "source_title": "Jean-François Du Cheyron",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0139-5ab327bc554299233954ff33.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0140",
+    "question": "Before going to the London School of Theology, John Burges spent six years working for a company headquartered in what country?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "John Burgess (priest)",
+        "sentence_index": 1,
+        "text": " After six years working for Shell he went to the London School of Theology."
+      },
+      {
+        "source_title": "Royal Dutch Shell",
+        "sentence_index": 0,
+        "text": "Royal Dutch Shell plc (, ), commonly known as Shell, is a British–Dutch multinational oil and gas company headquartered in the Netherlands and incorporated in the United Kingdom."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0140-5a90b1a15542990a984936ab-5efe49412b6f",
+        "source_document_name": "q-0140-5a90b1a15542990a984936ab.md",
+        "source_title": "Everything I Never Told You",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0140-5a90b1a15542990a984936ab.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0141",
+    "question": "Victor Varnada directed Twisted Fortune, which starred which brother of Eddie Murphy?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Twisted Fortune",
+        "sentence_index": 0,
+        "text": "Twisted Fortune is a black comedy about a bumbling small-time crook (played by Charlie Murphy) who finds a bottle cap worth $1,000,000 while robbing a convenience store."
+      },
+      {
+        "source_title": "Twisted Fortune",
+        "sentence_index": 2,
+        "text": " It was directed by comedian Victor Varnado (\"End of Days\"), who also acted in the movie."
+      },
+      {
+        "source_title": "Charlie Murphy",
+        "sentence_index": 2,
+        "text": " He was the older brother of comedian Eddie Murphy."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0141-5ae70ed7554299572ea546a1-e57c7e30d811",
+        "source_document_name": "q-0141-5ae70ed7554299572ea546a1.md",
+        "source_title": "Twisted Fortune",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0141-5ae70ed7554299572ea546a1.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0142",
+    "question": "Mariana Kovacevic used horse placenta treatment to heal the captian of what team?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Mariana Kovacevic",
+        "sentence_index": 0,
+        "text": "Mariana Kovacevic is a Serbian traditional healer who has specialized in the use of horse placenta treatment to heal athletes."
+      },
+      {
+        "source_title": "Mariana Kovacevic",
+        "sentence_index": 1,
+        "text": " During the duration of the 2012 African Cup of Nations in Gabon and Equatorial Guinea she used the horse placenta treatment to heal Ghana's Asamoah Gyan, who had been injured and was supposed to be off football for four weeks."
+      },
+      {
+        "source_title": "Asamoah Gyan",
+        "sentence_index": 0,
+        "text": "Asamoah Gyan ( , , born 22 November 1985 in Accra) is a Ghanaian professional footballer who plays as a striker for Kayserispor and captains the Ghanaian national team."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0142-5a7e42df5542994959419954-b6d89b30f229",
+        "source_document_name": "q-0142-5a7e42df5542994959419954.md",
+        "source_title": "Pin firing",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0142-5a7e42df5542994959419954.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0143",
+    "question": "Which television series featured an actor who also performed in \"The Young Ones\"?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Bad News (band)",
+        "sentence_index": 0,
+        "text": "Bad News were an English spoof heavy metal band, created for the Channel 4 television series \"The Comic Strip Presents...\"."
+      },
+      {
+        "source_title": "Bad News (band)",
+        "sentence_index": 1,
+        "text": " Its members were Vim Fuego (aka Alan Metcalfe), vocals and lead guitar (played by Ade Edmondson); Den Dennis, rhythm guitar (Nigel Planer); Colin Grigson, bass (Rik Mayall); and Spider \"Eight-Legs\" Webb, drums (Peter Richardson)."
+      },
+      {
+        "source_title": "Ade Edmondson",
+        "sentence_index": 0,
+        "text": "Adrian Charles \"Ade\" Edmondson (born 24 January 1957) is an English comedian, actor, writer, musician, television presenter and director."
+      },
+      {
+        "source_title": "Ade Edmondson",
+        "sentence_index": 2,
+        "text": " He is probably best known for his comedic roles in the television series \"The Young Ones\" (1982–84) and \"Bottom\" (1991–95), which he wrote together with his long-time collaborative partner Rik Mayall."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0143-5adf58f15542993a75d264d2-aaaf58e1f325",
+        "source_document_name": "q-0143-5adf58f15542993a75d264d2.md",
+        "source_title": "Ade Edmondson",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0143-5adf58f15542993a75d264d2.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0144",
+    "question": "Who is older between the brothers that J. Todd Anderson has primarily worked with?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "J. Todd Anderson",
+        "sentence_index": 0,
+        "text": "J. Todd Anderson is a storyboard artist who has worked primarily with the Coen brothers, but also with an array of other filmmakers."
+      },
+      {
+        "source_title": "Coen brothers",
+        "sentence_index": 0,
+        "text": "Joel David Coen (born November 29, 1954) and Ethan Jesse Coen (born September 21, 1957), collectively referred to as the Coen brothers, are American filmmakers."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0144-5a8759395542994775f607e0-d97720726d30",
+        "source_document_name": "q-0144-5a8759395542994775f607e0.md",
+        "source_title": "John Anderson (footballer, born 1937)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0144-5a8759395542994775f607e0.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0145",
+    "question": "Where did Henri Christophe and other slaves hold an uprising from 1791 to 1804 that led to the founding of a state which was both free from slavery and ruled by non-whites and former captives?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Henri Christophe",
+        "sentence_index": 0,
+        "text": "Henri Christophe (] ; 6 October 1767 – 8 October 1820; used the anglicized version of Henry Christopher) was a former slave of Bambara ethnicity, and perhaps of Ibo descent, and key leader in the Haitian Revolution, which succeeded in gaining independence from France in 1804."
+      },
+      {
+        "source_title": "Haitian Revolution",
+        "sentence_index": 0,
+        "text": "The Haitian Revolution (French: \"Révolution haïtienne\" ] ) was a successful anti-slavery and anti-colonial insurrection by self-liberated slaves against French colonial rule in Saint-Domingue, now the sovereign nation of Haiti."
+      },
+      {
+        "source_title": "Haitian Revolution",
+        "sentence_index": 1,
+        "text": " It began in 1791 and ended in 1804 with the former colony's independence."
+      },
+      {
+        "source_title": "Haitian Revolution",
+        "sentence_index": 2,
+        "text": " It was the only slave uprising that led to the founding of a state, which was both free from slavery, and ruled by non-whites and former captives."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0145-5ade1c9e55429939a52fe822-86d50f21776b",
+        "source_document_name": "q-0145-5ade1c9e55429939a52fe822.md",
+        "source_title": "Jean-Baptiste Sans Souci",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0145-5ade1c9e55429939a52fe822.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0146",
+    "question": "Getting Married in Buffalo Jump stars an actor who was born in what city?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Getting Married in Buffalo Jump",
+        "sentence_index": 2,
+        "text": " It was directed by Eric Till and stars Wendy Crewson and Paul Gross."
+      },
+      {
+        "source_title": "Paul Gross",
+        "sentence_index": 0,
+        "text": "Paul Michael Gross, OC (born April 30, 1959) is a Canadian actor, producer, director, singer, and writer born in Calgary, Alberta."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0146-5a7cdc1b55429907fabef04d-05ccce693ad4",
+        "source_document_name": "q-0146-5a7cdc1b55429907fabef04d.md",
+        "source_title": "Getting Married Today (song)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0146-5a7cdc1b55429907fabef04d.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0147",
+    "question": "What country are both Dafeng District and Jixi in?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Dafeng District",
+        "sentence_index": 0,
+        "text": "Dafeng () is a coastal district under the administration of Yancheng, Jiangsu province, China."
+      },
+      {
+        "source_title": "Jixi",
+        "sentence_index": 0,
+        "text": "Jixi () is a city in southeastern Heilongjiang Province, People's Republic of China."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0147-5ac43e0f554299076e296d8e-21f6307a0e65",
+        "source_document_name": "q-0147-5ac43e0f554299076e296d8e.md",
+        "source_title": "Lishu District",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0147-5ac43e0f554299076e296d8e.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0148",
+    "question": "Isabella Kelly was born at a ruined castle characterized as one of the most isolated fortifications in Britain by who?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Isabella Kelly",
+        "sentence_index": 0,
+        "text": "Isabella Kelly, née Fordyce, also Isabella Hedgeland (born at Cairnburgh Castle in the Scottish Highlands and baptised on 4 May 1759 – died on 25 June 1857 in London) was a Scottish novelist and poet."
+      },
+      {
+        "source_title": "Cairnburgh Castle",
+        "sentence_index": 0,
+        "text": "Cairnburgh Castle is a ruined castle that is located on the islands of Cairn na Burgh Mòr and Cairn na Burgh Beag, Argyll and Bute, Scotland."
+      },
+      {
+        "source_title": "Cairnburgh Castle",
+        "sentence_index": 2,
+        "text": " 1991's \"The Changing Scottish Landscape\" characterizes it as \"one of the most isolated fortifications in Britain...[and] also one of the strangest.\""
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0148-5ae80919554299540e5a56f6-0559c41469c2",
+        "source_document_name": "q-0148-5ae80919554299540e5a56f6.md",
+        "source_title": "Scharfenstein Castle (Kiedrich)",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0148-5ae80919554299540e5a56f6.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0149",
+    "question": "Korea University College of Education is based in the city that ranks what in the world by terms of size?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "Korea University College of Education",
+        "sentence_index": 0,
+        "text": "The College of Education is one of the undergraduate colleges at Korea University in Seoul, South Korea."
+      },
+      {
+        "source_title": "Seoul",
+        "sentence_index": 1,
+        "text": " Seoul is the world's 16th largest city, and forms the heart of the Seoul Capital Area, which includes the surrounding Incheon metropolis and Gyeonggi province."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0149-5ae324775542994393b9e62f-0ff21b420c29",
+        "source_document_name": "q-0149-5ae324775542994393b9e62f.md",
+        "source_title": "Korea University College of Medicine",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0149-5ae324775542994393b9e62f.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  },
+  {
+    "id": "q-0150",
+    "question": "Which team does the player named 2015 Diamond Head Classic's MVP play for?",
+    "answer_type": "unanswerable",
+    "gold_answer": "",
+    "gold_evidence_ids": [],
+    "gold_evidence_passages": [],
+    "challenge_passages": [],
+    "unanswerable_explanation": "The candidate intervention removes the annotated supporting facts from the query-scoped corpus. The passages below are from the source HotpotQA row and are shown as excluded reference material; they are not available to the benchmark query. Human review must confirm the removal and that no remaining scoped passage independently answers the question.",
+    "excluded_original_supporting_passages": [
+      {
+        "source_title": "2015 Diamond Head Classic",
+        "sentence_index": 3,
+        "text": " Buddy Hield was named the tournament's MVP."
+      },
+      {
+        "source_title": "Buddy Hield",
+        "sentence_index": 0,
+        "text": "Chavano Rainier \"Buddy\" Hield (born December 17, 1993) is a Bahamian professional basketball player for the Sacramento Kings of the National Basketball Association (NBA)."
+      }
+    ],
+    "source_documents": [
+      {
+        "document_id": "doc-q-0150-5a845e9055429933447460ec-b2051cfecef4",
+        "source_document_name": "q-0150-5a845e9055429933447460ec.md",
+        "source_title": "2010 Diamond Head Classic",
+        "source_path": "experiments/datasets/trustrag-public-candidate-v4/corpus/q-0150-5a845e9055429933447460ec.md",
+        "page_or_section": null,
+        "is_synthetic": false
+      }
+    ],
+    "review": {
+      "resolution": "pending",
+      "reviewer_a": "pending",
+      "reviewer_b": "pending"
+    },
+    "automated_support_status": "needs-human-semantic-review"
+  }
+]
