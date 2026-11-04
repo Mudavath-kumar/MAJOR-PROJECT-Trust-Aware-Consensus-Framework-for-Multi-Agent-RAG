@@ -376,13 +376,10 @@ async def call_llm(
         result = await _try_openrouter_model(settings.OPENROUTER_MODEL)
         if result:
             return result
-        # 2. If the configured model already ends with :free, do not loop again
-        if settings.OPENROUTER_MODEL.endswith(":free"):
-            return None
-        # 3. Paid model returned 402 (or failed) → automatically fall through to
-        #    free alternatives.  This keeps Render and any cloud deployment alive
-        #    even when OpenRouter credits are exhausted — free models never charge.
+        # 2. Fall through to verified free models (always try active alternatives)
         for free_model in _OPENROUTER_FREE_FALLBACK_MODELS:
+            if free_model == settings.OPENROUTER_MODEL:
+                continue
             logger.info("Trying OpenRouter free-fallback model: %s", free_model)
             result = await _try_openrouter_model(free_model)
             if result:
@@ -409,45 +406,75 @@ async def call_llm(
 
         Sign up at https://console.groq.com/keys and set GROQ_API_KEY in env.
         Uses hardcoded Groq-native model IDs (not OpenRouter format) to avoid HTTP 404.
-        Tries multiple models so a single model outage does not block all Groq calls.
+        Handles transient 429 token rate limits with a brief backoff (1.5-3s).
+        Extracts both content and reasoning fields to support all model types.
         """
         if not settings.GROQ_API_KEY:
             return None
         for groq_model in _GROQ_FALLBACK_MODELS:
             attempt = record_llm_attempt("groq", groq_model)
             try:
-                async with httpx.AsyncClient(timeout=12.0) as client:
-                    resp = await client.post(
-                        "https://api.groq.com/openai/v1/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                            "Content-Type": "application/json",
-                        },
-                        json={
-                            "model": groq_model,
-                            "messages": [
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": prompt},
-                            ],
-                            "temperature": temperature,
-                            "max_tokens": max_output_tokens,
-                        },
-                    )
-                    if resp.status_code in (404, 400):
-                        complete_llm_attempt(attempt, succeeded=False)
-                        provider_failures.append(
-                            f"Groq HTTP {resp.status_code}: model {groq_model!r} not available"
+                async with httpx.AsyncClient(timeout=14.0) as client:
+                    for retry_idx in range(2):
+                        resp = await client.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                                "Content-Type": "application/json",
+                            },
+                            json={
+                                "model": groq_model,
+                                "messages": [
+                                    {"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": prompt},
+                                ],
+                                "temperature": temperature,
+                                "max_tokens": max_output_tokens,
+                            },
                         )
-                        logger.warning("Groq model %r not available (%d); trying next.", groq_model, resp.status_code)
-                        continue
-                    resp.raise_for_status()
-                    body = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-                    if body:
-                        complete_llm_attempt(attempt, succeeded=True)
-                        logger.info("Groq free-tier fallback succeeded (model=%s).", groq_model)
-                        return body
-                complete_llm_attempt(attempt, succeeded=False)
-                provider_failures.append(f"Groq returned an empty response (model={groq_model}).")
+                        # Groq rate limit (429) reset is typically 1-3 seconds.
+                        if resp.status_code == 429:
+                            if retry_idx == 0:
+                                sleep_secs = 2.0
+                                try:
+                                    hdr = resp.headers.get("retry-after")
+                                    if hdr and float(hdr) > 0:
+                                        sleep_secs = min(float(hdr), 3.0)
+                                except (ValueError, TypeError):
+                                    pass
+                                logger.warning(
+                                    "Groq 429 on model %s; backing off %.1fs before retry...",
+                                    groq_model,
+                                    sleep_secs,
+                                )
+                                await asyncio.sleep(sleep_secs)
+                                continue
+                            else:
+                                complete_llm_attempt(attempt, succeeded=False)
+                                provider_failures.append(f"Groq HTTP 429: rate limit reached (model={groq_model})")
+                                break
+
+                        if resp.status_code in (404, 400):
+                            complete_llm_attempt(attempt, succeeded=False)
+                            provider_failures.append(
+                                f"Groq HTTP {resp.status_code}: model {groq_model!r} not available"
+                            )
+                            logger.warning("Groq model %r not available (%d); trying next.", groq_model, resp.status_code)
+                            break
+
+                        resp.raise_for_status()
+                        choice = resp.json().get("choices", [{}])[0]
+                        msg = choice.get("message", {})
+                        content = msg.get("content")
+                        reasoning = msg.get("reasoning")
+                        body = (content or "").strip() or (reasoning or "").strip()
+                        if body:
+                            complete_llm_attempt(attempt, succeeded=True)
+                            logger.info("Groq free-tier fallback succeeded (model=%s).", groq_model)
+                            return body
+                        complete_llm_attempt(attempt, succeeded=False)
+                        provider_failures.append(f"Groq returned an empty response (model={groq_model}).")
+                        break
             except Exception as e:
                 complete_llm_attempt(attempt, succeeded=False)
                 err_summary = _provider_error_summary("Groq", e)
