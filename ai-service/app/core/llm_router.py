@@ -379,6 +379,33 @@ async def call_llm(
         if res:
             return res
 
+    # ── Final fallback: local Ollama ──────────────────────────────────────────
+    # Reached when both Gemini (503/504) and OpenRouter (402 or other) have
+    # failed.  Ollama runs entirely on the user's machine so it is immune to
+    # cloud-provider outages and credit exhaustion.  We only skip it when
+    # OLLAMA_BASE_URL is not set (i.e. the operator explicitly has no local
+    # model server).
+    if settings.OLLAMA_BASE_URL:
+        logger.warning(
+            "All cloud providers failed; falling back to local Ollama "
+            "(model=%s). Cloud failures: %s",
+            settings.OLLAMA_MODEL,
+            "; ".join(dict.fromkeys(provider_failures)),
+        )
+        try:
+            return await _call_ollama(
+                prompt,
+                system_prompt,
+                model,
+                temperature,
+                max_output_tokens,
+                timeout_seconds=max(1.0, settings.OLLAMA_TIMEOUT_SECONDS),
+            )
+        except LLMProvidersUnavailable as ollama_err:
+            provider_failures.append(f"Ollama fallback: {ollama_err}")
+            logger.error("Ollama fallback also failed: %s", ollama_err)
+    # ─────────────────────────────────────────────────────────────────────────
+
     failure_details = "; ".join(dict.fromkeys(provider_failures))
     if not failure_details:
         failure_details = "No configured provider was available."
