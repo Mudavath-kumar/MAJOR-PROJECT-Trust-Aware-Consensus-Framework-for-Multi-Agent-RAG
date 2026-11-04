@@ -495,35 +495,24 @@ async def call_llm(
         detail = "; ".join(dict.fromkeys(provider_failures)) or "No free OpenRouter model responded."
         raise LLMProvidersUnavailable(detail)
 
-    # When GROQ_API_KEY is available, prioritize Groq in auto mode because
-    # Groq has verified zero-error rate, 14.4k requests/day free tier, and sub-second
-    # latency. This prevents 10-30s timeouts when Gemini or OpenRouter free tiers are degraded.
-    if settings.GROQ_API_KEY and settings.LLM_PROVIDER in ("auto", "groq", "groq_free"):
-        groq_result = await _try_groq_free()
-        if groq_result:
-            return groq_result
-
-    # Try preferred provider first
-    if prefer_gemini and settings.LLM_PROVIDER != "openrouter":
-        res = await _try_gemini()
-        if res:
-            return res
-        res = await _try_openrouter()
-        if res:
-            return res
-    else:
-        res = await _try_openrouter()
-        if res:
-            return res
-        res = await _try_gemini()
-        if res:
-            return res
-
-    # If Groq was not tried yet (e.g. LLM_PROVIDER wasn't auto), try Groq now
+    # ── Fallback Chain: Groq → OpenRouter → Gemini → Ollama ──────────────────
+    # 1. Groq: Fastest (<1.5s), 14.4k free requests/day, auto 429 backoff retry
     if settings.GROQ_API_KEY:
         groq_result = await _try_groq_free()
         if groq_result:
             return groq_result
+
+    # 2. OpenRouter: Verified free tier models (liquid/lfm, nvidia/nemotron, recursive/flint)
+    if settings.OPENROUTER_API_KEY:
+        or_result = await _try_openrouter()
+        if or_result:
+            return or_result
+
+    # 3. Google Gemini
+    if settings.GEMINI_API_KEY and _gemini_available:
+        gemini_result = await _try_gemini()
+        if gemini_result:
+            return gemini_result
 
     # ── Final fallback: local Ollama ──────────────────────────────────────────
     # Reached when both Gemini (503/504) and OpenRouter (402 or other) have
