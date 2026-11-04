@@ -232,7 +232,7 @@ async def call_llm(
     key = api_key_override or settings.GEMINI_API_KEY
     chosen_model = model or settings.GEMINI_MODEL
     # Normalize legacy, deprecated (e.g. gemini-2.0, gemini-2.5) or invalid model names
-    VALID_GEMINI_PREFIXES = ("gemini-3.5", "gemini-3.7", "gemini-3.8", "gemini-3.1")
+    VALID_GEMINI_PREFIXES = ("gemini-2.0", "gemini-1.5", "gemini-2.5", "gemini-3.5", "gemini-3.1")
     if not chosen_model or not any(chosen_model.startswith(p) for p in VALID_GEMINI_PREFIXES):
         logger.info("Non-standard model '%s' requested, normalizing to '%s'", chosen_model, settings.GEMINI_MODEL)
         chosen_model = settings.GEMINI_MODEL
@@ -390,50 +390,75 @@ async def call_llm(
                 logger.info("OpenRouter free-fallback succeeded (model=%s).", free_model)
                 return result
             # Circuit breaker: if connection or DNS failed, do not test remaining remote models
-            if provider_failures and any('Connect' in f or '11001' in f or 'timed out' in f for f in provider_failures[-1:]):
+            if provider_failures and any('Connect' in f or '11001' in f or 'timed out' in f or 'HTTP 404' in f or 'Name or service' in f for f in provider_failures[-1:]):
                 logger.warning("Network unreachable for OpenRouter; breaking free-model retry loop.")
                 break
         return None
+
+    # Valid Groq API model IDs (Groq-native format, NOT OpenRouter format).
+    # settings.GROQ_MODEL uses OpenRouter-style IDs (e.g. "qwen/qwen3.8-27b")
+    # which cause HTTP 404 on the Groq API endpoint.  Always use these
+    # hardcoded Groq-native IDs in the auto-fallback chain.
+    _GROQ_FALLBACK_MODELS = [
+        "llama-3.1-8b-instant",   # fastest, most available
+        "gemma2-9b-it",           # Google Gemma 2
+        "llama3-8b-8192",         # llama3 8B
+        "mixtral-8x7b-32768",     # Mixtral
+    ]
 
     async def _try_groq_free() -> Optional[str]:
         """Groq free tier — generous daily quota, works on Render with no credits.
 
         Sign up at https://console.groq.com/keys and set GROQ_API_KEY in env.
+        Uses hardcoded Groq-native model IDs (not OpenRouter format) to avoid HTTP 404.
+        Tries multiple models so a single model outage does not block all Groq calls.
         """
         if not settings.GROQ_API_KEY:
             return None
-        groq_model = getattr(settings, "GROQ_MODEL", None) or "llama-3.1-8b-instant"
-        attempt = record_llm_attempt("groq", groq_model)
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": groq_model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": prompt},
-                        ],
-                        "temperature": temperature,
-                        "max_tokens": max_output_tokens,
-                    },
-                )
-                resp.raise_for_status()
-                body = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-                if body:
-                    complete_llm_attempt(attempt, succeeded=True)
-                    logger.info("Groq free-tier fallback succeeded (model=%s).", groq_model)
-                    return body
-            complete_llm_attempt(attempt, succeeded=False)
-            provider_failures.append("Groq returned an empty response.")
-        except Exception as e:
-            complete_llm_attempt(attempt, succeeded=False)
-            provider_failures.append(_provider_error_summary("Groq", e))
-            logger.warning("Groq free-tier fallback failed (model=%s): %s", groq_model, e)
+        for groq_model in _GROQ_FALLBACK_MODELS:
+            attempt = record_llm_attempt("groq", groq_model)
+            try:
+                async with httpx.AsyncClient(timeout=12.0) as client:
+                    resp = await client.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": groq_model,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": prompt},
+                            ],
+                            "temperature": temperature,
+                            "max_tokens": max_output_tokens,
+                        },
+                    )
+                    if resp.status_code in (404, 400):
+                        complete_llm_attempt(attempt, succeeded=False)
+                        provider_failures.append(
+                            f"Groq HTTP {resp.status_code}: model {groq_model!r} not available"
+                        )
+                        logger.warning("Groq model %r not available (%d); trying next.", groq_model, resp.status_code)
+                        continue
+                    resp.raise_for_status()
+                    body = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                    if body:
+                        complete_llm_attempt(attempt, succeeded=True)
+                        logger.info("Groq free-tier fallback succeeded (model=%s).", groq_model)
+                        return body
+                complete_llm_attempt(attempt, succeeded=False)
+                provider_failures.append(f"Groq returned an empty response (model={groq_model}).")
+            except Exception as e:
+                complete_llm_attempt(attempt, succeeded=False)
+                err_summary = _provider_error_summary("Groq", e)
+                provider_failures.append(err_summary)
+                logger.warning("Groq free-tier fallback failed (model=%s): %s", groq_model, e)
+                # Circuit breaker: if DNS/network is down, skip remaining Groq models
+                if any(kw in err_summary for kw in ("Connect", "11001", "timed out", "Name or service")):
+                    logger.warning("Network unreachable for Groq; stopping Groq fallback loop.")
+                    break
         return None
 
     # Explicit free-only mode must never fall through to Gemini or a paid

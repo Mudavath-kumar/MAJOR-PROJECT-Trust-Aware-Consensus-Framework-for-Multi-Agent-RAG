@@ -98,7 +98,7 @@ class Settings:
     OLLAMA_TIMEOUT_SECONDS: float = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "180"))
 
     GEMINI_API_KEY: str = clean_provider_secret(os.getenv("GEMINI_API_KEY", ""))
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite")
 
     OPENROUTER_API_KEY: str = clean_provider_secret(os.getenv("OPENROUTER_API_KEY", ""))
     OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
@@ -106,7 +106,8 @@ class Settings:
     OPENROUTER_APP_NAME: str = os.getenv("OPENROUTER_APP_NAME", "TrustRAG")
 
     GROQ_API_KEY: str = clean_provider_secret(os.getenv("GROQ_API_KEY", ""))
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+    # GROQ_MODEL is kept for backward compat; llm_router uses hardcoded Groq-native IDs for auto-fallback
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     TAVILY_API_KEY: str = clean_provider_secret(os.getenv("TAVILY_API_KEY", ""))
     EXTERNAL_VERIFICATION_ENABLED: bool = os.getenv(
