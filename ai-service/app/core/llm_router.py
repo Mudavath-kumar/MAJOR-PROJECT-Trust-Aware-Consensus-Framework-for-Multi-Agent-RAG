@@ -287,12 +287,16 @@ async def call_llm(
                         )
                         break
                     if attempt_number == 0 and _is_retryable_gemini_error(e):
+                        status = _gemini_status_code(e)
+                        sleep_seconds = 2.5 if status == 429 else 0.5
                         logger.warning(
-                            "Gemini transient failure (model=%s); retrying once: %s",
+                            "Gemini transient failure (model=%s, status=%s); backing off %.1fs before retry: %s",
                             gemini_model,
+                            status,
+                            sleep_seconds,
                             e,
                         )
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(sleep_seconds)
                         continue
                     logger.warning("Gemini failed (model=%s): %s", gemini_model, e)
                 break

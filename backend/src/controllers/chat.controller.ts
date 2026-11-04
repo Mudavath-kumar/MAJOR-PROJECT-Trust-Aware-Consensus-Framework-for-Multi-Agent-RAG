@@ -339,7 +339,16 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       },
     });
   } catch (err: any) {
-    const statusCode = Number.isInteger(err?.statusCode) ? err.statusCode : 500;
-    res.status(statusCode).json({ error: statusCode === 403 ? "Document scope rejected" : "Failed to process message", message: err.message });
+    const statusCode =
+      Number.isInteger(err?.statusCode)
+        ? err.statusCode
+        : Number.isInteger(err?.response?.status)
+          ? err.response.status
+          : 500;
+    const detailMessage = err?.response?.data?.detail || err?.response?.data?.message || err.message;
+    res.status(statusCode).json({
+      error: statusCode === 429 ? "AI rate limit reached" : statusCode === 403 ? "Document scope rejected" : "Failed to process message",
+      message: detailMessage,
+    });
   }
 };

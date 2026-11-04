@@ -7,7 +7,7 @@ import tempfile
 import time
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from ..rag.chunker import (
     chunk_pdf_pages,
@@ -34,6 +34,11 @@ from ..core.llm_router import LLMProvidersUnavailable
 from ..core.verification_policy import should_trigger_external_verification
 
 logger = logging.getLogger("trustrag.api.rag")
+
+# Concurrency limit for multi-agent RAG queries: at most 2 concurrent executions
+# to keep API call rate safely below external provider rate limits (15 RPM)
+_RAG_CONCURRENCY_SEMAPHORE = asyncio.Semaphore(2)
+
 async def require_service_token(x_trustrag_service_token: Optional[str] = Header(default=None)) -> None:
     if not settings.SERVICE_TOKEN or not hmac.compare_digest(
         x_trustrag_service_token or "", settings.SERVICE_TOKEN
@@ -53,6 +58,39 @@ class QueryRequest(BaseModel):
     user_id: str
     document_ids: Optional[List[str]] = None
     settings: Optional[Dict[str, Any]] = None
+
+    @validator('query')
+    def query_must_be_valid(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError('Query must not be empty')
+        if len(v) > 2000:
+            raise ValueError('Query too long (max 2000 characters)')
+        return v
+
+    @validator('user_id')
+    def user_id_must_be_valid(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError('user_id must not be empty')
+        if len(v) > 128:
+            raise ValueError('user_id too long')
+        return v
+
+    @validator('conversation_id')
+    def conversation_id_must_be_valid(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError('conversation_id must not be empty')
+        if len(v) > 128:
+            raise ValueError('conversation_id too long')
+        return v
+
+    @validator('document_ids', each_item=False, always=True)
+    def limit_document_ids(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is not None and len(v) > 50:
+            raise ValueError('Too many document IDs selected (max 50)')
+        return v
 
 class IngestRequest(BaseModel):
     document_id: str
@@ -279,27 +317,28 @@ async def query_pipeline(req: QueryRequest):
             retrieval_quality=retrieval_quality,
         )
 
-        researcher_res = await run_researcher(
-            query=req.query,
-            context_chunks=retrieved_chunks,
-            model=preferred_model,
-            api_key=gemini_key
-        )
-        review_chunks = select_review_context_chunks(
-            researcher_res,
-            retrieved_chunks,
-            max_chunks=3,
-        )
-        # Independent reviewers share cited, top-ranked passages without
-        # repeatedly sending the full retrieval context to the same provider.
-        fact_checker_res, critic_res = await run_review_agents(
-            query=req.query,
-            researcher_output=researcher_res,
-            context_chunks=review_chunks,
-            model=preferred_model,
-            api_key=gemini_key,
-            tavily_key=tavily_key if external_verification_enabled else "",
-        )
+        async with _RAG_CONCURRENCY_SEMAPHORE:
+            researcher_res = await run_researcher(
+                query=req.query,
+                context_chunks=retrieved_chunks,
+                model=preferred_model,
+                api_key=gemini_key
+            )
+            review_chunks = select_review_context_chunks(
+                researcher_res,
+                retrieved_chunks,
+                max_chunks=3,
+            )
+            # Independent reviewers share cited, top-ranked passages without
+            # repeatedly sending the full retrieval context to the same provider.
+            fact_checker_res, critic_res = await run_review_agents(
+                query=req.query,
+                researcher_output=researcher_res,
+                context_chunks=review_chunks,
+                model=preferred_model,
+                api_key=gemini_key,
+                tavily_key=tavily_key if external_verification_enabled else "",
+            )
 
         trust_res = assess_trust(retrieved_chunks)
         # 6. Consensus engine calculation with evaluation matrix

@@ -10,6 +10,7 @@ import {
   deleteDocument,
 } from "../controllers/document.controller.js";
 import { authenticate } from "../middleware/auth.js";
+import { uploadLimiter } from "../middleware/rateLimiter.js";
 import { isSupportedDocumentType } from "../utils/document-types.js";
 
 const upload = multer({
@@ -40,8 +41,8 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", getDocuments);
-router.post("/upload", upload.single("file"), uploadDocument);
-router.post("/upload-batch", upload.array("files", 10), uploadMultipleDocuments);
+router.post("/upload", uploadLimiter, upload.single("file"), uploadDocument);
+router.post("/upload-batch", uploadLimiter, upload.array("files", 10), uploadMultipleDocuments);
 router.get("/:id", getDocumentById);
 router.get("/:id/chunks", getDocumentChunks);
 router.delete("/:id", deleteDocument);

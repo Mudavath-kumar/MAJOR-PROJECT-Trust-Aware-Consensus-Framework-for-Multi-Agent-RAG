@@ -1,3 +1,4 @@
+
 % Evidence-aligned IEEE conference draft for the TrustRAG repository.
 % Exploratory local results are reported separately from paper-eligible reviewed results.
 \documentclass[conference]{IEEEtran}
@@ -99,7 +100,7 @@ The production document path uses 400-word chunks with an 80-word overlap. Query
 
 Chunk boundaries trade off passage completeness against retrieval granularity. With a 400-word window and 80-word overlap, adjacent windows share context so a fact near a boundary is less likely to be separated from its explanation. The benchmark uses the same chunking values across configured variants to avoid attributing a chunking change to the orchestration change. The reranked variant changes candidate ordering as specified by its own configuration; it does not silently change the document corpus or final top-$k$.
 
-The vector path computes a 384-dimensional query embedding with the configured Gemini embedding service and performs vector search over scoped chunks. A fallback score is not guaranteed to share a calibrated or directly comparable scale with an Atlas score; the runtime retrieval-quality component is the arithmetic mean of returned chunks' \texttt{similarity\_score} values. The benchmark runner uses an in-memory retriever against a hashed corpus snapshot; Standard RAG uses cosine ranking, while reranked retrieval uses a candidate pool and a maximum of semantic and lexical scores. These offline retrieval implementations are not identical to production Atlas operations and must be identified in every report.
+The vector path computes a 768-dimensional query embedding with the configured Gemini embedding service (the local pilot used the cached \texttt{all-MiniLM-L6-v2} model, which produces 384-dimensional embeddings) and performs vector search over scoped chunks. A fallback score is not guaranteed to share a calibrated or directly comparable scale with an Atlas score; the runtime retrieval-quality component is the arithmetic mean of returned chunks' \texttt{similarity\_score} values. The benchmark runner uses an in-memory retriever against a hashed corpus snapshot; Standard RAG uses cosine ranking, while reranked retrieval uses a candidate pool and a maximum of semantic and lexical scores. These offline retrieval implementations are not identical to production Atlas operations and must be identified in every report.
 
 
 \subsection{Query Roles and Output}
@@ -137,7 +138,7 @@ The weights are fixed implementation constants, not learned or empirically optim
   \node[trustrag box,right=of client] (api) {Express API\\JWT/JWKS auth\\owner + scope checks};
   \node[trustrag box,right=of api] (ai) {FastAPI AI service\\internal service token};
   \node[trustrag box,right=of ai] (parse) {File parsing\\page-aware PDF\\400/80 chunks};
-  \node[trustrag box,right=of parse] (embed) {Gemini\\384-D embeddings};
+  \node[trustrag box,right=of parse] (embed) {Gemini\\768-D embeddings};
   \node[trustrag store,right=of embed] (atlas) {MongoDB Atlas\\Vector Search};
   \draw[trustrag arrow] (client)--(api);
   \draw[trustrag arrow] (api)--(ai);
@@ -358,7 +359,7 @@ The workflow in Fig.~\ref{fig:evaluation-workflow} separates candidate review, c
   \draw[trustrag optional] (runs)--(metrics);
   \draw[trustrag optional] (metrics)--(stats);
   \draw[trustrag optional] (stats)--(report);
-  \node[draw,dashed,red!65,rounded corners,fit=(review)(snapshot)(runs)(metrics)(stats)(report),inner sep=4mm,label=below:{Configured workflow; no paper-eligible run artifacts were present in the inspected repository}] {};
+  \node[draw,dashed,black!60,rounded corners,fit=(review)(snapshot)(runs)(metrics)(stats)(report),inner sep=4mm,label=below:{Configured workflow; no paper-eligible run artifacts were present in the inspected repository}] {};
 \end{tikzpicture}
 \caption{Research evaluation workflow. Dashed stages are configured but have not produced reportable results in the inspected snapshot.}
 \label{fig:evaluation-workflow}
