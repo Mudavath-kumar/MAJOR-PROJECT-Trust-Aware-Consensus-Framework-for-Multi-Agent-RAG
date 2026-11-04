@@ -44,9 +44,9 @@ def _gemini_status_code(error: Exception) -> Optional[int]:
 
 
 def _is_retryable_gemini_error(error: Exception) -> bool:
-    return isinstance(error, (TimeoutError, asyncio.TimeoutError)) or (
-        _gemini_status_code(error) in _GEMINI_RETRYABLE_STATUS_CODES
-    )
+    # Only retry rate limits (429). Retrying timeouts or network failures
+    # causes unacceptable 60-120s generation delays before fallbacks engage.
+    return _gemini_status_code(error) == 429
 
 
 def _provider_error_summary(provider: str, error: Exception) -> str:
@@ -77,7 +77,7 @@ def _get_client(api_key: str):
     if _client is None or _client_key != api_key:
         _client = genai.Client(
             api_key=api_key,
-            http_options=genai_types.HttpOptions(timeout=30_000),  # 30s timeout to prevent premature 504 deadline expired
+            http_options=genai_types.HttpOptions(timeout=12_000),  # 30s timeout to prevent premature 504 deadline expired
         )
         _client_key = api_key
     return _client
@@ -171,7 +171,7 @@ async def call_llm(
         selected_model = settings.GROQ_MODEL
         attempt = record_llm_attempt("groq", selected_model)
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=12.0) as client:
                 request_payload = {
                     "model": selected_model,
                     "messages": [
@@ -321,7 +321,7 @@ async def call_llm(
             }
             if settings.OPENROUTER_SITE_URL:
                 headers["HTTP-Referer"] = settings.OPENROUTER_SITE_URL
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=12.0) as client:
                 resp = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
                     headers=headers,
@@ -389,6 +389,10 @@ async def call_llm(
             if result:
                 logger.info("OpenRouter free-fallback succeeded (model=%s).", free_model)
                 return result
+            # Circuit breaker: if connection or DNS failed, do not test remaining remote models
+            if provider_failures and any('Connect' in f or '11001' in f or 'timed out' in f for f in provider_failures[-1:]):
+                logger.warning("Network unreachable for OpenRouter; breaking free-model retry loop.")
+                break
         return None
 
     async def _try_groq_free() -> Optional[str]:
