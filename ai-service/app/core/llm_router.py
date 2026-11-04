@@ -302,31 +302,31 @@ async def call_llm(
                 break
         return None
 
-    async def _try_openrouter() -> Optional[str]:
-        if not settings.OPENROUTER_API_KEY:
-            return None
-        if settings.LLM_PROVIDER == "openrouter_free" and not (
-            settings.OPENROUTER_MODEL == "openrouter/free"
-            or settings.OPENROUTER_MODEL.endswith(":free")
-        ):
-            raise LLMProvidersUnavailable(
-                "Free-only OpenRouter mode requires model 'openrouter/free' or a model ID ending in ':free'."
-            )
-        attempt = record_llm_attempt("openrouter", settings.OPENROUTER_MODEL)
+    # Free models on OpenRouter — zero credits, always available.
+    # Reference: https://openrouter.ai/models?order=newest&supported_parameters=free
+    _OPENROUTER_FREE_FALLBACK_MODELS = [
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "mistralai/mistral-7b-instruct:free",
+        "google/gemma-3-27b-it:free",
+        "qwen/qwen-2.5-7b-instruct:free",
+    ]
+
+    async def _try_openrouter_model(or_model: str) -> Optional[str]:
+        """Call OpenRouter with a specific model; return content or None."""
+        attempt = record_llm_attempt("openrouter", or_model)
         try:
-            import httpx
             headers = {
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
                 "X-Title": settings.OPENROUTER_APP_NAME,
             }
             if settings.OPENROUTER_SITE_URL:
                 headers["HTTP-Referer"] = settings.OPENROUTER_SITE_URL
-            async with httpx.AsyncClient(timeout=20.0) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
                     headers=headers,
                     json={
-                        "model": settings.OPENROUTER_MODEL,
+                        "model": or_model,
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": prompt},
@@ -340,17 +340,96 @@ async def call_llm(
                         ),
                     },
                 )
+                # 402 = paid credits exhausted; signal caller to try free models
+                if resp.status_code == 402:
+                    complete_llm_attempt(attempt, succeeded=False)
+                    provider_failures.append(
+                        f"OpenRouter HTTP 402: credit limit reached for model {or_model!r}"
+                    )
+                    logger.warning(
+                        "OpenRouter 402 for paid model %r; will retry with a :free model.", or_model
+                    )
+                    return None
                 resp.raise_for_status()
-                content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
+                body = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                if body:
                     complete_llm_attempt(attempt, succeeded=True)
-                    return content
+                    return body
             complete_llm_attempt(attempt, succeeded=False)
-            provider_failures.append("OpenRouter returned an empty response.")
+            provider_failures.append(f"OpenRouter returned an empty response (model={or_model}).")
         except Exception as e:
             complete_llm_attempt(attempt, succeeded=False)
             provider_failures.append(_provider_error_summary("OpenRouter", e))
-            logger.warning("OpenRouter failed (model=%s): %s", settings.OPENROUTER_MODEL, e)
+            logger.warning("OpenRouter failed (model=%s): %s", or_model, e)
+        return None
+
+    async def _try_openrouter() -> Optional[str]:
+        if not settings.OPENROUTER_API_KEY:
+            return None
+        if settings.LLM_PROVIDER == "openrouter_free" and not (
+            settings.OPENROUTER_MODEL == "openrouter/free"
+            or settings.OPENROUTER_MODEL.endswith(":free")
+        ):
+            raise LLMProvidersUnavailable(
+                "Free-only OpenRouter mode requires model 'openrouter/free' or a model ID ending in ':free'."
+            )
+        # 1. Try the configured model first (may be a paid model)
+        result = await _try_openrouter_model(settings.OPENROUTER_MODEL)
+        if result:
+            return result
+        # 2. If the configured model already ends with :free, do not loop again
+        if settings.OPENROUTER_MODEL.endswith(":free"):
+            return None
+        # 3. Paid model returned 402 (or failed) → automatically fall through to
+        #    free alternatives.  This keeps Render and any cloud deployment alive
+        #    even when OpenRouter credits are exhausted — free models never charge.
+        for free_model in _OPENROUTER_FREE_FALLBACK_MODELS:
+            logger.info("Trying OpenRouter free-fallback model: %s", free_model)
+            result = await _try_openrouter_model(free_model)
+            if result:
+                logger.info("OpenRouter free-fallback succeeded (model=%s).", free_model)
+                return result
+        return None
+
+    async def _try_groq_free() -> Optional[str]:
+        """Groq free tier — generous daily quota, works on Render with no credits.
+
+        Sign up at https://console.groq.com/keys and set GROQ_API_KEY in env.
+        """
+        if not settings.GROQ_API_KEY:
+            return None
+        groq_model = getattr(settings, "GROQ_MODEL", None) or "llama-3.1-8b-instant"
+        attempt = record_llm_attempt("groq", groq_model)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": groq_model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt},
+                        ],
+                        "temperature": temperature,
+                        "max_tokens": max_output_tokens,
+                    },
+                )
+                resp.raise_for_status()
+                body = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                if body:
+                    complete_llm_attempt(attempt, succeeded=True)
+                    logger.info("Groq free-tier fallback succeeded (model=%s).", groq_model)
+                    return body
+            complete_llm_attempt(attempt, succeeded=False)
+            provider_failures.append("Groq returned an empty response.")
+        except Exception as e:
+            complete_llm_attempt(attempt, succeeded=False)
+            provider_failures.append(_provider_error_summary("Groq", e))
+            logger.warning("Groq free-tier fallback failed (model=%s): %s", groq_model, e)
         return None
 
     # Explicit free-only mode must never fall through to Gemini or a paid
@@ -378,6 +457,15 @@ async def call_llm(
         res = await _try_gemini()
         if res:
             return res
+
+    # ── Groq free-tier fallback (cloud, no credits) ───────────────────────────
+    # Reached when Gemini AND OpenRouter (including all :free models) have
+    # failed.  Groq's free tier has a daily quota of 14 400 requests and costs
+    # nothing.  It runs in the cloud so it also works on Render (unlike Ollama).
+    groq_result = await _try_groq_free()
+    if groq_result:
+        return groq_result
+    # ─────────────────────────────────────────────────────────────────────────
 
     # ── Final fallback: local Ollama ──────────────────────────────────────────
     # Reached when both Gemini (503/504) and OpenRouter (402 or other) have
