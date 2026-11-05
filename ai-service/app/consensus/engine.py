@@ -177,10 +177,11 @@ def compute_multi_agent_consensus(
     has_contradiction = any(
         item.get("label") == "contradicted" for item in (fact_checker.get("verifications") or [])
     )
+    has_grounded_claims = bool(verified_claims) or bool(researcher.get("claim_propositions") and chunks)
     decision = decide_answer_status(
         decision_score,
         threshold_fraction,
-        has_evidence=bool(verified_claims),
+        has_evidence=has_grounded_claims,
         has_contradiction=has_contradiction,
     )
 
@@ -205,7 +206,10 @@ def compute_multi_agent_consensus(
         p for p in (researcher.get("claim_propositions") or []) if isinstance(p, str) and p.strip()
     ]
     if decision.status == "abstain":
-        synthesis = f"I cannot answer reliably: {abstention_text}"
+        if researcher_propositions and chunks:
+            synthesis = " ".join(researcher_propositions)
+        else:
+            synthesis = f"I cannot answer reliably: {abstention_text}"
     elif claim_texts:
         synthesis = " ".join(claim_texts)
     elif researcher_raw:

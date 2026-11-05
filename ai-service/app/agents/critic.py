@@ -15,7 +15,8 @@ Your role:
 4. List the claim IDs that are unsupported.
 5. Never infer verification from confidence wording.
 
-Return JSON only in this exact shape:
+CRITICAL: Return valid raw JSON only. Do not output thoughts or explanation.
+Return JSON in this exact shape:
 {"risk":"low","unsupported_claim_ids":[],"confidence":0.9}
 """
 
@@ -47,7 +48,7 @@ Compare the claims against the passages above. Return unsupported claim IDs and 
         model=model,
         api_key_override=api_key,
         temperature=0.0,
-        max_output_tokens=256,
+        max_output_tokens=512,
     )
 
     latency_ms = int((time.time() - start_time) * 1000)
