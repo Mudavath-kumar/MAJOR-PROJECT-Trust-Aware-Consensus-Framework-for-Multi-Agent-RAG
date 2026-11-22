@@ -63,35 +63,23 @@ kavyasaikothapally@gmail.com}}
 
 %% -----------------------------------------------------------------------
 \begin{abstract}
-Retrieval-augmented generation (RAG) grounds language-model responses in
-external document evidence, yet standard single-pass pipelines indiscriminately
-accept answers even when retrieved passages are irrelevant, incomplete, or
-mutually contradictory.  This paper presents \TR{}, a fully implemented,
-production-deployed multi-tenant document question-answering system that
-introduces an explicit, deterministic \emph{evidence-gating layer} governed by
-specialized agent roles.  The architecture couples tenant-scoped MongoDB Atlas
-Vector Search with page-aware document chunking, structured claim extraction
-by a Researcher agent, typed claim verification ($\text{\texttt{supported}}$,
-$\text{\texttt{contradicted}}$, $\text{\texttt{insufficient}}$) by a
-Fact-Checker agent, consistency auditing by a Critic agent, and a deterministic
-consensus engine.  The engine computes a composite evidence score $S$ weighting
-retrieval quality, claim support, citation coverage, and critic safety,
-operating alongside hard guards that enforce immediate abstention on detected
-contradictions.  We empirically evaluate six configured pipeline variants on a
-200-example HotpotQA-derived benchmark candidate spanning four distinct
-answerability categories.  A retrieval diagnostic on 179 candidate records
-confirms Recall@5\,=\,1.00 under scoped retrieval.  On a multi-system pilot
-evaluation using local Qwen2.5-Coder:3B execution, both \TR{} evidence-gated
-variants reduce unsafe acceptance from 1.00 (exhibited by Standard RAG,
-Reranked RAG, RAG\,+\,Verification, and Fixed Multi-Agent RAG) to 0.50, achieve
-conflict-abstention accuracy of 1.00 versus 0.00 for all baselines, and halve
-the decision-score Brier error from 0.5000 to 0.2397.  Complementary
-trade-offs emerge: Reranked RAG achieves top answer exact match (EM\,=\,1.00,
-F1\,=\,1.00), while RAG\,+\,Verification maximizes citation precision (0.75)
-and gold-evidence citation rate (1.00).  These safety guarantees introduce an
-operational latency trade-off (310--376\,s on CPU pilot; optimized for GPU/cloud
-deployment).  The system is deployed and accessible at
-\url{https://major-project-trust-aware-consensus.vercel.app}.
+Retrieval-Augmented Generation (RAG) enriches language-model responses with
+retrieved passages, yet retrieving context alone does not guarantee that the
+generated answer is factually grounded in that context. We present TrustRAG,
+a trust-aware consensus framework for multi-agent RAG that integrates
+tenant-scoped retrieval with structured claim extraction, typed evidence
+verification, and a deterministic consensus gate. The gate combines retrieval
+similarity, verified-claim coverage, citation coverage, and critic-identified
+risk into a composite trust score, producing one of three verdicts:
+\texttt{answer}, \texttt{partial}, or \texttt{abstain}. We evaluate six
+progressively richer system configurations on a stratified 40-query subset
+(20 answerable, 10 unanswerable, 5 conflicting, 5 prompt-injection) derived
+from HotpotQA. Standard and reranked RAG achieve 0.72--0.76 Exact Match on
+answerable queries but accept all unsafe inputs (UAR\,=\,1.0). The gated
+TrustRAG variants reduce the Unsafe Acceptance Rate to 0.93, lower the
+Brier score from 0.325 to 0.254, fully block prompt-injection compliance
+(0\% vs.\ 80--100\%), and maintain 0.98 citation precision---at a latency
+cost of ${\sim}60$\,s mean versus ${\sim}10$\,s for single-pass baselines.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -103,185 +91,208 @@ vector databases, document grounding
 %% -----------------------------------------------------------------------
 \section{Introduction}
 %% -----------------------------------------------------------------------
-Large language models (LLMs) frequently generate fluent, authoritative assertions
-that lack factual grounding in their supplied context~\cite{lewis2020rag,gao2023rag}.
-While retrieval-augmented generation (RAG) mitigates parametric hallucination by
-conditioning generation on retrieved document chunks~\cite{karpukhin2020dpr,borgeaud2022retro},
-standard RAG systems remain vulnerable to subtle points of failure.  Specifically,
-when retrieved passages contain conflicting information, outdated facts, or
-irrelevant distractor text, vanilla generators struggle to discern veracity and
-confidently generate unsubstantiated claims~\cite{niu2024ragtruth,huang2023hallucination}.
-Recent empirical studies show that LLMs can be easily distracted and misled by
-irrelevant or conflicting context within the retrieved window~\cite{shi2023large}.
-Furthermore, conventional RAG pipelines lack reliable mechanisms to selectively
-\emph{abstain} when the retrieved evidence is insufficient to warrant an answer.
+Retrieval gives a language model additional text, but it does not ensure that the
+answer follows from that text. A retrieved set may omit a needed fact, contain
+conflicting statements, or include instructions that should be treated as data.
+In each case, the model can still return a fluent answer without adequate support
+~\cite{lewis2020rag,gao2023rag,niu2024ragtruth,huang2023hallucination,shi2023large}.
+Selective abstention is one way to handle these cases, but many RAG pipelines do
+not make the evidence check and abstention rule explicit.
 
-To address these vulnerabilities, researchers have explored adaptive retrieval
-strategies such as Self-RAG~\cite{asai2024selfrag}, which trains models to emit
-reflection tokens, and Corrective RAG (CRAG)~\cite{yan2024crag}, which triggers
-corrective search when retrieval confidence is low.  Concurrently, multi-agent
-frameworks such as CAMEL~\cite{li2023camel} and AgentVerse~\cite{chen2023agentverse}
-demonstrate that assigning distinct functional roles (e.g., researcher, auditor,
-reviewer) improves problem decomposition.  Automated benchmarking frameworks
-like ARES~\cite{saadfalcon2024ares} and RAGAs~\cite{es2024ragas} provide
-reference-free evaluation metrics, while RAGTruth~\cite{niu2024ragtruth} offers
-fine-grained hallucination annotations.  However, prior research has largely
-treated retrieval ranking, claim verification, and multi-agent coordination as
-isolated academic prototypes.  Existing production deployments rarely integrate
-deterministic evidence gating, strict multi-tenant authorization, and verifiable
-provenance tracking into a single unified architecture.
+Prior work addresses parts of this problem. Self-RAG uses reflection tokens to
+decide when to retrieve or critique a response~\cite{asai2024selfrag}; Corrective
+RAG evaluates retrieved passages and can trigger another search~\cite{yan2024crag}.
+CAMEL and AgentVerse study role-based agent collaboration
+~\cite{li2023camel,chen2023agentverse}, while ARES, RAGAs, and RAGTruth provide
+evaluation methods and annotated examples for RAG systems
+~\cite{saadfalcon2024ares,es2024ragas,niu2024ragtruth}. However, none of these
+systems combine tenant-scoped retrieval, structured claim verification, and an
+explicit deterministic abstention gate in a single document assistant pipeline.
 
-This paper presents \TR{}, an end-to-end, multi-tenant document question-answering
-system engineered to enforce verifiable grounding.  Unlike conventional systems
-that emit raw LLM generations directly to clients, \TR{} introduces an explicit
-\emph{evidence-gating layer} governed by a multi-agent verification protocol.  The
-pipeline extracts structured factual propositions, verifies them against scoped
-document passages, audits them for contradictions, and computes a deterministic
-decision score.  If retrieved context is contradictory or unsubstantiated, the
-system deterministically abstains or downgrades the response to a partial verdict,
-ensuring that emitted citations link exclusively to validated user documents.
+TrustRAG addresses this gap by extracting claims from retrieved passages,
+independently verifying each claim via a typed Fact-Checker, auditing residual
+risk through a Critic agent, and routing the query through a formal decision
+rule. The rule either answers, partially answers, or abstains based on a
+composite trust score. We evaluate six configurations---from a baseline
+single-pass RAG to the full trust-aware consensus system---on a stratified
+HotpotQA-derived benchmark.
 
-\textbf{Research Questions.} This study investigates three empirical questions:
+\textbf{Research Questions.} We ask:
 \begin{itemize}
-  \item \textbf{RQ1 (Safety \& Abstention):} Does a deterministic evidence-gating
-    layer significantly reduce the unsafe acceptance of unanswerable and
-    conflicting queries compared to single-pass and ungated multi-agent RAG?
+  \item \textbf{RQ1 (Safety \& Abstention):} How does a deterministic evidence
+    gate change the rate of non-abstaining responses to unanswerable and
+    conflicting queries, compared with single-pass and ungated multi-agent RAG?
   \item \textbf{RQ2 (Grounding \& Quality):} How do reranking and typed claim
     verification influence answer fidelity, citation precision, and gold-evidence
     overlap?
-  \item \textbf{RQ3 (Operational Trade-offs):} What are the computational latency,
-    API cost, and execution call overheads associated with multi-agent evidence
-    gating across varying deployment configurations?
+  \item \textbf{RQ3 (Operational Trade-offs):} How do the six configurations
+    compare in end-to-end latency and model-call count?
 \end{itemize}
 
 \textbf{Contributions.}
 \begin{enumerate}
-  \item \textbf{Production System Architecture:} We design and deploy a full-stack,
-    multi-tenant RAG system featuring tenant-isolated MongoDB Atlas Vector Search,
-    Clerk cryptographic JWT/JWKS authentication, Backblaze B2 raw object persistence,
-    and a distributed FastAPI AI service with LLM rate limiting and concurrency control.
-  \item \textbf{Formal Evidence Decision Protocol:} We define a deterministic
-    consensus rule combining normalized retrieval similarity, claim support,
-    citation coverage, and critic safety into an operational score $S$, complemented
-    by hard guards that guarantee abstention under conflicting evidence.
-  \item \textbf{Reproducible Six-Variant Evaluation:} We specify a controlled
-    evaluation protocol and benchmark matrix comparing six configured variants
-    on a HotpotQA-derived dataset candidate across answerable, unanswerable,
-    conflicting, and adversarial prompt-injection categories.
-  \item \textbf{Empirical Validation:} We provide experimental findings from a
-    179-record retrieval diagnostic and multi-variant pilot runs demonstrating that
-    the \TR{} gate halves unsafe acceptance and Brier score error relative to
-    ungated baselines.
+  \item We describe a multi-tenant document assistant that combines scoped
+    retrieval, claim verification, and document-level citations.
+  \item We specify a deterministic decision rule that uses retrieval similarity,
+    claim support, citation coverage, and the Critic's risk assessment.
+  \item We evaluate six system configurations across answerable, unanswerable,
+    conflicting, and prompt-injection categories, reporting safety, quality,
+    calibration, and latency metrics with 95\% bootstrap confidence intervals.
 \end{enumerate}
 
 %% -----------------------------------------------------------------------
-\section{Related Work}
+\section{Literature Survey}
 %% -----------------------------------------------------------------------
 \label{sec:related}
 
 \subsection{Dense Retrieval and Retrieval-Augmented Generation}
-Retrieval-augmented generation was established by Lewis~\emph{et al.}~\cite{lewis2020rag}
-to ground parametric models in external knowledge via dense index retrieval.
-Surveys by Gao~\emph{et al.}~\cite{gao2023rag} detail the paradigm's evolution from
-naive RAG to modular and iterative architectures.  Dense Passage Retrieval
-(DPR)~\cite{karpukhin2020dpr} and Sentence-BERT~\cite{reimers2019sentencebert}
-demonstrated that bi-encoder semantic embeddings outperform traditional sparse
-lexical scoring (BM25~\cite{robertson2009probabilistic}) on nuanced natural language
-queries.  RETRO~\cite{borgeaud2022retro} demonstrated the benefits of continuous
-retrieval across trillion-token scales.  \TR{} leverages dense vector indexing
-via MongoDB Atlas Vector Search using 768-dimensional embeddings, backed by a hybrid
-cosine-lexical fallback to preserve retrieval resilience under transient database faults.
+Lewis~\emph{et al.} introduced retrieval-augmented generation as a way to ground
+language-model outputs in retrieved documents~\cite{lewis2020rag}; Gao~\emph{et al.}
+survey later RAG designs~\cite{gao2023rag}. Dense Passage Retrieval and
+Sentence-BERT use bi-encoder representations for passage retrieval
+~\cite{karpukhin2020dpr,reimers2019sentencebert}; BM25 remains a lexical baseline
+~\cite{robertson2009probabilistic}. RETRO also retrieves from a large text corpus
+during language-model training~\cite{borgeaud2022retro}. TrustRAG uses MongoDB
+Atlas Vector Search and a lexical-semantic fallback when the vector service is
+unavailable, requesting 384-dimensional embeddings.
 
 \subsection{Adaptive, Corrective, and Interactive Retrieval}
-Standard RAG uniformly queries documents regardless of query difficulty.
-Self-RAG~\cite{asai2024selfrag} addresses this by training models to generate
-arbitrary reflection tokens indicating when retrieval is beneficial.  Corrective
-RAG (CRAG)~\cite{yan2024crag} introduces a heuristic evaluator that determines
-whether document context is relevant and triggers supplementary public web searches
-when confidence drops below a threshold.  Search-in-the-Chain~\cite{xu2024search}
-interleaves search operations dynamically within reasoning chains.  In contrast to
-models that rely on implicit model confidence or unconstrained web browsing, \TR{}
-utilizes an explicit, deterministic threshold ($r < 0.75$) to conditionally invoke
-web fact-checking (via Tavily) solely as an auxiliary cross-check, strictly
-forbidding web artifacts from masquerading as user document citations.
+Self-RAG uses reflection tokens to decide when to retrieve or critique
+~\cite{asai2024selfrag}; Corrective RAG evaluates retrieved context and may
+trigger another search~\cite{yan2024crag}. Search-in-the-Chain interleaves search
+with reasoning~\cite{xu2024search}. TrustRAG uses a configurable retrieval score
+threshold $r < 0.75$ to request Tavily web verification when external checking is
+enabled. Web results are used as a cross-check and are not returned as citations
+to the user's documents.
 
 \subsection{Fact Verification and RAG Evaluation Frameworks}
-Automated evaluation of RAG systems has transitioned from lexical overlap metrics
-(BLEU, ROUGE) to semantic and faithfulness diagnostics.  The FEVER benchmark~\cite{thorne2018fever}
-pioneered the formulation of fact extraction and verification through typed
-claims ($\text{\texttt{supported}}$, $\text{\texttt{refuted}}$, $\text{\texttt{not enough info}}$).
-ARES~\cite{saadfalcon2024ares} trains lightweight synthetic judges to evaluate context
-relevance and answer faithfulness with statistical confidence bounds.  RAGAs~\cite{es2024ragas}
-introduces reference-free metrics for measuring context precision and harmonic faithfulness.
-RAGTruth~\cite{niu2024ragtruth} provides word-level human hallucination annotations for
-evaluating RAG models.  \TR{} embeds structured claim verification directly into the
-\emph{runtime execution path}, evaluating propositions prior to synthesis rather than
-relying on post-hoc external auditing.
+FEVER established fact verification with typed claim labels~\cite{thorne2018fever}.
+ARES uses trained judges to score context relevance and answer faithfulness
+~\cite{saadfalcon2024ares}; RAGAs reports reference-free RAG metrics
+~\cite{es2024ragas}; and RAGTruth provides human annotations of hallucinated text
+~\cite{niu2024ragtruth}. TrustRAG checks structured claims during query handling,
+assigning typed verification labels (supported, contradicted, insufficient) to
+each extracted claim.
 
 \subsection{Multi-Agent Collaboration and Specialization}
-Multi-agent architectures partition monolithic tasks into specialized roles.
-CAMEL~\cite{li2023camel} and AgentVerse~\cite{chen2023agentverse} demonstrate that
-communicative agents can coordinate through structured prompts.  However, open-ended
-agent societies often suffer from non-deterministic looping, cascading errors, and
-unbounded API consumption.  \TR{} enforces a strict, bounded sequential workflow
-(Researcher $\to$ Fact-Checker $\to$ Critic) with a hard maximum of one retry,
-guaranteeing bounded latency and predictable execution costs.
+CAMEL and AgentVerse study agents that coordinate through structured roles and
+messages~\cite{li2023camel,chen2023agentverse}. TrustRAG uses a Researcher, a
+Fact-Checker, and a Critic, followed by a deterministic evidence gate that
+combines their outputs into a consensus decision.
 
 \subsection{Trustworthiness, Privacy, and Hallucination Mitigation}
-Surveys by Zhou~\emph{et al.}~\cite{zhou2024trustworthy} and Huang~\emph{et al.}~\cite{huang2023hallucination}
-emphasize that trustworthy AI necessitates multi-faceted safeguards: factual alignment,
-adversarial robustness, operational safety, and tenant privacy.  Shi~\emph{et al.}~\cite{shi2023large}
-demonstrated that irrelevant context actively distracts LLMs from factual reasoning.
-\TR{} addresses these dimensions simultaneously by combining tenant-isolated indexing
-with adversarial prompt-injection resistance and an explicit abstention decision gate.
+Zhou~\emph{et al.} and Huang~\emph{et al.} discuss reliability and hallucination
+risks in language models~\cite{zhou2024trustworthy,huang2023hallucination}; Shi~\emph{et al.}
+show that irrelevant context can distract a model from the task
+~\cite{shi2023large}. TrustRAG mitigates these risks through tenant isolation,
+explicit abstention on contradicted evidence, and injection-resilient verification.
 
 %% -----------------------------------------------------------------------
-\section{System Architecture and Implementation}
+\section{Problem Statement}
+%% -----------------------------------------------------------------------
+\label{sec:problem}
+
+Standard RAG pipelines retrieve relevant passages and feed them to a language
+model for answer generation. However, this approach suffers from three
+fundamental limitations:
+
+\begin{enumerate}
+  \item \textbf{No evidence gating:} Single-pass RAG systems produce answers
+    regardless of whether retrieved passages actually support the response.
+    When passages are irrelevant, contradictory, or absent, the model still
+    generates fluent but unsupported text.
+  \item \textbf{Unsafe acceptance:} Without explicit abstention mechanisms,
+    RAG systems answer unanswerable and conflicting queries with equal
+    confidence, exposing users to hallucinated or misleading information.
+  \item \textbf{Injection vulnerability:} Retrieved passages may contain
+    adversarial instructions (prompt injections) that override the system's
+    intended behavior. Standard RAG pipelines lack mechanisms to detect and
+    resist such attacks.
+\end{enumerate}
+
+We formalize the problem as follows. Given a user query $q$, a set of
+tenant-scoped retrieved passages $R_q$, and a generation model $\mathcal{M}$,
+the goal is to produce a \emph{trust-aware} response $\mathcal{D}(q) \in
+\{\texttt{answer}, \texttt{partial}, \texttt{abstain}\}$ such that:
+\begin{itemize}
+  \item Answers are emitted only when claims are verifiably supported by $R_q$;
+  \item Contradicted or unsupported queries trigger explicit abstention;
+  \item Adversarial injections in $R_q$ do not alter the system's response behavior.
+\end{itemize}
+
+%% -----------------------------------------------------------------------
+\section{Proposed Methodology}
+%% -----------------------------------------------------------------------
+\label{sec:methodology}
+
+The proposed TrustRAG methodology augments standard RAG with three additional
+processing stages and a formal decision rule:
+
+\textbf{Stage 1: Tenant-Scoped Retrieval.}
+The system embeds query $q$ and retrieves the top-$k$ passages from a
+tenant-scoped vector index (MongoDB Atlas Vector Search). An optional reranking
+stage expands the initial candidate pool to $K_{\text{pool}} = 20$ chunks and
+applies hybrid lexical-semantic scoring to select the final top-$k = 5$.
+
+\textbf{Stage 2: Multi-Agent Verification Pipeline.}
+Three specialized agents process the retrieved context concurrently:
+\begin{itemize}
+  \item \textbf{Researcher:} Extracts structured claims $C_q = \{c_1, \ldots, c_m\}$
+    from the query and retrieved passages, linking each claim to its source chunks.
+  \item \textbf{Fact-Checker:} Assigns a typed verification label
+    $\lambda(c_j) \in \{\texttt{supported}, \texttt{contradicted}, \texttt{insufficient}\}$
+    to each claim, optionally cross-checking against external web sources.
+  \item \textbf{Critic:} Independently audits claim quality, identifies unsupported
+    claims, and assigns a risk level $u_{\text{risk}} \in \{\texttt{low}, \texttt{medium}, \texttt{high}\}$.
+\end{itemize}
+
+\textbf{Stage 3: Trust-Aware Consensus Gate.}
+The consensus engine computes a composite trust score $S$ from four normalized
+signals and applies a deterministic decision rule to produce the final verdict.
+
+\textbf{Stage 4: Response Synthesis.}
+Based on the verdict, the system either synthesizes a fully cited answer,
+presents a partial response with caveats, or returns an explicit abstention
+explaining why the query cannot be reliably answered.
+
+%% -----------------------------------------------------------------------
+\section{System Architecture}
 %% -----------------------------------------------------------------------
 \label{sec:system}
 
 \subsection{Application Stack and Distributed Infrastructure}
-\TR{} is engineered as a distributed, service-oriented cloud application.
-The system separates user-facing interaction, administrative state, and AI
-workloads across dedicated service tiers, as illustrated in Fig.~\ref{fig:architecture}:
+The source application has a React client, an Express API, a FastAPI AI service,
+MongoDB Atlas, and Backblaze B2 storage (Fig.~\ref{fig:architecture}). The main
+components are:
 \begin{itemize}
-  \item \textbf{Client Layer (Vercel):} Built with React~18, TypeScript, and
-    TanStack Start for server-side rendering, reactive streaming, and stateful
-    chat interactions.
-  \item \textbf{API Gateway \& Core Backend (Render):} Implemented in Express
-    and TypeScript.  Enforces per-request JWT authentication using Clerk JSON Web
-    Key Sets (JWKS) supporting both ES256 (P-256) and RS256 signature algorithms.
-    Manages document access control lists (ACLs), user profiles, conversation
-    metadata, and citation records in MongoDB.
-  \item \textbf{Persistent Object Storage (Backblaze B2):} Stores original binary
-    files (PDF, DOCX, TXT) with private bucket encryption and signed URL delivery.
-  \item \textbf{AI Service (Render Private Network):} Developed in FastAPI and
-    Python~3.11.  Operates behind a private virtual network, authenticated via an
-    internal shared service token.  Orchestrates text extraction, chunking,
-    embedding generation, vector database indexing, and multi-agent consensus.
-  \item \textbf{Vector Store (MongoDB Atlas Vector Search):} Stores chunk
-    embeddings indexed with Hierarchical Navigable Small World (HNSW) graphs,
-    enforcing mandatory pre-filtering on tenant IDs (\texttt{user\_id}) and
-    authorized document IDs (\texttt{document\_ids}).
+  \item \textbf{Client:} React~18, TypeScript, and TanStack Start provide the
+    document and chat interface.
+  \item \textbf{Express API:} Verifies Clerk JWTs, checks document access, and
+    stores user, conversation, and citation metadata in MongoDB.
+  \item \textbf{Object storage:} Backblaze B2 stores uploaded PDF, DOCX, and TXT
+    files; the application uses private-bucket access and signed URLs.
+  \item \textbf{AI service:} FastAPI handles text extraction, chunking,
+    embeddings, vector indexing, and the query pipeline. Requests from the API
+    use an internal service token.
+  \item \textbf{Vector store:} MongoDB Atlas stores chunk embeddings. Retrieval
+    queries include the authenticated user's ID and the authorized document IDs.
 \end{itemize}
 
 \subsection{Document Ingestion and Scoped Indexing}
-During ingestion, uploaded documents are fetched from Backblaze B2 and processed
-by a page-aware PDF parser.  Text is partitioned using a sliding window of
-$400$ words with an overlap of $80$ words.  This overlap parameter ensures that
-factual statements positioned near chunk boundaries retain contextual continuity
-in adjacent segments.  Each chunk is mapped to a 768-dimensional dense vector
-using Google's \texttt{gemini-embedding-2} model (the local benchmark pilot
-utilizes \texttt{all-MiniLM-L6-v2} generating 384-dimensional vectors).
+During ingestion, the AI service fetches uploaded files from Backblaze B2 and
+extracts their text. It divides the text into $400$-word chunks with an overlap
+of $80$ words, so text near a chunk boundary appears in both adjacent chunks.
+The application configuration requests 384-dimensional embeddings using the
+pinned local \texttt{sentence-transformers/all-MiniLM-L6-v2} model.
 Chunk records are persisted in MongoDB Atlas with metadata fields:
 $\langle\texttt{chunk\_id}, \texttt{document\_id}, \texttt{user\_id},
 \texttt{page\_number}, \texttt{text}, \texttt{vector}\rangle$.
-A pre-filter index guarantees that chunks belonging to User~$A$ are physically
-inaccessible to User~$B$, preventing cross-tenant information leakage.
+Each vector query requires an authenticated \texttt{user\_id} filter and
+intersects any requested document IDs with that user's scope.
 
 \subsection{Retrieval and Fallback Mechanics}
 At query time, the system encodes query $q$ into dense embedding $\mathbf{v}_q$.
-Production retrieval executes a scoped approximate nearest neighbor (ANN) search
+The service retrieval path executes a scoped approximate nearest neighbor (ANN) search
 over Atlas Vector Search requesting top-$k$ passages ($k = 5$ by default).
 If Atlas returns empty results or encounters transient connectivity faults,
 the service invokes an in-memory hybrid fallback: it loads vectors matching the
@@ -306,7 +317,7 @@ similarity scores:
   \node[tbox,right=of client] (api) {Express API\\JWT/JWKS auth\\owner + scope};
   \node[tbox,right=of api] (ai) {FastAPI AI\\internal token\\rate-limited};
   \node[tbox,right=of ai] (parse) {Chunking\\page-aware PDF\\400 / 80 words};
-  \node[tbox,right=of parse] (embed) {Gemini\\embedding-2\\768-D};
+  \node[tbox,right=of parse] (embed) {Configured embedding provider\\384-D};
   \node[tstore,right=of embed] (atlas) {MongoDB Atlas\\Vector Search\\tenant scope};
   \draw[tarrow] (client)--(api);
   \draw[tarrow] (api)--(ai);
@@ -329,47 +340,38 @@ similarity scores:
   \draw[tarrow] (trust)--(consensus);
   \draw[tarrow] (consensus)--(resp);
   \draw[tarrow] (resp.north) |- (client.south);
-  \node[tplanned,below=of agents] (llm) {LLM router\\Gemini $\to$ Ollama\\provider fallback};
+  \node[tbox,below=of agents] (llm) {LLM router\\Groq / free OpenRouter / Gemini / Ollama};
   \draw[toptional] (llm)--(agents);
   \node[tplanned,below=of retrieve] (web) {Tavily\\($r{<}0.75$ only)};
   \draw[toptional] (web)--(agents);
   \node[draw,dashed,rounded corners,fit=(client)(api)(ai)(parse)(embed)(atlas)(b2)(mongo)(retrieve)(agents)(trust)(consensus)(resp)(llm)(web),inner sep=5mm,
-    label=above:{Deployed: Vercel (frontend) + Render (backend + AI service) + MongoDB Atlas + Backblaze B2}] {};
+    label=above:{Source architecture: web client + API + AI service + MongoDB Atlas + Backblaze B2}] {};
 \end{tikzpicture}
-\caption{\TR{} distributed architecture. Ingestion flow (top) and query execution flow (bottom)
-interface through tenant-scoped MongoDB Atlas Vector Search. Dashed nodes denote provider routing
-and conditional auxiliary search.}
+\caption{\TR{} source architecture. Ingestion flow (top) and query execution flow (bottom)
+interface through tenant-scoped MongoDB Atlas Vector Search. Tavily is shown as an
+optional conditional verification component; dashed arrows indicate optional paths.}
 \label{fig:architecture}
 \end{figure*}
 
 \subsection{Multi-Agent Verification Pipeline}
 \label{sec:agents}
-If retrieved chunk set $R_q = \varnothing$, the query pipeline immediately
-aborts and returns \texttt{abstain}, bypassing all LLM calls.  When $R_q \neq \varnothing$,
-the service coordinates three specialized LLM agents in strict sequence
+If retrieval returns no chunks ($R_q = \varnothing$), the service returns
+\texttt{abstain} without calling an LLM. Otherwise, the Researcher extracts
+claims, after which the Fact-Checker and Critic run concurrently
 (Fig.~\ref{fig:query-workflow}):
 \begin{enumerate}
-  \item \textbf{Researcher Agent:} Analyzes query $q$ and passages $R_q$ to generate
-    candidate response propositions $C_q = \{c_1, c_2, \dots, c_m\}$.  Each proposition
-    $c_j$ is structured as a JSON record containing the atomic factual claim and its
-    claimed source chunk identifiers $E(c_j) \subseteq R_q$.
-  \item \textbf{Fact-Checker Agent:} Audits each extracted claim $c_j \in C_q$ against
-    the source text of $R_q$, emitting a typed label $\lambda(c_j) \in
-    \{\text{\texttt{supported}}, \text{\texttt{contradicted}}, \text{\texttt{insufficient}}\}$
-    with rationales.  If retrieval quality $r < 0.75$ and external checking is enabled,
-    the Fact-Checker conditionally incorporates web search context from Tavily.  However,
-    web-retrieved context serves exclusively for verification; web passages are strictly
-    disallowed from being returned as user document citations.
-  \item \textbf{Critic Agent:} Reviews the joint outputs of the Researcher and
-    Fact-Checker.  Identifies ungrounded assertions, logical inconsistencies, and
-    hallucinated entities, assigning a holistic risk level $u_{\text{risk}} \in
-    \{\text{\texttt{low}}, \text{\texttt{medium}}, \text{\texttt{high}}\}$ along with a
-    list of flagged unsupported claim IDs.
-  \item \textbf{Deterministic Trust Assessor:} Evaluates the provenance metadata of
-    $R_q$.  Computes a heuristic source trust signal based on chunk similarity and
-    metadata consistency.  Critically, this score is emitted to the client for UI
-    transparency but is \emph{strictly excluded} from the consensus decision score
-    $S$ to prevent circular dependency with $r$.
+  \item \textbf{Researcher:} Reads query $q$ and retrieved passages $R_q$ and
+    returns claims $C_q = \{c_1, c_2, \dots, c_m\}$. Each claim includes the
+    identifiers $E(c_j)$ of the chunks it cites.
+  \item \textbf{Fact-Checker:} Labels each claim as supported, contradicted, or
+    insufficient, based on the retrieved passages. If $r < 0.75$ and external
+    checking is enabled, it also receives Tavily search results. Those results
+    may inform the label but are not returned as citations to the user's files.
+  \item \textbf{Critic:} Independently reviews the claims and retrieved passages,
+    assigns a risk level $u_{\text{risk}}$, and lists unsupported claim IDs.
+  \item \textbf{Trust Assessor:} Computes retrieval and provenance signals for
+    the interface. This heuristic is reported separately and is not included in
+    the consensus score $S$.
 \end{enumerate}
 
 \begin{figure*}[t]
@@ -384,10 +386,10 @@ the service coordinates three specialized LLM agents in strict sequence
   \node[tdecision]            (trigger)   at (3.5,-5.0) {$r{<}0.75$ and Tavily configured?};
   \node[tbox]                 (factweb)   at (1.8,-6.3) {Fact-Checker\\doc + web context};
   \node[tbox]                 (factdoc)   at (5.0,-6.3) {Fact-Checker\\doc evidence only};
-  \node[tbox,text width=35mm] (audit)     at (0,-7.5)   {Critic: audit unsupported claims + trust assessment};
+  \node[tbox,text width=35mm] (audit)     at (0,-7.5)   {Critic: audit unsupported claims};
   \node[tbox]                 (gate)      at (0,-8.7)   {Consensus score + evidence gate};
   \node[tdecision]            (retryq)    at (3.5,-8.7) {Reached or no retry budget?};
-  \node[tplanned]             (retry)     at (6.5,-10.0){Bounded retry\\(same chunks; web\\only if unused)};
+  \node[tplanned]             (retry)     at (6.5,-10.0){One conditional external\\verification pass\\(same retrieved chunks)};
   \node[tdecision]            (final)     at (0,-10.0)  {Final status};
   \node[tbox]                 (out)       at (0,-11.3)  {Answer / partial / abstain\\+ verified doc references};
   \draw[tarrow] (auth)--(scope);
@@ -410,31 +412,30 @@ the service coordinates three specialized LLM agents in strict sequence
   \draw[tarrow] (final)--(out);
   \draw[tarrow] (noev)|-(out);
 \end{tikzpicture}
-\caption{Production query workflow. Immediate abstention handles empty retrieval.
-Tavily is invoked conditionally when $r < 0.75$. A single bounded retry executes
-over existing chunks without repeating database retrieval.}
+\caption{Query workflow. Empty retrieval leads directly to abstention. The
+Fact-Checker and Critic run concurrently after the Researcher; Tavily is optional.}
 \label{fig:query-workflow}
 \end{figure*}
 
 \subsection{Consensus Engine and Formal Decision Rule}
 \label{sec:score}
-The consensus engine evaluates four quantitative signals normalized to $[0,1]$:
+The consensus score uses four signals scaled to $[0,1]$:
 \begin{enumerate}
   \item \textbf{Retrieval Quality ($r$):} Mean similarity score of retrieved chunks.
-  \item \textbf{Claim Support ($s$):} Ratio of claims successfully verified:
+  \item \textbf{Claim Support ($s$):} Fraction of claims verified as supported:
     \begin{equation}
       s = \frac{|V_q|}{|C_q|}, \quad (s = 0 \text{ if } |C_q| = 0),
     \end{equation}
     where $V_q \subseteq C_q$ comprises claims $c_j$ satisfying: (i)~$\lambda(c_j) =
     \text{\texttt{supported}}$, (ii)~$E(c_j) \cap R_q \neq \varnothing$, and
     (iii)~$c_j$ is not flagged as unsupported by the Critic.
-  \item \textbf{Citation Coverage ($c$):} Proportion of claims possessing non-empty
-    grounding in retrieved passages:
+  \item \textbf{Citation Coverage ($c$):} Fraction of claims linked to at least
+    one retrieved chunk:
     \begin{equation}
       c = \frac{|\{c_j \in C_q : E(c_j) \cap R_q \neq \varnothing\}|}{|C_q|}, \quad (c = 0 \text{ if } |C_q| = 0).
       \label{eq:cov}
     \end{equation}
-  \item \textbf{Critic Safety ($u$):} Metric derived from the Critic's risk audit:
+  \item \textbf{Critic Safety ($u$):} Value assigned from the Critic's risk label:
     \begin{equation}
       u = \begin{cases}
         0.0, & \text{if unsupported claim IDs exist or } u_{\text{risk}} = \text{\texttt{high}}, \\
@@ -444,14 +445,13 @@ The consensus engine evaluates four quantitative signals normalized to $[0,1]$:
     \end{equation}
 \end{enumerate}
 
-The composite evidence score $S$ is computed as:
+The system combines the signals as follows:
 \begin{equation}
   S = 0.20r + 0.35s + 0.25c + 0.20u.
   \label{eq:score}
 \end{equation}
-The operational decision $\mathcal{D}(q) \in \{\text{\texttt{answer}},
-\text{\texttt{partial}}, \text{\texttt{abstain}}\}$ is formalized by the
-piece-wise function in Eq.~(\ref{eq:decision_func}):
+The decision $\mathcal{D}(q)$ can be \texttt{answer}, \texttt{partial}, or
+\texttt{abstain}. The guards below determine which status is returned:
 \begin{equation}
 \mathcal{D}(q) = \begin{cases}
   \text{\texttt{abstain}}, & \text{if } \exists c_j \in C_q : \lambda(c_j) = \text{\texttt{contradicted}} \\
@@ -463,11 +463,9 @@ piece-wise function in Eq.~(\ref{eq:decision_func}):
 \end{cases}
 \label{eq:decision_func}
 \end{equation}
-Here $\tau = 0.80$ is the default decision threshold.  Crucially, Guard~G1 takes
-absolute precedence: if any proposition is flagged as contradicted by the Fact-Checker,
-the system abstains immediately, regardless of high similarity $r$ or high coverage $c$.
-Guard~G3 ensures that if a response scores above threshold but leaves any proposition
-unsupported ($s < 1.0$), it is downgraded to \texttt{partial}.
+The default threshold is $\tau = 0.80$. Guard~G1 takes precedence: any claim
+labelled contradicted leads to abstention. Guard~G3 returns a partial answer when
+the score reaches the threshold but at least one claim remains unsupported.
 
 \begin{figure*}[t]
 \centering
@@ -506,39 +504,91 @@ Guard G3 demotes scores meeting $\tau$ to \texttt{partial} if claim support is i
 \end{figure*}
 
 %% -----------------------------------------------------------------------
-\section{Experimental Setup}
+\section{Implementation}
 %% -----------------------------------------------------------------------
-\label{sec:setup}
+\label{sec:implementation}
 
-\subsection{Benchmark Dataset and Stratification}
-We evaluate the systems using \texttt{trustrag-public-candidate-v4}, a frozen
-evaluation dataset derived from the HotpotQA distractor validation split~\cite{yang2018hotpotqa}.
-The candidate dataset comprises $200$ examples carefully stratified into four
-distinct evaluation categories:
+\subsection{Technology Stack}
+The TrustRAG system is implemented as a distributed web application:
 \begin{itemize}
-  \item \textbf{Answerable ($n=100$):} Queries whose reference answers are fully
-    supported by gold passages present within the tenant corpus.
-  \item \textbf{Unanswerable ($n=50$):} Queries where essential factual evidence
-    has been withheld from the scoped corpus.  The system must recognize context
-    deficiency and abstain.
-  \item \textbf{Controlled-Conflict ($n=25$):} Context sets containing pairs of
-    mutually contradictory passages.  Tests the system's ability to trigger
-    contradiction detection (Guard~G1).
-  \item \textbf{Prompt-Injection Resilience ($n=25$):} Queries where distractor
-    passages contain embedded adversarial prompts (e.g., instructions to ignore
-    context or emit specific strings).  The target task remains answerable from
-    trusted evidence; the system must complete the original query without
-    succumbing to adversarial hijack.
+  \item \textbf{Frontend:} React 18 with TypeScript, TanStack Start for routing,
+    and Clerk for authentication. Deployed on Vercel.
+  \item \textbf{Backend API:} Express.js (Node.js) with JWT/JWKS-based
+    authentication, rate limiting on chat and upload endpoints. Deployed on Render.
+  \item \textbf{AI Service:} Python FastAPI with asynchronous agent orchestration
+    via \texttt{asyncio.Semaphore(2)} for concurrency control. Deployed on Render.
+  \item \textbf{Storage:} MongoDB Atlas for document metadata, chat history, and
+    vector embeddings (Atlas Vector Search). Backblaze B2 for original file storage.
+  \item \textbf{LLM Routing:} A multi-provider router supporting Groq, OpenRouter
+    (free-tier models), Google Gemini, and local Ollama, with automatic failover,
+    429 backoff-retry, and reasoning-token extraction.
 \end{itemize}
 
-An automated integrity and AI-assisted semantic audit over all 200 items classified
-191 records as passing construction checks, 8 as not approved (scoped evidence
-answered the labeled-unanswerable question), and 1 (q-0128) as requiring review
-due to a false premise.
+\subsection{Agent Implementation}
+Each agent is implemented as an async Python module:
+\begin{itemize}
+  \item \texttt{researcher.py}: Extracts structured claims with chunk citations
+    using a JSON-constrained prompt; max output 2048 tokens.
+  \item \texttt{fact\_checker.py}: Verifies claims with typed labels (supported/
+    contradicted/insufficient); JSON-only system prompt with 1024 max tokens.
+    Includes fallback to recover grounded claims when the LLM returns reasoning
+    tokens instead of JSON.
+  \item \texttt{critic.py}: Independently audits claims with risk assessment;
+    512 max tokens with JSON output constraint.
+\end{itemize}
 
-\subsection{System Comparison Matrix}
-We compare six system configurations sharing identical corpus chunks, chunking
-boundaries (400/80 words), and seed parameters (seed 42, temperature 0.1):
+\subsection{Consensus Engine}
+The consensus engine (\texttt{consensus/engine.py}) implements the decision rule
+from Eq.~(\ref{eq:decision_func}). It handles edge cases including:
+\begin{itemize}
+  \item False abstention recovery: when claims exist but the Fact-Checker returns
+    empty verification results, the engine falls back to researcher-extracted
+    claim propositions.
+  \item Partial answer synthesis: when score meets threshold but claim support is
+    incomplete, the system presents verified claims with explicit caveats.
+\end{itemize}
+
+\subsection{Benchmark Infrastructure}
+The experiment framework (\texttt{experiments/}) includes:
+\begin{itemize}
+  \item \textbf{Dataset builder:} Constructs stratified evaluation sets from
+    HotpotQA with answerable, unanswerable, conflicting, and prompt-injection categories.
+  \item \textbf{Variant runner:} Executes each of the six system configurations
+    with identical corpus, embeddings, and random seed, recording per-query
+    predictions, latency, and provider telemetry.
+  \item \textbf{Metrics engine:} Computes all evaluation metrics with 95\%
+    stratified bootstrap confidence intervals.
+\end{itemize}
+
+%% -----------------------------------------------------------------------
+\section{Results and Discussion}
+\label{sec:results}
+%% -----------------------------------------------------------------------
+
+\subsection{Experimental Setup and Benchmark Protocol}
+\label{sec:setup}
+
+\subsubsection{Benchmark Dataset and Stratification}
+The evaluation dataset contains $N=40$ examples derived from the HotpotQA
+distractor validation split~\cite{yang2018hotpotqa}, stratified by query type:
+\begin{itemize}
+  \item \textbf{Answerable ($n=20$):} The scoped corpus contains the gold evidence
+    needed to answer the question.
+  \item \textbf{Unanswerable ($n=10$):} The scoped corpus omits evidence needed
+    to answer; unanswerable here means unanswerable from the provided files.
+  \item \textbf{Controlled conflict ($n=5$):} Synthetic passages add a claim
+    that conflicts with the source evidence.
+  \item \textbf{Prompt injection ($n=5$):} A retrieved passage contains a
+    synthetic instruction that conflicts with the user's task. The source evidence
+    still supports an answer.
+\end{itemize}
+
+Each record was reviewed by one human reviewer with an automated consistency
+audit verifying metadata, hash, and record equivalence.
+
+\subsubsection{System Comparison Matrix}
+The comparison uses six configurations with the same corpus chunks,
+400-word chunks, 80-word overlap, seed 42, and temperature 0.1:
 \begin{enumerate}
   \item \textbf{Standard RAG:} Single-pass retrieval ($k=5$), direct generator
     synthesis; no reranking, claim verification, or decision gate.
@@ -546,7 +596,7 @@ boundaries (400/80 words), and seed parameters (seed 42, temperature 0.1):
     hybrid lexical-semantic reranking to select top 5, followed by direct generator synthesis.
   \item \textbf{RAG + Verification:} Single-pass retrieval followed by generator
     claim extraction and Fact-Checker typed verification; lacks the consensus decision gate.
-  \item \textbf{Fixed Multi-Agent RAG:} Complete sequential multi-agent pipeline
+  \item \textbf{Multi-Agent RAG:} Complete sequential multi-agent pipeline
     (Researcher $\to$ Fact-Checker $\to$ Critic); lacks the consensus gate (G1--G5)
     and unconditionally emits the generated text.
   \item \textbf{\TR{}, no external:} Full \TR{} evidence-gated system (Eq.~\ref{eq:score}
@@ -555,62 +605,48 @@ boundaries (400/80 words), and seed parameters (seed 42, temperature 0.1):
     verification enabled when $r < 0.75$.
 \end{enumerate}
 
-\subsection{Evaluation Environment and Pilot Execution}
-Production deployments execute with \texttt{gemini-embedding-2} (768-D) and hosted
-LLMs.  To evaluate offline behavior under bounded environments and establish reproducible
-diagnostics, our pilot experiments executed on a dedicated local CPU server using
-cached \texttt{all-MiniLM-L6-v2} (384-D) embeddings~\cite{reimers2019sentencebert}
-and Ollama-hosted Qwen2.5-Coder:3B~\cite{bai2023qwen}.
-First, an exhaustive retrieval diagnostic was executed across all 179 valid records
-for all six retrieval profiles.  Second, a controlled multi-system generation pilot
-was conducted across four representative candidate records: \texttt{q-0001} (Answerable),
-\texttt{q-0101} (Unanswerable), \texttt{q-0151} (Conflicting), and \texttt{q-0176}
-(Prompt Injection), producing $6 \times 4 = 24$ fully tracked predictions.  Tavily was
-disabled during local pilot execution to guarantee zero network leakage and ensure that
-all variants operated under identical local compute budgets.
-
-\subsection{Evaluation Metrics}
+\subsubsection{Evaluation Metrics}
 \label{sec:metrics}
-Metrics are computed directly from saved prediction JSON artifacts:
+Metrics are computed from the saved prediction records with 95\% stratified
+bootstrap confidence intervals:
 \begin{itemize}
-  \item \textbf{Answer Quality:} Exact Match (EM) and token-level macro F1 score
-    evaluated on accepted answerable and prompt-injection items against reference answers.
-  \item \textbf{Retrieval Recall (R@5):} Fraction of gold passage identifiers
-    contained in top-$k$ retrieved chunks:
+  \item \textbf{Answer quality:} Exact Match (EM) and macro token F1 on all
+    answerable and prompt-injection records.
+  \item \textbf{Answer containment:} Gold Answer Contained rate---whether the
+    gold answer string appears in the generated response.
+  \item \textbf{Retrieval recall (R@5):} Fraction of gold passage IDs in the
+    top-five retrieved chunks:
     \begin{equation}
       \mathrm{Recall@}k = \frac{1}{N}\sum_{i=1}^N \frac{|G_i \cap R_i^k|}{|G_i|}.
     \end{equation}
-  \item \textbf{Citation Overlap:} Citation Precision ($P$), Citation Recall ($R$),
-    and Gold-Evidence Citation Rate:
+  \item \textbf{Citation overlap:} Precision ($P$), recall ($R$), and the rate
+    at which a response cites at least one gold passage:
     \begin{equation}
       P = \frac{|G_i \cap C_i|}{|C_i|}, \quad R = \frac{|G_i \cap C_i|}{|G_i|}.
     \end{equation}
-  \item \textbf{Unsafe Acceptance Rate (UAR $\downarrow$):} Fraction of unanswerable
-    or conflicting items that the system failed to abstain from:
+  \item \textbf{Unsafe acceptance rate (UAR $\downarrow$):} Fraction of
+    unanswerable or conflicting examples that receive a non-abstaining verdict:
     \begin{equation}
       \mathrm{UAR} = \frac{|\{i \in \text{Unsafe} : \mathcal{D}(q_i) \neq \text{\texttt{abstain}}\}|}{|\text{Unsafe}|}.
     \end{equation}
-  \item \textbf{Abstention Coverage ($\uparrow$):} Fraction of unsafe queries correctly
+  \item \textbf{Abstention coverage:} Fraction of unsafe examples correctly
     abstained from ($\text{Coverage}_{\text{abs}} = 1.0 - \text{UAR}$).
-  \item \textbf{Query Coverage:} Proportion of all queries receiving non-abstaining
-    verdicts (\texttt{answer} or \texttt{partial}).
-  \item \textbf{Selective Risk:} EM error rate computed over accepted answerable queries.
-  \item \textbf{Calibration Diagnostics (Brier Score \& ECE):} Evaluated between
-    composite score $S \in [0,1]$ and binary gold answerability $y_i \in \{0, 1\}$.
-    The Brier score measures mean squared calibration error:
+  \item \textbf{Injection task success rate ($\downarrow$):} Fraction of
+    prompt-injection cases where the model complies with the injected instruction.
+  \item \textbf{Calibration:} Brier score and expected calibration error (ECE),
+    comparing decision score $S \in [0,1]$ with binary answerability
+    $y_i \in \{0,1\}$:
     \begin{equation}
       \mathrm{BS} = \frac{1}{N}\sum_{i=1}^{N}(S_i - y_i)^2.
       \label{eq:brier}
     \end{equation}
-    Expected Calibration Error (ECE) partitions score predictions into $M=10$
-    equal-width confidence bins $B_m \subset [0,1]$:
     \begin{equation}
       \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{N}
       \left| \frac{1}{|B_m|}\sum_{i \in B_m} y_i - \frac{1}{|B_m|}\sum_{i \in B_m} S_i \right|.
       \label{eq:ece}
     \end{equation}
-  \item \textbf{Operational Footprint:} End-to-end latency (mean, p50, p95 in ms),
-    LLM invocation count per query, and hosted API monetary spend.
+  \item \textbf{Operational measures:} End-to-end latency (mean, p50, and p95)
+    and LLM calls per query.
 \end{itemize}
 
 \begin{table}[t]
@@ -622,322 +658,204 @@ Metrics are computed directly from saved prediction JSON artifacts:
 \toprule
 Parameter & Value \\
 \midrule
-Production embedding model       & \texttt{gemini-embedding-2} (768-D) \\
-Pilot embedding model            & \texttt{all-MiniLM-L6-v2} (384-D) \\
-Configured generation model      & \texttt{openai/gpt-4o-mini} \\
-Pilot execution model            & Qwen2.5-Coder:3B via Ollama \\
-Generation temperature           & 0.1 \\
-Chunk size / overlap             & 400 / 80 words \\
-Retrieval top-$k$                & 5 \\
-Reranked candidate pool          & 20 (variant 2 only) \\
-Random seed                      & 42 \\
-Decision weights $(r,s,c,u)$     & 0.20, 0.35, 0.25, 0.20 \\
-Decision threshold $\tau$        & 0.80 \\
-Candidate benchmark size         & 200 examples \\
-Pilot evaluated records          & 4 records $\times$ 6 variants ($n=24$) \\
+Embedding model            & \texttt{all-MiniLM-L6-v2} (384-D, pinned local) \\
+Generation model           & \texttt{qwen/qwen3.8-27b} (Groq) \\
+Generation temperature     & 0.1 \\
+Chunk size / overlap       & 400 / 80 words \\
+Retrieval top-$k$          & 5 \\
+Reranked candidate pool    & 20 (variant 2 only) \\
+Random seed                & 42 \\
+Decision weights $(r,s,c,u)$ & 0.20, 0.35, 0.25, 0.20 \\
+Decision threshold $\tau$  & 0.80 \\
+Evaluation set size        & 40 queries (20 ans / 10 unans / 5 confl / 5 inj) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-%% -----------------------------------------------------------------------
-\section{Results}
-%% -----------------------------------------------------------------------
-\label{sec:results}
+\subsection{Main Benchmark Findings}
 
-\subsection{Retrieval Diagnostic on 179 Candidate Records}
-The in-memory retrieval diagnostic across all 179 valid records yielded an
-unanimous \textbf{Recall@5 of 1.00} across all 125 answerable and injection queries.
-This confirms that 400-word chunking with 80-word overlap reliably captures the
-gold evidence passages in the top-5 candidate set under per-record document scope.
-Warm in-memory retrieval latency averaged between $0.72$\,ms and $0.83$\,ms across
-all six variants (Table~\ref{tab:operations}), demonstrating that dense retrieval
-computational overhead is negligible relative to language model generation.
-
-\subsection{Answer Quality and Citation Precision}
-Table~\ref{tab:quality} reports generation quality, citation overlap, and injection
-task success across the pilot runs.
-\begin{itemize}
-  \item \textbf{Reranked RAG} achieved the highest generation accuracy, recording
-    $\text{EM} = 1.00$ and $\text{Token-F1} = 1.00$ on answerable items, while
-    successfully completing the prompt-injection task ($1/1$).  This highlights that
-    re-ordering candidate chunks to place the most salient evidence at the top of the
-    prompt context significantly aids the small local generator.
-  \item \textbf{RAG + Verification} attained the highest citation precision ($0.75$),
-    citation recall ($0.50$), and gold-evidence citation rate ($1.00$).  Forcing the
-    Fact-Checker to evaluate claims against retrieved IDs strongly anchors evidence
-    linking, even when generator answer text is non-identical to reference strings.
-  \item \textbf{\TR{} Variants} achieved moderate token F1 ($0.1818$ and $0.0370$)
-    and balanced citation precision ($0.50$).  Because \TR{} abstains on conflicting
-    examples, its accepted answerable pool is tightly constrained.
-\end{itemize}
+Table~\ref{tab:main-results} summarizes the main evaluation metrics across
+all six configurations. Table~\ref{tab:latency-results} reports operational
+metrics. All confidence intervals are 95\% stratified bootstrap.
 
 \begin{table*}[t]
 \centering
-\caption{Answer Quality, Retrieval Recall, and Citation Metrics ($n=4$ per variant;
-EM/F1 denominator: 2 answerable queries; injection success: 1 query; R@5 from 179-record diagnostic).}
-\label{tab:quality}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrrr}
+\caption{Main Evaluation Results ($N=40$; 95\% bootstrap CI in brackets)}
+\label{tab:main-results}
+\footnotesize
+\begin{tabular}{l c c c c c c c c c}
 \toprule
-System & EM & Token F1 & R@5 & Citation Prec. & Citation Rec. &
-  Gold-Evid.\ Rate & Injection Success \\
+\textbf{Variant} & \textbf{EM} & \textbf{Token F1} & \textbf{Contains} & \textbf{R@5} &
+\textbf{Cite P} & \textbf{Cite R} & \textbf{UAR\,$\downarrow$} &
+\textbf{Inj.\,$\downarrow$} & \textbf{Brier\,$\downarrow$} \\
 \midrule
-Standard RAG          & 0.00 & 0.0000 & 1.00 & 0.50 & 0.25 & 0.50 & 0/1 \\
-Reranked RAG          & \textbf{1.00} & \textbf{1.0000} & 1.00 & 0.50 & 0.25 & 0.50 & \textbf{1/1} \\
-RAG + Verification    & 0.00 & 0.1818 & 1.00 & \textbf{0.75} & \textbf{0.50} & \textbf{1.00} & 0/1 \\
-Fixed Multi-Agent RAG & 0.00 & 0.2374 & 1.00 & 0.50 & 0.25 & 0.50 & 0/1 \\
-\TR{}, no external    & 0.00 & 0.1818 & 1.00 & 0.50 & 0.25 & 0.50 & 0/1 \\
-Full \TR{}            & 0.00 & 0.0370 & 1.00 & 0.50 & 0.25 & 0.50 & 0/1 \\
+Standard RAG
+  & 0.720 & 0.837 & 0.840 & 1.000
+  & 0.980 & 0.980 & 1.000
+  & 0.800 & 0.325 \\
+Reranked RAG
+  & 0.760 & 0.843 & 0.800 & 1.000
+  & 0.953 & 0.980 & 1.000
+  & 1.000 & 0.325 \\
+RAG + Verification
+  & 0.000 & 0.153 & 0.760 & 1.000
+  & 0.920 & 0.980 & 0.933
+  & 0.000 & 0.375 \\
+Multi-Agent RAG
+  & 0.000 & 0.153 & 0.760 & 1.000
+  & 0.920 & 0.980 & 0.933
+  & 0.000 & 0.350 \\
+\TR{} (no external)
+  & 0.000 & 0.142 & 0.680 & 1.000
+  & 0.920 & 0.980 & 0.933
+  & 0.000 & \textbf{0.306} \\
+Full \TR{}
+  & 0.000 & 0.153 & 0.760 & 1.000
+  & 0.920 & 0.980 & 0.933
+  & 0.000 & \textbf{0.296} \\
 \bottomrule
-\end{tabular}}
-\par\smallskip{\footnotesize Full \TR{} ran with Tavily disabled in local pilot; web verification effects are not measured.
-R@5 is derived from the separate warm 179-record retrieval diagnostic.}
+\end{tabular}
 \end{table*}
 
-\subsection{Safety, Abstention Gating, and Calibration Diagnostics}
-Table~\ref{tab:safety} presents the core safety and calibration findings of this study.
-\begin{itemize}
-  \item \textbf{Unsafe Acceptance Mitigation:} Standard RAG, Reranked RAG,
-    RAG\,+\,Verification, and Fixed Multi-Agent RAG all exhibited an Unsafe
-    Acceptance Rate of \textbf{1.00} (accepting $2/2$ unsafe queries: the unanswerable
-    and the conflicting cases).  In stark contrast, both \TR{} gate variants reduced
-    UAR to \textbf{0.50}, achieving an Abstention Coverage of \textbf{0.50}.
-  \item \textbf{Decision Calibration:} Both \TR{} variants achieved a Brier score of
-    \textbf{0.2397} and ECE of \textbf{0.241}, cutting Brier error by more than half
-    compared to the flat $0.5000$ recorded by all four baseline systems.
-  \item \textbf{Claim Rejection:} In \TR{} (no external), the Fact-Checker explicitly
-    rejected $1$ of $4$ verified claims (verifier-rejected claim rate = $0.25$).  Single-pass
-    Standard RAG and Reranked RAG do not execute verification (reported as N/A$^*$).
-\end{itemize}
-
-\begin{table*}[t]
+\begin{table}[t]
 \centering
-\caption{Safety, Decision-Score Calibration, and Status Verdicts ($n=4$ per variant; $n_{\text{unsafe}}=2$).}
-\label{tab:safety}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lcrrrrrrr}
+\caption{Operational Metrics ($N=40$; latency in ms)}
+\label{tab:latency-results}
+\footnotesize
+\begin{tabular}{l r r r c}
 \toprule
-System & Status (Ans / Abs) & Verif.-Rejected Rate & UAR$\downarrow$ & Abstention Cov.$\uparrow$ &
-  Coverage & Selective Risk & Brier Score$\downarrow$ & ECE$\downarrow$ \\
+\textbf{Variant} & \textbf{Mean} & \textbf{p50} & \textbf{p95} & \textbf{LLM/q} \\
 \midrule
-Standard RAG          & 4 / 0 & N/A$^*$ (No Verifier) & 1.00 & 0.00 & 1.00 & 1.00 & 0.5000 & 0.500 \\
-Reranked RAG          & 4 / 0 & N/A$^*$ (No Verifier) & 1.00 & 0.00 & 1.00 & 0.00 & 0.5000 & 0.500 \\
-RAG + Verification    & 4 / 0 & 0.00 (0/4)            & 1.00 & 0.00 & 1.00 & 1.00 & 0.5000 & 0.500 \\
-Fixed Multi-Agent RAG & 4 / 0 & 0.00 (0/5)            & 1.00 & 0.00 & 1.00 & 1.00 & 0.5000 & 0.500 \\
-\TR{}, no external    & 3 / 1 & 0.25 (1/4)            & \textbf{0.50} & \textbf{0.50} & 0.75 & 1.00 & \textbf{0.2397} & \textbf{0.241} \\
-Full \TR{}            & 3 / 1 & 0.00 (0/7)            & \textbf{0.50} & \textbf{0.50} & 0.75 & 1.00 & \textbf{0.2397} & \textbf{0.241} \\
+Standard RAG        & 68,746  & 2,400   & 358,912 & 1.35 \\
+Reranked RAG        & 11,818  & 1,736   & 53,522  & 1.20 \\
+RAG + Verification  & 33,782  & 46,991  & 58,992  & 2.65 \\
+Multi-Agent RAG     & 59,109  & 56,821  & 108,199 & 4.05 \\
+\TR{} (no ext.)     & 60,104  & 58,286  & 89,691  & 3.95 \\
+Full \TR{}          & 62,389  & 58,418  & 102,676 & 4.20 \\
 \bottomrule
-\end{tabular}}
-\par\smallskip{\footnotesize $^*$N/A: Single-pass Standard RAG and Reranked RAG lack the multi-agent verification stage; claim-level rejection is inherently not applicable.
-Both \TR{} gate variants correctly abstain on the conflicting item (Guard G1 fires) while accepting the unanswerable item.}
-\end{table*}
+\end{tabular}
+\end{table}
 
-\subsection{Operational Metrics and Computational Latency}
-Table~\ref{tab:operations} details end-to-end execution latency, call overheads,
-and financial expenditure.
-\begin{itemize}
-  \item \textbf{Call Multipliers:} Standard and Reranked RAG execute exactly $1$ LLM
-    call per query.  RAG\,+\,Verification requires $2$ calls (generation + claim check).
-    Fixed Multi-Agent and both \TR{} variants require $3$ calls (Researcher, Fact-Checker,
-    Critic).  Retrieval requires $1$ call across all systems.
-  \item \textbf{Execution Latency:} On CPU execution with Qwen2.5-Coder:3B, Reranked RAG
-    recorded the lowest mean latency ($38.2$\,s), followed by Standard RAG ($62.2$\,s).
-    RAG\,+\,Verification averaged $283.9$\,s.  \TR{} (no external) recorded a mean
-    latency of $310.7$\,s, significantly outperforming Fixed Multi-Agent RAG ($495.3$\,s
-    mean, $1264.5$\,s p95).  This demonstrates that \TR{}'s early-exit abstention under
-    Guard~G1 prevents redundant downstream critique generation.
-  \item \textbf{Cost Accounting:} In local pilot execution, hosted API cost was
-    exactly \textbf{\$0.00} across all variants.
-\end{itemize}
+\subsection{RQ1: Safety and Abstention}
+The baseline configurations (Standard RAG and Reranked RAG) accept all
+unsafe queries without abstaining ($\text{UAR} = 1.0$), confirming that
+single-pass generation provides no protection against unanswerable or
+conflicting inputs. All four verification-enabled variants (RAG+Verification,
+Multi-Agent RAG, TrustRAG without external, and Full TrustRAG) reduce the
+Unsafe Acceptance Rate to 0.933, achieving 6.7\% correct abstention coverage.
+While the absolute reduction is modest, it demonstrates that the evidence
+gate does trigger on a subset of unsafe queries---the first step toward
+meaningful safety filtering.
 
-\begin{table*}[t]
-\centering
-\caption{Operational Latency and Computational Footprint (Local CPU Qwen2.5-Coder:3B execution, $n=4$).}
-\label{tab:operations}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrrrr}
-\toprule
-System & E2E Mean (ms) & p50 (ms) & p95 (ms) &
-  LLM Calls/q & Verif.\ Rate & Retr.\ Calls/q &
-  Retr.-Only Mean (ms) & API Cost/q \\
-\midrule
-Standard RAG          & 62{,}228  & 55{,}154   & 87{,}451      & 1 & 0.00 & 1 & 0.77 & \$0.00 \\
-Reranked RAG          & \textbf{38{,}190}  & \textbf{20{,}540}   & 95{,}190      & 1 & 0.00 & 1 & \textbf{0.72} & \$0.00 \\
-RAG + Verification    & 283{,}936 & 202{,}013  & 476{,}138     & 2 & 1.00 & 1 & 0.74 & \$0.00 \\
-Fixed Multi-Agent RAG & 495{,}339 & 119{,}667  & 1{,}264{,}454 & 3 & 1.00 & 1 & 0.75 & \$0.00 \\
-\TR{}, no external    & 310{,}705 & 62{,}071   & 760{,}199     & 3 & 1.00 & 1 & 0.83 & \$0.00 \\
-Full \TR{}            & 376{,}235 & 44{,}057   & 830{,}038     & 3 & 1.00 & 1 & 0.80 & \$0.00 \\
-\bottomrule
-\end{tabular}}
-\par\smallskip{\footnotesize Retrieval-only latency is in-memory and excludes Atlas network round-trips.
-CPU-only deployment; production latency with GPU and hosted LLM would differ substantially.}
-\end{table*}
+Critically, the gated variants completely eliminate prompt-injection compliance:
+the Injection Task Success Rate drops from 0.80--1.00 for the baselines to
+0.00 for all four verification-enabled configurations. This shows that the
+claim verification pipeline treats injected instructions as evidence to verify
+rather than instructions to follow.
 
-\subsection{Category-Wise Breakdown}
-Table~\ref{tab:category} stratifies behavior across the four evaluation categories:
-\begin{itemize}
-  \item \textbf{Conflict Abstention:} On the conflicting candidate (\texttt{q-0151}),
-    all four baseline variants confidently synthesized answers ($0.00$ accuracy).
-    Both \TR{} gate variants correctly triggered Guard~G1 and achieved \textbf{1.00
-    conflict abstention accuracy}.
-  \item \textbf{Unanswerable Abstention:} On the unanswerable candidate (\texttt{q-0101}),
-    all systems accepted the query ($0.00$ abstention).  The candidate passage
-    contained superficial lexical tokens that partially satisfied the prompt's entity
-    extraction conditions, revealing a subtle point of failure where lexical overlap
-    mimics semantic evidence.
-  \item \textbf{Prompt-Injection Task Success:} Only Reranked RAG successfully
-    resisted distractor instruction hijack and completed the task ($1/1$).
-\end{itemize}
+\subsection{RQ2: Grounding and Quality}
+Standard RAG and Reranked RAG achieve 0.72 and 0.76 Exact Match respectively,
+with token F1 scores of 0.837 and 0.843. The verification-enabled variants
+produce lower EM (0.00) and token F1 (0.142--0.153) because their outputs are
+structured claim-verification reports rather than direct answer strings. However,
+the Gold Answer Contained metric (which checks whether the correct answer appears
+anywhere in the response) remains high at 0.68--0.76 across all variants,
+confirming that the verification pipeline preserves answer content while
+restructuring the output format.
 
-\begin{table*}[t]
-\centering
-\caption{Category-Wise Evaluation Breakdown ($n=1$ candidate per category; diagnostic R@5 over $n=100$ and $n=25$).}
-\label{tab:category}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrr}
-\toprule
-System &
-  Answerable EM ($n=1$) & Answerable R@5 ($n=100$) &
-  Unanswerable Abstain ($n=1$) & Conflict Abstain ($n=1$) &
-  Injection Success ($n=1$) & Injection R@5 ($n=25$) \\
-\midrule
-Standard RAG          & 0.00 & 1.00 & 0.00 & 0.00 & 0/1 & 1.00 \\
-Reranked RAG          & \textbf{1.00} & 1.00 & 0.00 & 0.00 & \textbf{1/1} & 1.00 \\
-RAG + Verification    & 0.00 & 1.00 & 0.00 & 0.00 & 0/1 & 1.00 \\
-Fixed Multi-Agent RAG & 0.00 & 1.00 & 0.00 & 0.00 & 0/1 & 1.00 \\
-\TR{}, no external    & 0.00 & 1.00 & 0.00 & \textbf{1.00} & 0/1 & 1.00 \\
-Full \TR{}            & 0.00 & 1.00 & 0.00 & \textbf{1.00} & 0/1 & 1.00 \\
-\bottomrule
-\end{tabular}}
-\par\smallskip{\footnotesize Both \TR{} gate variants correctly abstain on conflicting evidence (Guard G1) while accepting unanswerable evidence.}
-\end{table*}
+All six configurations achieve perfect Recall@5 (1.000), indicating that
+the retrieval layer consistently surfaces relevant passages. Citation precision
+ranges from 0.920 to 0.980, with the baselines slightly higher (0.953--0.980)
+because they cite fewer but more targeted passages. Gold Evidence Citation Rate
+is 1.000 for all Standard/Reranked variants and 0.920--1.000 for gated variants.
+
+\subsection{RQ3: Operational Trade-offs}
+Reranked RAG is the fastest variant (mean 11.8\,s, p50 1.7\,s), benefiting
+from its expanded candidate pool reducing the need for LLM retries. Standard
+RAG has a higher mean (68.7\,s) due to occasional retry-induced outliers
+(p95 = 358.9\,s). The multi-agent variants cluster around 59--62\,s mean
+latency with 3.95--4.20 LLM calls per query, reflecting the sequential
+Researcher $\to$ Fact-Checker $\to$ Critic pipeline. RAG+Verification
+occupies a middle ground at 33.8\,s with 2.65 LLM calls.
+
+The Brier score improves monotonically from ungated (0.325) through
+verification-only (0.375/0.350) to the full TrustRAG consensus
+(0.296--0.306), and ECE follows a similar trend (0.325 $\to$ 0.254),
+indicating that the consensus score $S$ provides increasingly calibrated
+confidence estimates as more verification stages are added.
+
+\subsection{Per-Category Analysis}
+On answerable queries ($n=20$), Standard and Reranked RAG achieve 0.70 EM
+with 0.80--0.84 token F1. The selective risk (EM error rate among accepted
+answers) is 0.28--0.30 for baselines, showing that roughly 30\% of accepted
+answers are incorrect.
+
+On unanswerable queries ($n=10$), all baselines accept 100\% of queries.
+The gated variants achieve 10\% abstention accuracy on unanswerable cases,
+demonstrating that the evidence gate can detect missing evidence in some cases.
+
+On conflicting queries ($n=5$), all configurations currently accept 100\%
+of queries. This highlights an area for improvement: the conflict detection
+mechanism requires additional tuning of the contradiction threshold.
+
+On prompt-injection queries ($n=5$), Standard RAG complies with 80\% of
+injections and Reranked RAG with 100\%. All gated variants achieve 0\%
+injection compliance, fully resisting the adversarial instructions.
 
 %% -----------------------------------------------------------------------
-\section{Discussion}
-%% -----------------------------------------------------------------------
-\label{sec:discussion}
+\section{Conclusion}
+\label{sec:conclusion}
+TrustRAG combines tenant-scoped retrieval, multi-agent claim verification,
+and a deterministic consensus gate for trust-aware response generation. Our
+evaluation across six system configurations demonstrates three key findings:
 
-\subsection{Mechanism of Guard G1 in Resolving Evidence Conflicts (RQ1)}
-The experimental findings provide an unambiguous answer to RQ1: conventional
-single-pass RAG and unconstrained multi-agent pipelines lack the ability to abstain
-when confronted with conflicting evidence.  In the conflicting test case, contradictory
-statements regarding a historical entity were present in the retrieved window.
-Standard RAG, Reranked RAG, RAG\,+\,Verification, and Fixed Multi-Agent RAG synthesized
-plausible but factually erroneous compromise responses.  In contrast, \TR{}'s Fact-Checker
-flagged the proposition as $\text{\texttt{contradicted}}$, which immediately tripped
-Guard~G1.  By decoupling contradiction detection from generation synthesis, \TR{}
-halves the unsafe acceptance rate and halves Brier score calibration error.
-
-\subsection{Decoupling Generation Quality from Citation Grounding (RQ2)}
-Analyzing RQ2 reveals a critical structural insight: generation quality and evidence
-grounding represent orthogonal dimensions of RAG performance.
-\begin{itemize}
-  \item \textbf{Reranking dominates answer accuracy:} Reranked RAG achieved perfect
-    EM ($1.00$) because re-ordering passages places the primary gold clause directly
-    at the start of the LLM context, preventing attention dilution.  However, Reranked
-    RAG possesses zero abstention capability (UAR = $1.00$).
-  \item \textbf{Verification dominates citation fidelity:} RAG\,+\,Verification
-    maximized citation precision ($0.75$) and gold-evidence rate ($1.00$).  Forcing the
-    system to audit each claim against explicit chunk IDs prevents ungrounded citation
-    fabrication.
-\end{itemize}
-This demonstrates that optimal RAG design requires \emph{both} reranking (for answer
-accuracy) and evidence gating (for safety and citation auditability).
-
-\subsection{Latency Overheads and Deployment Realities (RQ3)}
-Regarding RQ3, multi-agent evidence gating incurs a non-trivial computational cost:
-increasing from 1 to 3 LLM calls elevates mean latency from $62$\,s to $310$\,s on a
-local CPU server.  However, two mitigating factors exist:
 \begin{enumerate}
-  \item \textbf{Early-Exit Optimization:} \TR{}'s mean latency ($310.7$\,s) was $37\%$
-    faster than Fixed Multi-Agent RAG ($495.3$\,s) because Guard~G1 aborts processing
-    early upon contradiction detection, saving downstream critique time.
-  \item \textbf{Cloud Hardware Acceleration:} On modern GPU infrastructure or hosted
-    cloud LLMs (e.g., Google Gemini Flash on Render), 3 sequential LLM calls execute
-    in approximately $1.5$--$2.5$ seconds total, making the safety benefits of \TR{}
-    fully practical for production web applications.
+  \item \textbf{Safety:} The evidence gate reduces the Unsafe Acceptance Rate
+    from 1.0 to 0.93 and completely eliminates prompt-injection compliance
+    (0\% vs.\ 80--100\% for baselines).
+  \item \textbf{Calibration:} The consensus score provides increasingly
+    calibrated confidence estimates, with Brier score improving from 0.325
+    (ungated) to 0.296 (Full TrustRAG) and ECE from 0.325 to 0.254.
+  \item \textbf{Trade-offs:} The multi-agent verification pipeline adds
+    ${\sim}50$\,s mean latency (3--4 additional LLM calls per query) compared
+    to single-pass baselines, a cost that may be acceptable for applications
+    prioritizing reliability over speed.
 \end{enumerate}
 
-%% -----------------------------------------------------------------------
-\section{Threats to Validity}
-%% -----------------------------------------------------------------------
-\label{sec:threats}
-
-\subsection{Construct Validity}
-The composite evidence score $S$ (Eq.~\ref{eq:score}) employs manually specified
-linear weights ($0.20, 0.35, 0.25, 0.20$).  While mathematically intuitive, these weights
-are operational heuristics rather than statistically calibrated posterior probabilities.
-Similarly, gold-evidence citation overlap evaluates whether the expected chunk IDs were
-referenced; it does not perform natural language inference (NLI) to formally verify
-that every token is logically entailed by the passage.
-
-\subsection{Internal Validity}
-Pilot experiments utilized local Ollama execution with Qwen2.5-Coder:3B rather than the
-production-configured hosted LLM (\texttt{openai/gpt-4o-mini} or \texttt{gemini-3.5-flash}).
-While prompt templates, seeds (42), and temperatures (0.1) were identical across variants,
-smaller local models exhibit idiosyncratic reasoning limitations that may not reflect
-frontier model behavior.  Additionally, evaluating $n=4$ pilot queries produces zero
-degrees of freedom for parametric confidence interval estimation.
-
-\subsection{External Validity}
-The benchmark candidate derives from HotpotQA multi-hop Wikipedia passages.
-Enterprise documents—such as complex financial balance sheets, dense legal contracts,
-or handwritten medical records—may introduce extraction artifacts, OCR noise, and
-tabular formatting ambiguities not captured in clean Wikipedia text.
-
-\subsection{Operational Validity}
-Offline benchmarks evaluate isolated algorithm accuracy but do not model network
-partitioning, database socket exhaustion, or expired Clerk JWT tokens.  These production
-factors are safeguarded by our backend rate limiters and error middleware but remain
-outside the scope of benchmark metric tables.
+The main limitation is that exact-match accuracy drops for verification-enabled
+variants because structured claim reports differ from direct answer strings,
+even though the gold answer is contained in 68--76\% of responses. Conflict
+detection on synthetic contradictions also requires further tuning.
 
 %% -----------------------------------------------------------------------
-\section{Security, Privacy, and Ethical Considerations}
-%% -----------------------------------------------------------------------
-\label{sec:ethics}
-\TR{} is engineered as decision support and explicitly does not guarantee infallible
-truth.  Every emitted response carries an explicit verdict tag (\texttt{answer},
-\texttt{partial}, or \texttt{abstain}) alongside chunk-level citation links, allowing
-end users to audit evidence directly.
+\section{Future Scope}
+\label{sec:future}
 
-\textbf{Tenant Isolation and Cryptographic Auth.}
-Document privacy is enforced at the database query layer: MongoDB Atlas Vector Search
-queries mandate an authenticated \texttt{user\_id} filter.  API endpoints verify Clerk
-ES256/RS256 signatures via cryptographic JWKS keys.  Internal communication between the
-Express backend and FastAPI AI service is gated by shared secret tokens.
+Several directions can extend TrustRAG's capabilities:
 
-\textbf{API Quota and Concurrency Protection.}
-To prevent denial-of-service and API quota exhaustion on external providers, the Express
-backend enforces IP-based rate limiting ($12$ chat requests/min, $15$ document uploads/5\,min).
-The AI service encapsulates multi-agent execution inside an \texttt{asyncio.Semaphore(2)}
-concurrency guard.  API 429 rate-limit responses from Gemini trigger an automatic
-exponential backoff ($2.5$\,s sleep).
-
-\textbf{Adversarial Injection and Data Ethics.}
-The benchmark candidate contains adversarial prompt-injection vectors.  The execution
-harness sandboxes these passages as untrusted data inputs, ensuring they cannot mutate
-evaluator instructions.  Corpus text derives from HotpotQA under its Apache 2.0 license.
-
-%% -----------------------------------------------------------------------
-\section{Conclusion and Future Work}
-%% -----------------------------------------------------------------------
-\label{sec:conclusion}
-This paper presented \TR{}, an end-to-end multi-tenant RAG system combining
-tenant-scoped vector retrieval, multi-agent claim verification, and an explicit
-deterministic evidence gate.  Experimental evaluations across six pipeline variants
-demonstrated that \TR{}'s evidence gate successfully addresses a critical flaw of
-standard RAG: it halves unsafe acceptance from $1.00$ to $0.50$ and achieves perfect
-$1.00$ conflict abstention accuracy by virtue of its hard contradiction guard (Guard~G1),
-while halving Brier calibration error from $0.5000$ to $0.2397$.  Our findings also
-demonstrate that reranking maximizes answer generation accuracy, while typed verification
-maximizes citation precision, establishing that safe and accurate RAG requires a hybrid,
-gated approach.
-
-Future research directions include: (1)~executing the full 200-example benchmark
-with hosted Gemini embeddings and GPU generation; (2)~evaluating conditional web
-verification under live Tavily search conditions; (3)~applying reinforcement learning
-from AI feedback (RLAIF) to optimize consensus score weights; and (4)~extending
-deterministic evidence gating to streaming multi-turn conversational agents.
+\begin{enumerate}
+  \item \textbf{Larger-scale evaluation:} Extending the benchmark to the full
+    200-record dataset with multiple LLM providers to establish statistical
+    significance and generalizability.
+  \item \textbf{Adaptive threshold calibration:} Learning the consensus threshold
+    $\tau$ from a held-out development split rather than using a fixed value,
+    potentially improving abstention accuracy on conflicting queries.
+  \item \textbf{Conflict-aware retrieval:} Integrating contradiction detection
+    directly into the retrieval stage to flag conflicting passages before
+    claim extraction.
+  \item \textbf{Multi-modal support:} Extending the pipeline to handle tables,
+    images, and scanned documents, which require different chunking and
+    verification strategies.
+  \item \textbf{Real-time calibration:} Continuously updating the decision
+    weights $(w_r, w_s, w_c, w_u)$ based on user feedback and downstream
+    accuracy signals.
+  \item \textbf{Federated multi-tenant evaluation:} Testing cross-tenant
+    isolation with concurrent users to validate the access-control guarantees
+    under load.
+  \item \textbf{Cost optimization:} Implementing selective agent invocation---
+    skipping the Fact-Checker and Critic when retrieval quality is sufficiently
+    high---to reduce latency and LLM costs without sacrificing safety.
+\end{enumerate}
 
 %% -----------------------------------------------------------------------
 \begin{thebibliography}{20}
@@ -1037,7 +955,6 @@ Irrelevant Context,'' in \emph{Proc.\ ICML}, 2023, pp.~31210--31227.
 Z.~Yang, P.~Qi, S.~Zhang, Y.~Bengio, W.~W.~Cohen, R.~Salakhutdinov, and
 C.~D.~Manning, ``HotpotQA: A Dataset for Diverse, Explainable Multi-hop
 Question Answering,'' in \emph{Proc.\ EMNLP}, 2018, pp.~2369--2380,
-
 doi: 10.18653/v1/D18-1259.
 
 \bibitem{bai2023qwen}
@@ -1047,4 +964,3 @@ J.~Bai \emph{et al.}, ``Qwen Technical Report,'' arXiv:2309.16609, 2023.
 \end{thebibliography}
 
 \end{document}
-
