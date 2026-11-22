@@ -466,6 +466,7 @@ The decision $\mathcal{D}(q)$ can be \texttt{answer}, \texttt{partial}, or
 The default threshold is $\tau = 0.80$. Guard~G1 takes precedence: any claim
 labelled contradicted leads to abstention. Guard~G3 returns a partial answer when
 the score reaches the threshold but at least one claim remains unsupported.
+The complete decision flow and guard branching logic is illustrated in Fig.~\ref{fig:consensus-rule}.
 
 \begin{figure*}[t]
 \centering
@@ -648,6 +649,8 @@ bootstrap confidence intervals:
   \item \textbf{Operational measures:} End-to-end latency (mean, p50, and p95)
     and LLM calls per query.
 \end{itemize}
+
+Table~\ref{tab:config} summarizes the key configuration parameters governing the evaluation environment.
 
 \begin{table}[t]
 \centering
